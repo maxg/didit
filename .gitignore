@@ -1,4 +1,7 @@
 .DS_store
 .vagrant
+config/aws.json
+config/*.js
+devel
 node_modules
 ssl-*.pem

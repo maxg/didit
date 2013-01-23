@@ -1,0 +1,6 @@
+{
+  "workflow": { "name": "build-workflow", "version": "0.1" },
+  "activity": { "name": "build-activity", "version": "0.1" },
+  "decisions": { "name": "build-decisions" },
+  "activities": { "name": "build-activities" }
+}

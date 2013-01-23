@@ -1,0 +1,23 @@
+{
+  "who": [
+    "Alice & Bob",
+    "Alyssa P. Hacker",
+    "Ben Bitdiddle",
+    "Jack Florey",
+    "Louis Reasoner"
+  ],
+  "where": [
+    "computer lab",
+    "lecture hall",
+    "matrix",
+    "server farm",
+    "SIPB office"
+  ],
+  "what": [
+    "abstract method",
+    "lambda expression",
+    "null pointer",
+    "recursive function",
+    "unbalanced brace"
+  ]
+}

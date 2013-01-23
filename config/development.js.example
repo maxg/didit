@@ -1,0 +1,20 @@
+module.exports = {
+  student: {
+    semester: 'sp13',
+    repos: '/vagrant/devel/repos'
+  },
+  staff: {
+    semester: 'spring13',
+    repo: '/vagrant/devel/repos/staff'
+  },
+  web: {
+    port: 4443
+  },
+  build: {
+    eclipse: '/usr/lib/eclipse',
+    results: '/vagrant/devel/builds'
+  },
+  workflow: {
+    domain: 'didit-dev'
+  }
+};
