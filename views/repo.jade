@@ -1,0 +1,31 @@
+extends layout
+
+append head
+  title #{kind}/#{proj} - #{users.join('-')} - Didit
+
+block content
+  div.span3
+    include sidebar
+  div.span9
+    div.page-header
+      h1
+        tt #{kind}/#{proj}
+        |  by&nbsp;
+        tt= users.join('-')
+
+    if current
+      div.span6.pull-right.well
+        h2 Latest Build
+        h3
+          a(href="/#{current.spec.kind}/#{current.spec.proj}/#{current.spec.users.join('-')}/#{current.spec.rev}")
+            tt= current.spec.rev
+          | &nbsp;
+          small built #{locals.moment(current.finished).calendar()}
+        div.alert(class="alert-#{current.public ? 'success' : 'yellow'}")
+          h4 Tests #{current.public ? 'passed' : 'FAILED'}
+        div.alert(class="alert-#{current.compile ? 'success' : 'error'}")
+          h4 Compilation #{current.compile ? 'succeeded' : 'FAILED'}
+
+    h2= builds.length > 0 ? 'Revisions' : 'No revisions'
+    each build in builds
+      h3: a(href="/#{build.kind}/#{build.proj}/#{build.users.join('-')}/#{build.rev}"): tt= build.rev

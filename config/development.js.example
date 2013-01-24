@@ -5,7 +5,8 @@ module.exports = {
   },
   staff: {
     semester: 'spring13',
-    repo: '/vagrant/devel/repos/staff'
+    repo: '/vagrant/devel/repos/staff',
+    users: [ 'maxg' ]
   },
   web: {
     port: 4443

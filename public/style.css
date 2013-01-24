@@ -1,0 +1,22 @@
+@import url(https://fonts.googleapis.com/css?family=Lato:400,700);
+
+body {
+  padding-top: 60px;
+  font-family: Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+tt {
+  font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+  font-size: 90%;
+}
+
+pre {
+  font-size: 12px;
+  line-height: 18px;
+  tab-size: 4;
+  -moz-tab-size: 4;
+}
+
+.well .nav-list {
+  padding: 0 5px 5px 5px;
+}

@@ -1,0 +1,21 @@
+extends layout
+
+append head
+  title Didit
+
+block content
+  div.span3
+    include sidebar
+  div.span9
+    div.page-header
+      h1 Didit
+
+    if authstaff
+      h2 All Projects
+      each project in projects
+        h3: a(href="/#{project.kind}/#{project.proj}") #{project.kind}/#{project.proj}
+
+    h2= repos.length > 0 ? 'My repositories' : 'No repositories'
+    each repo in repos
+      h3: a(href="/#{repo.kind}/#{repo.proj}/#{repo.users.join('-')}").
+        #{repo.kind}/#{repo.proj} #{repo.users.join('-')}

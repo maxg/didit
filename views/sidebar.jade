@@ -1,0 +1,28 @@
+div.well.well-small.sidebar-nav
+  ul.nav.nav-list
+    if locals.proj && locals.users
+      if locals.rev
+        li.nav-header Repository
+        li: a(href="/#{kind}/#{proj}/#{users.join('-')}") #{kind}/#{proj} #{users.join('-')}
+        li.divider
+      li.nav-header Project
+      li: a(href="/#{kind}/#{proj}") #{kind}/#{proj}
+      li.divider
+      li.nav-header User#{users.length > 1 ? 's' : ''}
+      each user in users
+        li: a(href='/u/' + user)= user
+      li.divider
+    li.nav-header Recent Builds
+      li.muted: small.
+        #{moment.unix(stats.interval.oldestDate).calendar()}
+        + #{moment.duration(stats.interval.latestDate - stats.interval.oldestDate, 'seconds').humanize()}
+      li.muted
+        span.badge(class="badge-#{stats.open > stats.completed ? 'warning' : 'info'}").
+          #{stats.open}
+        |  pending
+      li.muted
+        span.badge #{stats.completed}
+        |  complete
+      li.muted
+        span.badge(class="badge-#{stats.closed - stats.completed > 0 ? 'important' : 'default' }") #{stats.closed - stats.completed}
+        |  failed

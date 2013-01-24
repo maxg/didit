@@ -1,0 +1,68 @@
+extends layout
+
+append head
+  title #{kind}/#{proj} - #{users.join('-')}@#{rev} - Didit
+
+block content
+  div.span3
+    include sidebar
+  div.span9
+    div.page-header
+      h1
+        tt #{kind}/#{proj}
+        |  by&nbsp;
+        tt= users.join('-')
+        |  rev&nbsp;
+        tt= rev
+      p.muted builder&nbsp;
+        if build.builder
+          tt= build.builder
+        else
+          span.label.label-warning unknown
+        |  started #{locals.moment(build.started).calendar()}
+        |  took #{moment.duration(build.finished - build.started).humanize()}
+
+    if authstaff && build.json.hidden
+      mixin testresults('Hidden tests', build.hidden, build.txt.hidden, build.json.hidden)
+
+    mixin testresults(authstaff ? 'Public tests' : 'Tests', build.public, build.txt.public, build.json.public)
+
+    div.progress.progress-striped(class="progress-#{build.compile ? 'success' : 'danger'}")
+      div.bar(style='width: 100%')
+    div.alert(class="alert-#{build.compile ? 'success' : 'error'}")
+      h2 Compilation #{build.compile ? 'succeeded' : 'FAILED'}
+      if build.txt.compile
+        pre= build.txt.compile
+      else
+        h3 No output
+
+mixin testresults(title, success, output, results)
+  if ( ! results) || (results.tests == 0)
+    div.progress.progress-striped
+      div.bar(style='width: 100%')
+    div.alert.alert-info
+      h2 #{title} did not run
+  else
+    div.progress.progress-striped
+      - var ok = results.tests - results.failures - results.errors
+      - var frac = results.tests == 0 ? 0 : ok / results.tests;
+      div.bar.bar-success(style="width: #{Math.ceil(frac*100)}%")
+      div.bar.bar-danger(style='width: #{Math.floor((1-frac)*100)}%')
+    div.alert(class="alert-#{success ? 'success' : 'yellow'}")
+      h2 #{title} #{success ? 'passed' : 'FAILED'}&nbsp;
+        small #{results.tests} test#{build.json.public.tests == 1 ? '' : 's'},
+          | #{results.failures} failure#{results.failures == 1 ? '' : 's'},
+          | #{results.errors} error#{results.errors == 1 ? '' : 's'}
+      pre= output
+      each suite in results.testsuites
+        h3 #{suite.package}.#{suite.name}
+        each test in suite.testcases
+          h4 #{test.name} #{test.error ? 'ERROR' : ''}#{test.failure ? 'FAILED' : ''}
+          p
+          if test.error || test.failure
+            pre.pre-scrollable= test.error || test.failure
+        div.clearfix
+          if suite.sysout && suite.sysout.length > 0
+            pre.pull-left.pre-scrollable(style='width:45%')= suite.sysout.join('\n')
+          if suite.syserr && suite.syserr.length > 0
+            pre.pull-right.pre-scrollable.text-error(style='width:45%')= suite.syserr.join('\n')
