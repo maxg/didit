@@ -1,0 +1,39 @@
+#!/bin/bash
+
+branch="$1"
+oldrev="$2"
+newrev="$3"
+
+if [ -z "$GIT_DIR" -o -z "$branch" -o -z "$newrev" ]; then
+  echo "Usage: GIT_DIR=<dir> $0 <branch> <oldrev> <newrev>"
+  exit 1
+fi
+
+master="refs/heads/master"
+
+if [ "$branch" != "$master" ]; then
+  exit 0
+fi
+
+repohost="$GIT_DIR/hooks/didit-host" # the host might be in the hooks dir...
+projhost="$GIT_DIR/../didit-host"    # or it might be in the repo parent dir
+
+if [ -f "$repohost" ]; then
+  didit=`cat "$repohost"`
+elif [ -f "$projhost" ]; then
+  didit=`cat "$projhost"`
+fi
+
+if [ -z "$didit" ]; then
+  echo "Missing or empty Didit host file"
+  exit 0
+fi
+
+dir=$(cd "$GIT_DIR" && pwd) # get the absolute path
+head="${dir%/*/*/*.git}"    # chop off /:kind/:proj/:users.git
+tail="${dir#$head/}"        # -> :kind/:proj/:users.git
+repo="${tail%.git}"         # -> :kind/:proj/:users
+rev="${newrev:0:7}"
+
+echo "Requesting Didit build for $repo rev $rev"
+curl --silent --insecure --no-buffer -d '' "https://$didit/build/$repo/$rev"
