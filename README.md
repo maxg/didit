@@ -22,6 +22,12 @@ Fill in `config/aws.json` with AWS authentication keys.
 
 Fill in `config/development.js` with development settings.
 
+In `/vagrant`...
+
+ * `node web`: start the web front-end and build workflow decider
+ * `node worker`: start a build worker
+ * `node builder <kind> <proj> <users> <rev>`: run a build manually
+
 
 Resources
 ---------
