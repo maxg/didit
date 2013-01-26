@@ -67,6 +67,7 @@ exports.cloneStudentSource = function(spec, dest, callback) {
 exports.fetchBuilder = function(spec, dest, callback) {
   console.log('[git]', 'fetchBuilder', spec, dest);
   var pathParts = [ config.staff.semester, spec.kind, spec.proj, 'grading' ];
+  var procs = [ 'id', 'tar' ];
   async.auto({
     
     // obtain the staff repository revision
@@ -87,7 +88,7 @@ exports.fetchBuilder = function(spec, dest, callback) {
     },
     
     // fetch the staff builder and send data to "id" and "tar"
-    archive: [ 'id', 'tar', function(next, results) {
+    archive: procs.concat(function(next, results) {
       console.log('[git]', 'fetchBuilder', 'archive');
       var git = spawn('git', [ 'archive',
         '--remote', [ 'file:/', config.staff.repo ].join('/'), 'master', '--',
@@ -96,14 +97,23 @@ exports.fetchBuilder = function(spec, dest, callback) {
         cwd: dest,
         stdio: 'pipe'
       });
-      git.stdout.pipe(results.id.stdin);
-      git.stdout.pipe(results.tar.stdin);
+      procs.forEach(function(proc) { git.stdout.pipe(results[proc].stdin); });
+      
+      // get staff repository revision
       var staffrev = '';
-      results.id.stdout.on('data', function(data) { staffrev += data; })
-      results.tar.on('exit', function(code) {
-        next(code == 0 ? null : { dmesg: 'error expanding builder' }, staffrev);
-      })
-    } ],
+      results.id.stdout.on('data', function(data) { staffrev += data; });
+      
+      // wait until all steps are complete
+      var running = procs.length;
+      function done(code) {
+        if (code != 0) {
+          next({ dmesg: 'error fetching builder' });
+        } else if (--running == 0) {
+          next(staffrev.length > 0 ? null : { dmesg: 'error reading builder revision' }, staffrev);
+        }
+      }
+      procs.forEach(function(proc) { results[proc].on('exit', done); });
+    }),
   }, function(err, results) {
     callback(err, results ? results.archive.substring(0, 7) : null);
   });
