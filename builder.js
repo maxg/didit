@@ -141,7 +141,7 @@ exports.monitor = function(id) {
 
 // run the build
 // stores results and returns them in the callback
-exports.build = function(spec, callback) {
+exports.build = function(spec, progressCallback, resultCallback) {
   console.log('[build]', 'build', spec);
   var started = +new Date();
   async.auto({
@@ -152,11 +152,21 @@ exports.build = function(spec, callback) {
     builder: [ 'source', function(next, results) {
       git.fetchBuilder(spec, results.builddir, next);
     } ],
+    builderProgress: [ 'builder', function(next, results) {
+      progressCallback('Checked out rev ' + results.source.rev);
+      next();
+    } ],
     resultdir: [ 'builder', function(next, results) {
       mkdirp(buildResultDir(spec, results.builder), next);
     } ],
     compile: [ 'resultdir', function(next, results) {
       ant.compile(spec, results.builddir, 'compile', buildOutputBase(spec, results.builder, 'compile'), next);
+    } ],
+    compileProgress: [ 'compile', function(next, results) {
+      if ( ! results.compile) {
+        progressCallback('Compilation error');
+      }
+      next();
     } ],
     public: [ 'compile', function(next, results) {
       ant.test(spec, results.builddir, 'public', buildOutputBase(spec, results.builder, 'public'), next);
@@ -166,17 +176,16 @@ exports.build = function(spec, callback) {
     } ]
   }, function(err, results) {
     console.log('[build]', 'build results', err, results);
+    results = results || {};
     if (err) {
       err.dmesg = err.dmesg || 'unknown build error';
-    }
-    if ( ! results) {
-      results = {};
+      results.err = err;
     }
     results.started = started;
     results.finished = +new Date();
     fs.writeFile(buildResultFile(spec), JSON.stringify(results), function(fserr) {
       console.log('[build]', 'wrote results', fserr, results);
-      callback(err || fserr, results);
+      resultCallback(err || fserr, results);
     });
   });
 }
@@ -187,6 +196,8 @@ if (require.main === module) {
   console.log('[build]', 'manual build', args);
   exports.build({
     kind: args[0], proj: args[1], users: args[2].split('-'), rev: args[3]
+  }, function(progress) {
+    console.log('[build]', 'progress =', progress);
   }, function(err, result) {
     console.log('[build]', 'err =', err);
     console.log('[build]', 'result =', result);

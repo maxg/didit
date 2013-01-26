@@ -160,6 +160,9 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
       monitor.on('start', function(input) {
         res.write('Started build\n');
       });
+      monitor.on('progress', function(output) {
+        res.write((output.message || '...') + '\n');
+      });
       monitor.on('done', function(output) {
         if (output.result) {
           res.write('Compilation ' + (output.result.compile ? 'succeeded' : 'FAILED') + '\n');

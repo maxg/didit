@@ -16,7 +16,20 @@ function perform(task, next) {
   
   console.log('[work]', 'perform', task);
   var spec = JSON.parse(task.input);
-  builder.build(spec, function(err, result) {
+  builder.build(spec, function(progress) {
+    console.log('[work]', 'signal progress', progress);
+    swf.client.signalWorkflowExecution({
+      domain: config.workflow.domain,
+      workflowId: task.workflowExecution.workflowId,
+      runId: task.workflowExecution.runId,
+      signalName: config.swf.signals.progress,
+      input: JSON.stringify({ message: progress })
+    }, function(err, data) {
+      if (err) {
+        console.log('[work]', 'error signaling workflow', err);
+      }
+    })
+  }, function(err, result) {
     swf.client.respondActivityTaskCompleted({
       taskToken: task.taskToken,
       result: JSON.stringify({

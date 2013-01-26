@@ -71,6 +71,13 @@ var deciders = {
       }
     } ];
   },
+  WorkflowExecutionSignaled: function(task, event) {
+    console.log('[decide]', 'WorkflowExecutionSignaled decider', event);
+    var attr = event.workflowExecutionSignaledEventAttributes;
+    if (attr.signalName == config.swf.signals.progress) {
+      emitter.emit(task.workflowExecution.workflowId, 'progress', JSON.parse(attr.input));
+    }
+  },
   WorkflowExecutionStarted: function(task, event) {
     console.log('[decide]', 'WorkflowExecutionStarted decider', event);
     var input = event.workflowExecutionStartedEventAttributes.input;
@@ -103,7 +110,7 @@ function decide(decisionTask, next) {
       console.log('[decide]', 'decisions', decisions);
       swf.client.respondDecisionTaskCompleted({
         taskToken: decisionTask.taskToken,
-        decisions: decisions
+        decisions: decisions || []
       }, function(err, data) {
         if (err) {
           console.log('[decide]', 'error deciding', err);
