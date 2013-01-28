@@ -45,6 +45,25 @@ In a student repository, simulate a push:
     git rev-parse HEAD^ HEAD | GIT_DIR=. xargs hooks/update refs/heads/master
 
 
+Deployment
+----------
+
+On CSAIL VMs...
+
+ * Modify `/etc/csail/users.allow` to restrict machine login access
+ * Create UNIX user `didit` with a `/bin/nologin` shell
+ * Obtain an AFS user `didit.<hostname>` and a Kerberos keytab from TIG
+
+Run `manifests/csail.sh` to set up the VM.
+
+Fill in configuration files as above, but use `config/production.js`.
+
+In `/var/didit`...
+
+ * `bin/daemon start web` (or `worker`)
+ * `bin/daemon stop`
+
+
 Resources
 ---------
 
