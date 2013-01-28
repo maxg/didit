@@ -1,0 +1,34 @@
+#!/bin/bash
+
+#
+# Forever wrapper. Sets up logging and runs the given script.
+#
+
+script="$1"
+
+if [ -z "$script" ]; then
+  echo "Usage: $0 <script>"
+  exit 1
+fi
+
+cd `dirname "$0"`/..
+
+if [ ! -r "$script" ]; then
+  script="$script.js"
+fi
+
+if [ ! -r "$script" ]; then
+  echo "Not found: $script"
+  exit 1
+fi
+
+(
+  echo "== Starting $script =="
+  command -v klist && klist
+  command -v tokens && tokens
+  echo
+) >> log/forever.log
+
+node_modules/forever/bin/forever -m 5 \
+  -l log/forever.log -o log/forever-out.log -e log/forever-err.log \
+  "$script"

@@ -1,0 +1,24 @@
+module.exports = {
+  student: {
+    semester: 'sp13',
+    repos: '/afs/athena.mit.edu/course/.../git'
+  },
+  staff: {
+    semester: 'spring13',
+    repo: '/afs/athena.mit.edu/course/.../git/staff.git',
+    users: [ 'maxg' ]
+  },
+  web: {
+    port: 443
+  },
+  build: {
+    eclipse: '/usr/lib/eclipse',
+    results: '/afs/athena.mit.edu/course/.../didit'
+  },
+  workflow: {
+    domain: 'didit-...'
+  },
+  log: {
+    console: false
+  }
+};
