@@ -4,6 +4,7 @@ var events = require('events');
 var os = require('os');
 
 var config = require('./config');
+var log = require('./logger').cat('decider');
 
 aws.config.loadFromPath('./config/aws.json');
 
@@ -16,11 +17,11 @@ swf.client.registerWorkflowType({
   defaultTaskList: config.swf.decisions
 }, function(err, data) {
   if (data) {
-    console.log('[decide]', 'registered build workflow', config.swf.workflow.version, data)
+    log.info('registered build workflow', config.swf.workflow.version, data)
   } else if (err.code == 'TypeAlreadyExistsFault') {
-    console.log('[decide]', 'using build workflow', config.swf.workflow.version);
+    log.info('using build workflow', config.swf.workflow.version);
   } else {
-    console.log('[decide]', 'error registering build workflow', err);
+    log.error(err, 'error registering build workflow');
   }
 });
 
@@ -31,11 +32,11 @@ swf.client.registerActivityType({
   defaultTaskList: config.swf.activities
 }, function(err, data) {
   if (data) {
-    console.log('[decide]', 'registered build activity', config.swf.activity.version, data);
+    log.info('registered build activity', config.swf.activity.version, data);
   } else if (err.code == 'TypeAlreadyExistsFault') {
-    console.log('[decide]', 'using build activity', config.swf.activity.version);
+    log.info('using build activity', config.swf.activity.version);
   } else {
-    console.log('[decide]', 'error registering build activity', err);
+    log.error(err, 'error registering build activity');
   }
 });
 
@@ -43,7 +44,7 @@ var emitter = new events.EventEmitter();
 
 var deciders = {
   ActivityTaskCompleted: function(task, event) {
-    console.log('[decide]', 'ActivityTaskCompleted decider', event);
+    log.info('ActivityTaskCompleted decider', event);
     var result = event.activityTaskCompletedEventAttributes.result;
     emitter.emit(task.workflowExecution.workflowId, 'done', JSON.parse(result));
     return [ {
@@ -54,7 +55,7 @@ var deciders = {
     } ];
   },
   ActivityTaskTimedOut: function(task, event) {
-    console.log('[decide]', 'ActivityTaskTimedOut decider', event);
+    log.warn('ActivityTaskTimedOut decider', event);
     return [ {
       decisionType: 'FailWorkflowExecution',
       failWorkflowExecutionDecisionAttributes: {
@@ -63,7 +64,7 @@ var deciders = {
     } ];
   },
   ScheduleActivityTaskFailed: function(task, event) {
-    console.log('[decide]', 'ScheduleActivityTaskFailed decider', event);
+    log.warn('ScheduleActivityTaskFailed decider', event);
     return [ {
       decisionType: 'FailWorkflowExecution',
       failWorkflowExecutionDecisionAttributes: {
@@ -72,14 +73,14 @@ var deciders = {
     } ];
   },
   WorkflowExecutionSignaled: function(task, event) {
-    console.log('[decide]', 'WorkflowExecutionSignaled decider', event);
+    log.info('WorkflowExecutionSignaled decider', event);
     var attr = event.workflowExecutionSignaledEventAttributes;
     if (attr.signalName == config.swf.signals.progress) {
       emitter.emit(task.workflowExecution.workflowId, 'progress', JSON.parse(attr.input));
     }
   },
   WorkflowExecutionStarted: function(task, event) {
-    console.log('[decide]', 'WorkflowExecutionStarted decider', event);
+    log.info('WorkflowExecutionStarted decider', event);
     var input = event.workflowExecutionStartedEventAttributes.input;
     emitter.emit(task.workflowExecution.workflowId, 'start', JSON.parse(input));
     return [ { decisionType: 'ScheduleActivityTask',
@@ -102,25 +103,25 @@ function decide(decisionTask, next) {
     return;
   }
   
-  console.log('[decide]', 'decide', decisionTask.workflowExecution);
+  log.info('decide', decisionTask.workflowExecution);
   for (var ii = 0; ii < decisionTask.events.length; ii++) {
     var event = decisionTask.events[ii];
     if (deciders[event.eventType]) {
       var decisions = deciders[event.eventType](decisionTask, event);
-      console.log('[decide]', 'decisions', decisions);
+      log.info('decisions', decisions);
       swf.client.respondDecisionTaskCompleted({
         taskToken: decisionTask.taskToken,
         decisions: decisions || []
       }, function(err, data) {
         if (err) {
-          console.log('[decide]', 'error deciding', err);
+          log.error(err, 'error deciding');
         }
         next();
       });
       return;
     }
   }
-  console.log('[decide]', 'no decisions');
+  log.info('no decisions');
   next();
 }
 
@@ -131,7 +132,7 @@ exports.stats = function() {
 // start handling decision tasks
 exports.createServer = function(callback) {
   function pollForDecisionTasks() {
-    console.log('[decide]', 'polling');
+    log.info('polling');
     swf.client.pollForDecisionTask({
       domain: config.workflow.domain,
       taskList: config.swf.decisions,
@@ -139,7 +140,7 @@ exports.createServer = function(callback) {
       reverseOrder: true
     }, function(err, data) {
       if (err) {
-        console.log('[decide]', 'error polling for decision', err);
+        log.error(err, 'error polling for decision');
       } else {
         decide(data, pollForDecisionTasks);
       }
@@ -180,7 +181,7 @@ exports.createServer = function(callback) {
       }
     }, function(err, results) {
       if (err) {
-        console.log('[decide]', 'error checking stats', err);
+        log.error(err, 'error checking stats');
       } else {
         results.interval = interval;
         module.statistics = results;
@@ -193,7 +194,7 @@ exports.createServer = function(callback) {
 
 // start the workflow for a build
 exports.startWorkflow = function(id, spec, callback) {
-  console.log('[decide]', 'startWorkflow', id, spec);
+  log.info({ spec: spec }, 'startWorkflow', id);
   swf.client.startWorkflowExecution({
     domain: config.workflow.domain,
     workflowId: id,
@@ -203,8 +204,8 @@ exports.startWorkflow = function(id, spec, callback) {
     taskStartToCloseTimeout: '30', // XXX move to default 600
     childPolicy: 'REQUEST_CANCEL' // XXX move to default
   }, function(err, data) {
-    console.log('[decide]', 'startWorkflowExecution returned', err, data);
     if (err) {
+      log.error(err, 'startWorkflowExecution error');
       err.dmesg = 'failed to start workflow execution'
     }
     callback(err);

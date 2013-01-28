@@ -5,6 +5,7 @@
   "dependencies": {
     "async": "0.1.x",
     "aws-sdk": "0.9.x",
+    "bunyan": "0.18.x",
     "byline": "2.0.x",
     "express": "3.0.x",
     "glob": "3.1.x",

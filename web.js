@@ -2,10 +2,11 @@ var fs = require('fs');
 var https = require('https');
 
 var config = require('./config');
+var log = require('./logger').cat('web');
 
 var decider = require('./decider');
 decider.createServer(function() {
-  console.log('[web]', 'decider started');
+  log.info('decider started');
 });
 
 var web = require('./frontend');
@@ -16,5 +17,5 @@ var ssl = {
   requestCert: true
 };
 https.createServer(ssl, web).listen(config.web.port, function() {
-  console.log('[web]', 'web started on HTTPS port ' + config.web.port);
+  log.info('web started on HTTPS port ' + config.web.port);
 });

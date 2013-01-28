@@ -3,6 +3,7 @@ var os = require('os');
 
 var config = require('./config');
 var builder = require('./builder');
+var log = require('./logger').cat('worker');
 
 aws.config.loadFromPath('./config/aws.json');
 
@@ -14,10 +15,10 @@ function perform(task, next) {
     return;
   }
   
-  console.log('[work]', 'perform', task);
+  log.info('perform', task);
   var spec = JSON.parse(task.input);
   builder.build(spec, function(progress) {
-    console.log('[work]', 'signal progress', progress);
+    log.info('signal progress', progress);
     swf.client.signalWorkflowExecution({
       domain: config.workflow.domain,
       workflowId: task.workflowExecution.workflowId,
@@ -26,7 +27,7 @@ function perform(task, next) {
       input: JSON.stringify({ message: progress })
     }, function(err, data) {
       if (err) {
-        console.log('[work]', 'error signaling workflow', err);
+        log.error(err, 'error signaling workflow');
       }
     })
   }, function(err, result) {
@@ -39,7 +40,7 @@ function perform(task, next) {
       })
     }, function(err, data) {
       if (err) {
-        console.log('[work]', 'error completing activity', err);
+        log.error(err, 'error completing activity');
       }
       next();
     });
@@ -47,14 +48,14 @@ function perform(task, next) {
 }
 
 function pollForActivities() {
-  console.log('[work]', 'polling');
+  log.info('polling');
   swf.client.pollForActivityTask({
     domain: config.workflow.domain,
     taskList: config.swf.activities,
     identity: [ 'worker', os.hostname(), process.pid ].join('-')
   }, function(err, data) {
     if (err) {
-      console.log('[work]', 'error polling for activity', err);
+      log.error(err, 'error polling for activity');
     } else {
       perform(data, pollForActivities);
     }

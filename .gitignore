@@ -3,5 +3,6 @@
 config/aws.json
 config/*.js
 devel
+log/*.log
 node_modules
 ssl-*.pem

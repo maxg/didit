@@ -5,11 +5,12 @@ var spawn = require('child_process').spawn;
 var xml2js = require('xml2js');
 
 var config = require('./config');
+var log = require('./logger').cat('ant');
 
 // run a compilation task
 // callback returns true iff Ant exists normally
 exports.compile = function(spec, builddir, target, output, callback) {
-  console.log('[ant]', 'compile', spec, builddir, target, output);
+  log.info({ spec: spec }, 'compile', builddir, target, output);
   spawn('ant', [
     '-Declipse.home', config.build.eclipse,
     '-logfile', output + '.txt',
@@ -24,7 +25,7 @@ exports.compile = function(spec, builddir, target, output, callback) {
 // run a JUnit task and parse the XML report
 // callback returns true iff Ant exits normally and tests passed
 exports.test = function(spec, builddir, target, output, callback) {
-  console.log('[ant]', 'test', spec, builddir, target, output);
+  log.info({ spec: spec }, 'test', builddir, target, output);
   spawn('ant', [
     '-Declipse.home', config.build.eclipse,
     '-logfile', output + '.txt',
@@ -52,13 +53,13 @@ exports.test = function(spec, builddir, target, output, callback) {
 function parseJUnitResults(code, report, callback) {
   var result = { testsuites: [], tests: 0, failures: 0, errors: 0 };
   if (code != 0) {
-    console.log('[ant]', 'parseJUnitResults', 'not reading errorful report file');
+    log.info('parseJUnitResults', 'not reading errorful report file');
     callback(null, result);
     return;
   }
   fs.readFile(report, function(err, data) {
     if (err) {
-      console.log('[ant]', 'parseJUnitResults', 'no report file');
+      log.warn('parseJUnitResults', 'no report file');
       callback(null, result);
       return;
     }

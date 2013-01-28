@@ -8,6 +8,7 @@ var temp = require('temp');
 
 var config = require('./config');
 var decider = require('./decider');
+var log = require('./logger').cat('builder');
 
 var ant = require('./ant');
 var git = require('./git');
@@ -50,7 +51,7 @@ exports.findRepos = function(spec, callback) {
   var kind = spec.kind || '*';
   var proj = spec.proj || '*';
   var users = spec.users ? '?(*-)' + spec.users.join('-') + '?(-*)' : '*';
-  console.log('[build]', 'findRepos', kind, proj, users);
+  log.info('findRepos', kind, proj, users);
   glob(path.join(config.student.semester, kind, proj, users), {
     cwd: config.build.results
   }, function(err, files) {
@@ -63,13 +64,12 @@ exports.findRepos = function(spec, callback) {
 
 // find all builds of a repo by kind, project, and users
 exports.findBuilds = function(spec, callback) {
-  console.log('[build]', 'findBuilds', spec);
+  log.info({ spec: spec }, 'findBuilds');
   var dir = path.join(config.build.results, config.student.semester, spec.kind, spec.proj, spec.users.join('-'));
-  console.log('[build]', 'findBuilds', 'globbing', dir);
   glob('*/result.json', {
     cwd: dir
   }, function(err, files) {
-    console.log('[build]', 'findBuilds', 'found', files);
+    log.info('findBuilds', 'found', files);
     var revs = files.map(function(file) {
       return { rev: file.split(path.sep)[0], ctime: fs.statSync(path.join(dir, file)).ctime.getTime() };
     }).sort(function(a, b) {
@@ -83,7 +83,7 @@ exports.findBuilds = function(spec, callback) {
 
 // find a build of a repo by kind, project, users, and revision
 exports.findBuild = function(spec, callback) {
-  console.log('[build]', 'findBuild', spec);
+  log.info({ spec: spec }, 'findBuild');
   fs.readFile(buildResultFile(spec), function(err, data) {
     if (err) {
       err.dmesg = err.dmesg || 'error reading build result file';
@@ -116,8 +116,8 @@ exports.findBuild = function(spec, callback) {
 exports.startBuild = function(spec, callback) {
   var id = buildId(spec);
   decider.startWorkflow(id, buildJSONable(spec), function(err) {
-    console.log('[build]', 'startBuildWorkflow returned', err);
     if (err) {
+      log.error(err, 'startBuildWorkflow error');
       err.dmesg = err.dmesg || 'failed to start workflow';
     }
     callback(err, id);
@@ -128,12 +128,12 @@ exports.startBuild = function(spec, callback) {
 exports.monitor = function(id) {
   var mon = new events.EventEmitter();
   function report(event, data) {
-    console.log('[build]', 'monitor', id, event, data);
+    log.info('monitor', id, event, data);
     mon.emit(event, data);
   }
   decider.on(id, report);
   mon.cancel = function() {
-    console.log('[build]', 'monitor', id, 'cancelling')
+    log.info('monitor', id, 'cancelling')
     decider.removeListener(id, report);
   };
   return mon;
@@ -142,7 +142,7 @@ exports.monitor = function(id) {
 // run the build
 // stores results and returns them in the callback
 exports.build = function(spec, progressCallback, resultCallback) {
-  console.log('[build]', 'build', spec);
+  log.info({ spec: spec }, 'build');
   var started = +new Date();
   async.auto({
     builddir: async.apply(temp.mkdir, 'didit-'),
@@ -175,16 +175,17 @@ exports.build = function(spec, progressCallback, resultCallback) {
       ant.test(spec, results.builddir, 'hidden', buildOutputBase(spec, results.builder, 'hidden'), next);
     } ]
   }, function(err, results) {
-    console.log('[build]', 'build results', err, results);
+    log.info('build complete');
     results = results || {};
     if (err) {
+      log.error(err, 'build error');
       err.dmesg = err.dmesg || 'unknown build error';
       results.err = err;
     }
     results.started = started;
     results.finished = +new Date();
     fs.writeFile(buildResultFile(spec), JSON.stringify(results), function(fserr) {
-      console.log('[build]', 'wrote results', fserr, results);
+      if (fserr) { log.error({ err: fserr, results: results }, 'error writing results'); }
       resultCallback(err || fserr, results);
     });
   });
@@ -193,13 +194,13 @@ exports.build = function(spec, progressCallback, resultCallback) {
 // command-line build
 if (require.main === module) {
   var args = process.argv.slice(2);
-  console.log('[build]', 'manual build', args);
+  log.info('manual build', args);
   exports.build({
     kind: args[0], proj: args[1], users: args[2].split('-'), rev: args[3]
   }, function(progress) {
-    console.log('[build]', 'progress =', progress);
+    log.info({ progress: progress }, 'progress');
   }, function(err, result) {
-    console.log('[build]', 'err =', err);
-    console.log('[build]', 'result =', result);
+    if (err) { log.error(err, 'error'); }
+    log.info(result, 'result');
   });
 }

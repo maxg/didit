@@ -7,6 +7,8 @@ var path = require('path');
 var config = require('./config');
 var builder = require('./builder');
 var decider = require('./decider');
+var logger = require('./logger');
+var log = logger.cat('frontend');
 
 moment.calendar = {
   lastDay: '[yesterday] LT',
@@ -19,7 +21,7 @@ var app = express();
 
 app.set('view engine', 'jade');
 
-app.use(express.logger('dev'));
+app.use(logger.express());
 app.use(express.bodyParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -63,7 +65,7 @@ app.get('*', function(req, res, next) {
 
 // check that the authenticated user is allowed to make the request
 function authorize(req, res, next) {
-  console.log('[front]', 'authorize', req.params, res.locals.authuser);
+  log.info('authorize', req.params, res.locals.authuser);
   if (req.params.users && req.params.users.indexOf(res.locals.authuser) < 0 && ! res.locals.authstaff) {
     // not one of the requested users, or staff
     res.render('401', { error: 'You are not ' + req.params.users.join(' or ') });
@@ -130,7 +132,6 @@ app.get('/:kind/:proj/:users', authorize, function(req, res) {
 
 app.get('/:kind/:proj/:users/:rev', authorize, function(req, res) {
   builder.findBuild(req.params, function(err, build) {
-    console.log('[front]', 'build', err, build);
     res.status(err ? 404 : 200);
     res.render(err ? 'missing' : 'build', {
       kind: req.params.kind,
@@ -155,7 +156,7 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
         res.end('Error starting build: ' + (err.dmesg || 'unknown error') + '\n');
         return;
       }
-      console.log('[web]', 'Started build', buildId);
+      log.info('started build', buildId);
       var monitor = builder.monitor(buildId, 'compile');
       monitor.on('start', function(input) {
         res.write('Started build\n');

@@ -17,5 +17,8 @@ module.exports = {
   },
   workflow: {
     domain: 'didit-dev'
+  },
+  log: {
+    console: true
   }
 };
