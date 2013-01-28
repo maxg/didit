@@ -8,6 +8,14 @@ A continuous build server designed for the classroom. Uses the [Amazon Simple Wo
   [SWF]: http://aws.amazon.com/swf/
 
 
+Git Repositories
+----------------
+
+Student repositories must be organized in the `config.student.repos` directory under `<semester>/<kind>/<proj>/<users>.git`. In each repository, `hooks/update` should symlink to Didit's `hooks/update` script.
+
+The staff repository must store build materials under `<semester>/<kind>/<proj>/grading`.
+
+
 Development
 -----------
 
@@ -27,6 +35,14 @@ In `/vagrant`...
  * `node web`: start the web front-end and build workflow decider
  * `node worker`: start a build worker
  * `node builder <kind> <proj> <users> <rev>`: run a build manually
+
+In a student repository, simulate a push:
+
+    GIT_DIR=. hooks/update refs/heads/master <oldrev> <newrev>
+
+`<oldrev>` can be `0000000`, or use e.g.:
+
+    git rev-parse HEAD^ HEAD | GIT_DIR=. xargs hooks/update refs/heads/master
 
 
 Resources
