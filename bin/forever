@@ -27,8 +27,8 @@ fi
   command -v klist && klist
   command -v tokens && tokens
   echo
-) >> log/forever.log
 
-node_modules/forever/bin/forever -m 5 \
-  -l log/forever.log -o log/forever-out.log -e log/forever-err.log \
-  "$script"
+  node_modules/forever/bin/forever -m 5 \
+    -l log/forever.log -o log/forever-out.log -e log/forever-err.log \
+    "$script"
+) >> log/forever.log 2>&1
