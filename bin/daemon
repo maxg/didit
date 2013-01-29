@@ -8,6 +8,9 @@ cmd="$1"
 script="$2"
 
 export NODE_ENV=production
+user=didit
+host=`hostname`
+host=${host%%.*}
 
 if [[ "$EUID" -ne 0 ]]; then
   echo "$0 requires root"
@@ -27,15 +30,15 @@ case "$cmd" in
       exit 1
     fi
     # start-stop-daemon -> k5start -> authbind -> forever wrapper
-    # only runs if user didit is not already running k5start
-    start-stop-daemon -v --start --chuid didit --user didit --exec \
-      /usr/bin/k5start -- -b -L -f /etc/didit.keytab -t -U -- \
+    # only runs if didit user is not already running k5start
+    start-stop-daemon -v --start --chuid "$user" --user "$user" --exec \
+      /usr/bin/k5start -- -b -L -f "/etc/$host.keytab" -t -U -- \
       authbind --depth 4 \
       "$dir/bin/forever" "$script"
     ;;
   stop)
-    # kills ALL node processes owned by user didit
-    start-stop-daemon -v --stop --user didit --name node
+    # kills ALL node processes owned by didit user
+    start-stop-daemon -v --stop --user "$user" --name node
     ;;
   *)
     echo "Usage: commands are {start,stop}"
