@@ -19,11 +19,6 @@ sudo ln -s "/usr/local/node-$node_ver-$node_dist/bin/npm" /usr/local/bin/npm
 sudo mkdir -p /usr/local/share/man/man1
 sudo ln -s "/usr/local/node-$node_ver-$node_dist/share/man/man1/node.1" /usr/local/share/man/man1/node.1
 
-# Allow Didit to bind to port 443
-sudo touch /etc/authbind/byport/443
-sudo chown didit /etc/authbind/byport/443
-sudo chmod u+x /etc/authbind/byport/443
-
 # Check out Didit
 sudo mkdir /var/didit
 sudo chown `whoami` /var/didit
@@ -35,6 +30,15 @@ cd /var/didit
 # Set ownership
 sudo chown didit:`whoami` config log
 sudo chmod o-rx config log
+
+#
+# For web
+#
+
+# Allow Didit to bind to port 443
+sudo touch /etc/authbind/byport/443
+sudo chown didit /etc/authbind/byport/443
+sudo chmod u+x /etc/authbind/byport/443
 
 # Generate SSL certificates
 openssl genrsa -out ssl-private-key.pem 1024 && openssl req -new -key ssl-private-key.pem -config config/openssl.conf | openssl x509 -req -signkey ssl-private-key.pem -out ssl-certificate.pem
