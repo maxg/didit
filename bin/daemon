@@ -23,6 +23,9 @@ fi
 
 dir=$(cd `dirname "$script"` && pwd)
 
+afspath=`node -pe "require('$dir/config/production.js').staff.repo"`
+export KINIT_PROG="aklog -path '$afspath'"
+
 case "$cmd" in
   start)
     if [[ -z "$script" ]]; then
