@@ -11,7 +11,7 @@ A continuous build server designed for the classroom. Uses the [Amazon Simple Wo
 Git Repositories
 ----------------
 
-Student repositories must be organized in the `config.student.repos` directory under `<semester>/<kind>/<proj>/<users>.git`. In each repository, `hooks/update` should symlink to Didit's `hooks/update` script.
+Student repositories must be organized in the `config.student.repos` directory under `<semester>/<kind>/<proj>/<users>.git`. In each repository, `hooks/post-receive` should copy or symlink Didit's `hooks/post-receive` script.
 
 The staff repository must store build materials under `<semester>/<kind>/<proj>/grading`.
 
@@ -38,11 +38,11 @@ In `/vagrant`...
 
 In a student repository, simulate a push:
 
-    GIT_DIR=. hooks/update refs/heads/master <oldrev> <newrev>
+    echo <oldrev> <newrev> refs/heads/master | GIT_DIR=. hooks/post-receive
 
 `<oldrev>` can be `0000000`, or use e.g.:
 
-    git rev-parse HEAD^ HEAD | GIT_DIR=. xargs hooks/update refs/heads/master
+    echo `git rev-parse HEAD^1 HEAD` refs/heads/master | GIT_DIR=. hooks/post-receive
 
 
 Deployment

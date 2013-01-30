@@ -1,17 +1,19 @@
 #!/bin/bash
 
-branch="$1"
-oldrev="$2"
-newrev="$3"
-
-if [ -z "$GIT_DIR" -o -z "$branch" -o -z "$newrev" ]; then
-  echo "Usage: GIT_DIR=<dir> $0 <branch> <oldrev> <newrev>"
+if [ -z "$GIT_DIR" ]; then
+  echo "Usage: echo <oldrev> <newrev> <branch> | GIT_DIR=<dir> $0"
   exit 1
 fi
 
 master="refs/heads/master"
 
-if [ "$branch" != "$master" ]; then
+while read -r oldrev newrev branch; do
+  if [ "$branch" == "$master" ]; then
+    break
+  fi
+done
+
+if [ "$branch" != "$master" -o -z "$newrev" ]; then
   exit 0
 fi
 
