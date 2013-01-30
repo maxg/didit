@@ -9,7 +9,8 @@ module.exports = {
     users: [ 'maxg' ]
   },
   web: {
-    port: 443
+    port: 443,
+    redirect: 80
   },
   build: {
     eclipse: '/usr/lib/eclipse',

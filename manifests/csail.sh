@@ -35,7 +35,10 @@ sudo chmod o-rx config log
 # For web
 #
 
-# Allow Didit to bind to port 443
+# Allow Didit to bind to HTTP and HTTPS ports
+sudo touch /etc/authbind/byport/80
+sudo chown didit /etc/authbind/byport/80
+sudo chmod u+x /etc/authbind/byport/80
 sudo touch /etc/authbind/byport/443
 sudo chown didit /etc/authbind/byport/443
 sudo chmod u+x /etc/authbind/byport/443

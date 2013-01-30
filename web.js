@@ -1,4 +1,5 @@
 var fs = require('fs');
+var http = require('http');
 var https = require('https');
 
 var config = require('./config');
@@ -19,3 +20,10 @@ var ssl = {
 https.createServer(ssl, web).listen(config.web.port, function() {
   log.info('web started on HTTPS port ' + config.web.port);
 });
+
+if (config.web.redirect) {
+  var redirect = require('./redirect');
+  http.createServer(redirect).listen(config.web.redirect, function() {
+    log.info('redirect started on HTTP port ' + config.web.redirect);
+  });
+}
