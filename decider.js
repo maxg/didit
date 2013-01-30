@@ -14,7 +14,10 @@ swf.client.registerWorkflowType({
   domain: config.workflow.domain,
   name: config.swf.workflow.name,
   version: config.swf.workflow.version,
-  defaultTaskList: config.swf.decisions
+  defaultTaskList: config.swf.decisions,
+  defaultExecutionStartToCloseTimeout: config.swf.default.execStartToClose,
+  defaultTaskStartToCloseTimeout: config.swf.default.decisionStartToClose,
+  defaultChildPolicy: config.swf.default.childPolicy
 }, function(err, data) {
   if (data) {
     log.info('registered build workflow', config.swf.workflow.version, data)
@@ -29,7 +32,11 @@ swf.client.registerActivityType({
   domain: config.workflow.domain,
   name: config.swf.activity.name,
   version: config.swf.activity.version,
-  defaultTaskList: config.swf.activities
+  defaultTaskList: config.swf.activities,
+  defaultTaskHeartbeatTimeout: config.swf.default.activityHeartbeat,
+  defaultTaskScheduleToCloseTimeout: config.swf.default.activitySchedToClose,
+  defaultTaskScheduleToStartTimeout: config.swf.default.activitySchedToStart,
+  defaultTaskStartToCloseTimeout: config.swf.default.activityStartToClose
 }, function(err, data) {
   if (data) {
     log.info('registered build activity', config.swf.activity.version, data);
@@ -87,11 +94,7 @@ var deciders = {
       scheduleActivityTaskDecisionAttributes: {
         activityId: [ task.workflowExecution.workflowId, 'all' ].join('-'),
         activityType: config.swf.activity,
-        input: input,
-        heartbeatTimeout: 'NONE', // XXX move to default
-        scheduleToCloseTimeout: 'NONE', // XXX move to default
-        scheduleToStartTimeout: '3600', // XXX move to default
-        startToCloseTimeout: '30' // XXX move to default 600
+        input: input
       }
     } ];
   }
@@ -199,10 +202,7 @@ exports.startWorkflow = function(id, spec, callback) {
     domain: config.workflow.domain,
     workflowId: id,
     workflowType: config.swf.workflow,
-    input: JSON.stringify(spec),
-    executionStartToCloseTimeout: '3600', // XXX move to default
-    taskStartToCloseTimeout: '30', // XXX move to default 600
-    childPolicy: 'REQUEST_CANCEL' // XXX move to default
+    input: JSON.stringify(spec)
   }, function(err, data) {
     if (err) {
       log.error(err, 'startWorkflowExecution error');

@@ -1,7 +1,16 @@
 {
-  "workflow": { "name": "build-workflow", "version": "0.1" },
-  "activity": { "name": "build-activity", "version": "0.1" },
+  "workflow": { "name": "build-workflow", "version": "0.2" },
+  "activity": { "name": "build-activity", "version": "0.2" },
   "decisions": { "name": "build-decisions" },
   "activities": { "name": "build-activities" },
+  "default": {
+    "execStartToClose": "7200",
+    "decisionStartToClose": "30",
+    "childPolicy": "REQUEST_CANCEL",
+    "activityHeartbeat": "NONE",
+    "activitySchedToClose": "NONE",
+    "activitySchedToStart": "3600",
+    "activityStartToClose": "600"
+  },
   "signals": { "progress": "progress" }
 }
