@@ -193,6 +193,8 @@ exports.createServer = function(callback) {
   }
   setInterval(updateStats, 1000 * 120);
   updateStats();
+  
+  callback();
 };
 
 // start the workflow for a build
