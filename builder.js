@@ -114,10 +114,19 @@ exports.findBuild = function(spec, callback) {
 // start the build of a repo by kind, project, users, and revision
 // callback returns a build id
 exports.startBuild = function(spec, callback) {
+  var path = [
+    config.student.repos, config.student.semester, spec.kind, spec.proj, spec.users.join('-')
+  ].join('/') + '.git';
+  if ( ! fs.existsSync(path)) {
+    log.error({ spec: spec }, 'startBuild no such repository');
+    callback({ dmesg: 'no such repository' });
+    return;
+  }
+  
   var id = buildId(spec);
   decider.startWorkflow(id, buildJSONable(spec), function(err) {
     if (err) {
-      log.error(err, 'startBuildWorkflow error');
+      log.error(err, 'startBuild error');
       err.dmesg = err.dmesg || 'failed to start workflow';
     }
     callback(err, id);
