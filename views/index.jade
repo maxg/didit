@@ -11,9 +11,10 @@ block content
       h1 Didit
 
     if authstaff
-      h2 All Projects
+      h2= projects.length > 0 ? 'All projects' : 'No projects'
       each project in projects
         h3: a(href="/#{project.kind}/#{project.proj}") #{project.kind}/#{project.proj}
+      br
 
     h2= repos.length > 0 ? 'My repositories' : 'No repositories'
     each repo in repos
