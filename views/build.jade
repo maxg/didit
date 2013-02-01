@@ -52,19 +52,32 @@ mixin testresults(title, success, output, results)
       h2 #{title} #{success ? 'passed' : 'FAILED'}&nbsp;
         mixin testcounts(results)
       pre= output
-      each suite in results.testsuites
-        h3 #{suite.package}.#{suite.name}&nbsp;
-          mixin testcounts(suite)
-        each test in suite.testcases
-          h4 #{test.name} #{test.error ? 'ERROR' : ''}#{test.failure ? 'FAILED' : ''}
-          p
-          if test.error || test.failure
-            pre.pre-scrollable= test.error || test.failure
-        div.clearfix
-          if suite.sysout && suite.sysout.length > 0
-            pre.pull-left.pre-scrollable(style='width:45%')= suite.sysout.join('\n')
-          if suite.syserr && suite.syserr.length > 0
-            pre.pull-right.pre-scrollable.text-error(style='width:45%')= suite.syserr.join('\n')
+      ul.testresults
+        each suite in results.testsuites
+          li
+            mixin suiteresults(suite)
+
+mixin suiteresults(suite)
+  h3 #{suite.package}#{suite.package ? '.' : ''}#{suite.name}&nbsp;
+    mixin testcounts(suite)
+  ul
+    each test in suite.testcases
+      li
+        if test.error
+          span.label.label-info X
+        else if test.failure
+          span.label.label-important X
+        else
+          span.label.label-success &#x2713;
+        h4 #{test.name} #{test.error ? 'ERROR' : ''}#{test.failure ? 'FAILED' : ''}
+        p
+        if test.error || test.failure
+          pre.pre-scrollable= test.error || test.failure
+  div.clearfix
+    if suite.sysout && suite.sysout.length > 0
+      pre.pull-left.pre-scrollable(style='width:45%')= suite.sysout.join('\n')
+    if suite.syserr && suite.syserr.length > 0
+      pre.pull-right.pre-scrollable.text-error(style='width:45%')= suite.syserr.join('\n')
 
 mixin testcounts(counted)
   small #{counted.tests} test#{counted.tests == 1 ? '' : 's'},

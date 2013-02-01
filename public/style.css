@@ -20,3 +20,24 @@ pre {
 .well .nav-list {
   padding: 0 5px 5px 5px;
 }
+
+ul.testresults {
+  margin-left: 0;
+  list-style: none;
+}
+
+ul.testresults ul {
+  margin-left: 30px;
+  list-style: none;
+}
+
+ul.testresults h3 {
+  margin-bottom: 0;
+}
+
+ul.testresults ul .label {
+  position: absolute;
+  margin-left: -30px;
+  width: 10px;
+  text-align: center;
+}
