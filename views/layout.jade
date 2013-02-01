@@ -11,7 +11,7 @@ html
           ul.nav
             li: a(href='/') The Classroom Continuous Build Butler - Didit
           p.navbar-text.pull-right
-            if authstaff
+            if locals.authstaff
               span.label staff
             | &nbsp;
             a(href="/u/#{locals.authuser}")= locals.authuser
