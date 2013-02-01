@@ -46,3 +46,5 @@ sudo chmod u+x /etc/authbind/byport/443
 # Generate SSL certificates
 openssl genrsa -out ssl-private-key.pem 1024 && openssl req -new -key ssl-private-key.pem -config config/openssl.conf | openssl x509 -req -signkey ssl-private-key.pem -out ssl-certificate.pem
 wget -q -O - http://ca.mit.edu/mitClient.crt | openssl x509 -inform der -out ssl-ca.pem
+sudo chown didit:`whoami` ssl-*
+sudo chmod o-r ssl-*
