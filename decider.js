@@ -10,42 +10,44 @@ aws.config.loadFromPath('./config/aws.json');
 
 var swf = new aws.SimpleWorkflow();
 
-swf.client.registerWorkflowType({
-  domain: config.workflow.domain,
-  name: config.swf.workflow.name,
-  version: config.swf.workflow.version,
-  defaultTaskList: config.swf.decisions,
-  defaultExecutionStartToCloseTimeout: config.swf.default.execStartToClose,
-  defaultTaskStartToCloseTimeout: config.swf.default.decisionStartToClose,
-  defaultChildPolicy: config.swf.default.childPolicy
-}, function(err, data) {
-  if (data) {
-    log.info('registered build workflow', config.swf.workflow.version, data)
-  } else if (err.code == 'TypeAlreadyExistsFault') {
-    log.info('using build workflow', config.swf.workflow.version);
-  } else {
-    log.error(err, 'error registering build workflow');
-  }
-});
-
-swf.client.registerActivityType({
-  domain: config.workflow.domain,
-  name: config.swf.activity.name,
-  version: config.swf.activity.version,
-  defaultTaskList: config.swf.activities,
-  defaultTaskHeartbeatTimeout: config.swf.default.activityHeartbeat,
-  defaultTaskScheduleToCloseTimeout: config.swf.default.activitySchedToClose,
-  defaultTaskScheduleToStartTimeout: config.swf.default.activitySchedToStart,
-  defaultTaskStartToCloseTimeout: config.swf.default.activityStartToClose
-}, function(err, data) {
-  if (data) {
-    log.info('registered build activity', config.swf.activity.version, data);
-  } else if (err.code == 'TypeAlreadyExistsFault') {
-    log.info('using build activity', config.swf.activity.version);
-  } else {
-    log.error(err, 'error registering build activity');
-  }
-});
+function registerTypes() {
+  swf.client.registerWorkflowType({
+    domain: config.workflow.domain,
+    name: config.swf.workflow.name,
+    version: config.swf.workflow.version,
+    defaultTaskList: config.swf.decisions,
+    defaultExecutionStartToCloseTimeout: config.swf.default.execStartToClose,
+    defaultTaskStartToCloseTimeout: config.swf.default.decisionStartToClose,
+    defaultChildPolicy: config.swf.default.childPolicy
+  }, function(err, data) {
+    if (data) {
+      log.info('registered build workflow', config.swf.workflow.version, data)
+    } else if (err.code == 'TypeAlreadyExistsFault') {
+      log.info('using build workflow', config.swf.workflow.version);
+    } else {
+      log.error(err, 'error registering build workflow');
+    }
+  });
+  
+  swf.client.registerActivityType({
+    domain: config.workflow.domain,
+    name: config.swf.activity.name,
+    version: config.swf.activity.version,
+    defaultTaskList: config.swf.activities,
+    defaultTaskHeartbeatTimeout: config.swf.default.activityHeartbeat,
+    defaultTaskScheduleToCloseTimeout: config.swf.default.activitySchedToClose,
+    defaultTaskScheduleToStartTimeout: config.swf.default.activitySchedToStart,
+    defaultTaskStartToCloseTimeout: config.swf.default.activityStartToClose
+  }, function(err, data) {
+    if (data) {
+      log.info('registered build activity', config.swf.activity.version, data);
+    } else if (err.code == 'TypeAlreadyExistsFault') {
+      log.info('using build activity', config.swf.activity.version);
+    } else {
+      log.error(err, 'error registering build activity');
+    }
+  });
+}
 
 var emitter = new events.EventEmitter();
 
@@ -134,6 +136,8 @@ exports.stats = function() {
 
 // start handling decision tasks
 exports.createServer = function(callback) {
+  registerTypes();
+  
   function pollForDecisionTasks() {
     log.info('polling');
     swf.client.pollForDecisionTask({
