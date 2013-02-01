@@ -204,6 +204,10 @@ exports.build = function(spec, progressCallback, resultCallback) {
 if (require.main === module) {
   var args = process.argv.slice(2);
   log.info('manual build', args);
+  if ( ! args.join(' ').match(/^\w+ \w+ [\w-]+ \w+$/)) {
+    log.error('expected arguments: <kind> <proj> <users> <rev>');
+    return;
+  }
   exports.build({
     kind: args[0], proj: args[1], users: args[2].split('-'), rev: args[3]
   }, function(progress) {
