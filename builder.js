@@ -14,11 +14,11 @@ var ant = require('./ant');
 var git = require('./git');
 
 function buildId(spec) {
-  return [ 'build', config.student.semester, spec.kind, spec.proj, spec.users.join('-'), spec.rev ].join('-');
+  return [ 'build', config.student.semester, spec.kind, spec.proj, spec.users.join('-'), spec.rev.substring(0, 7) ].join('-');
 }
 
 function buildJSONable(spec) {
-  return { kind: spec.kind, proj: spec.proj, users: spec.users, rev: spec.rev };
+  return { kind: spec.kind, proj: spec.proj, users: spec.users, rev: spec.rev.substring(0, 7) };
 }
 
 function buildResultDir(spec, staffrev) {
