@@ -167,7 +167,7 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
       monitor.on('done', function(output) {
         if (output.result) {
           res.write('Compilation ' + (output.result.compile ? 'succeeded' : 'FAILED') + '\n');
-          res.write('Tests ' + (output.result.public ? 'passed' : 'FAILED') + '\n');
+          res.write('Public tests ' + (output.result.public ? 'passed' : 'FAILED') + '\n');
         } else if (err) {
           res.write('Error running build: ' + (err.dmesg || 'unknown error') + '\n');
         }

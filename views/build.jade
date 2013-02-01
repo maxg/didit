@@ -25,7 +25,7 @@ block content
     if authstaff && build.json.hidden
       mixin testresults('Hidden tests', build.hidden, build.txt.hidden, build.json.hidden)
 
-    mixin testresults(authstaff ? 'Public tests' : 'Tests', build.public, build.txt.public, build.json.public)
+    mixin testresults('Public tests', build.public, build.txt.public, build.json.public)
 
     div.progress.progress-striped(class="progress-#{build.compile ? 'success' : 'danger'}")
       div.bar(style='width: 100%')

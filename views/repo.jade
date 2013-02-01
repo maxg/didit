@@ -22,7 +22,7 @@ block content
           | &nbsp;
           small built #{locals.moment(current.finished).calendar()}
         div.alert(class="alert-#{current.public ? 'success' : 'yellow'}")
-          h4 Tests #{current.public ? 'passed' : 'FAILED'}
+          h4 Public tests #{current.public ? 'passed' : 'FAILED'}
         div.alert(class="alert-#{current.compile ? 'success' : 'error'}")
           h4 Compilation #{current.compile ? 'succeeded' : 'FAILED'}
 
