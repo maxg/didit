@@ -50,12 +50,11 @@ mixin testresults(title, success, output, results)
       div.bar.bar-danger(style='width: #{Math.floor((1-frac)*100)}%')
     div.alert(class="alert-#{success ? 'success' : 'yellow'}")
       h2 #{title} #{success ? 'passed' : 'FAILED'}&nbsp;
-        small #{results.tests} test#{build.json.public.tests == 1 ? '' : 's'},
-          | #{results.failures} failure#{results.failures == 1 ? '' : 's'},
-          | #{results.errors} error#{results.errors == 1 ? '' : 's'}
+        mixin testcounts(results)
       pre= output
       each suite in results.testsuites
-        h3 #{suite.package}.#{suite.name}
+        h3 #{suite.package}.#{suite.name}&nbsp;
+          mixin testcounts(suite)
         each test in suite.testcases
           h4 #{test.name} #{test.error ? 'ERROR' : ''}#{test.failure ? 'FAILED' : ''}
           p
@@ -66,3 +65,8 @@ mixin testresults(title, success, output, results)
             pre.pull-left.pre-scrollable(style='width:45%')= suite.sysout.join('\n')
           if suite.syserr && suite.syserr.length > 0
             pre.pull-right.pre-scrollable.text-error(style='width:45%')= suite.syserr.join('\n')
+
+mixin testcounts(counted)
+  small #{counted.tests} test#{counted.tests == 1 ? '' : 's'},
+    | #{counted.failures} failure#{counted.failures == 1 ? '' : 's'},
+    | #{counted.errors} error#{counted.errors == 1 ? '' : 's'}
