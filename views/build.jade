@@ -60,6 +60,7 @@ mixin testresults(title, success, output, results)
 mixin suiteresults(suite)
   h3 #{suite.package}#{suite.package ? '.' : ''}#{suite.name}&nbsp;
     mixin testcounts(suite)
+  p= suite.properties.desc
   ul
     each test in suite.testcases
       li

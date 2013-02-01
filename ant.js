@@ -69,9 +69,15 @@ function parseJUnitResults(code, report, callback) {
         callback(err);
         return;
       }
+      var propfix = /^didit\./;
       (xml.testsuites.testsuite || []).forEach(function(suite) {
         var suiteJSON = suite.$;
-        suiteJSON.testcases = suite.testcase;
+        suiteJSON.properties = {};
+        suite.properties[0].property.filter(function(prop) {
+          return propfix.test(prop.$.name);
+        }).forEach(function(prop) {
+          suiteJSON.properties[prop.$.name.replace(propfix, '')] = prop.$.value;
+        });
         suiteJSON.sysout = suite['system-out'].filter(function(line) {
           return line.constructor == String;
         });
