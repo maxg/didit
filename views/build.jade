@@ -32,7 +32,7 @@ block content
     div.alert(class="alert-#{build.compile ? 'success' : 'error'}")
       h2 Compilation #{build.compile ? 'succeeded' : 'FAILED'}
       if build.txt.compile
-        pre= build.txt.compile
+        pre.pre-scrollable= build.txt.compile
       else
         h3 No output
 
@@ -51,7 +51,7 @@ mixin testresults(title, success, output, results)
     div.alert(class="alert-#{success ? 'success' : 'yellow'}")
       h2 #{title} #{success ? 'passed' : 'FAILED'}&nbsp;
         mixin testcounts(results)
-      pre= output
+      pre.pre-scrollable= output
       ul.testresults
         each suite in results.testsuites
           li
