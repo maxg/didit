@@ -145,6 +145,11 @@ app.get('/:kind/:proj/:users/:rev', authorize, function(req, res) {
   });
 });
 
+app.get('*', function(req, res) {
+  res.status(404);
+  res.render('404');
+});
+
 app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   var url = '< https://'+req.host+'/'+req.params.kind+'/'+req.params.proj+'/'+req.params.users.join('-')+' >';
@@ -182,6 +187,14 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
         }
       }, 30000);
     });
+  });
+});
+
+app.use(function(err, req, res, next) {
+  log.error(err, 'application error');
+  res.status(500);
+  res.render('500', {
+    stack: app.get('env') == 'development' ? err.stack : ''
   });
 });
 

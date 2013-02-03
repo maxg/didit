@@ -1,0 +1,8 @@
+extends layout
+
+block content
+  div.page-header
+    h1 500 Internal Error&nbsp;
+      small #{locals.error}
+  if locals.stack
+    pre= stack
