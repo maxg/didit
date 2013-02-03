@@ -12,8 +12,7 @@ html
             li: a(href='/') The Classroom Continuous Build Butler - Didit
           p.navbar-text.pull-right
             if locals.authstaff
-              span.label staff
-            | &nbsp;
+              button#stafftoggle.btn.btn-mini(class=locals.staffmode ? 'btn-warning' : '') staff
             a(href="/u/#{locals.authuser}")= locals.authuser
     div.container-fluid
       div.row-fluid
@@ -24,3 +23,5 @@ html
         - function a(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
         p.muted
           small #{a(config.footer.who)} in the #{a(config.footer.where)} with the #{a(config.footer.what)}?
+    script(src='//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js')
+    script(src='/main.js')

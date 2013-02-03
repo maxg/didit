@@ -22,7 +22,7 @@ block content
         |  started #{locals.moment(build.started).calendar()}
         |  took #{moment.duration(build.finished - build.started).humanize()}
 
-    if authstaff && build.json.hidden
+    if authstaff && staffmode && build.json.hidden
       mixin testresults('Hidden tests', build.hidden, build.txt.hidden, build.json.hidden)
 
     mixin testresults('Public tests', build.public, build.txt.public, build.json.public)

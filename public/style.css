@@ -2,7 +2,15 @@
 
 body {
   padding-top: 60px;
+}
+
+body, input, button {
   font-family: Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.navbar .btn {
+  margin-top: -5px;
+  margin-right: 5px;
 }
 
 tt {

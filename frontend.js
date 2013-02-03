@@ -22,6 +22,7 @@ var app = express();
 app.set('view engine', 'jade');
 
 app.use(logger.express());
+app.use(express.cookieParser());
 app.use(express.bodyParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -59,6 +60,7 @@ app.get('*', function(req, res, next) {
   } else {
     res.locals.authuser = cert.subject.emailAddress.replace('@MIT.EDU', '');
     res.locals.authstaff = config.staff.users.indexOf(res.locals.authuser) >= 0;
+    res.locals.staffmode = res.locals.authstaff && req.cookies.staffmode == 'true';
     next();
   }
 });
