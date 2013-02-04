@@ -155,7 +155,8 @@ exports.build = function(spec, progressCallback, resultCallback) {
   var started = +new Date();
   async.auto({
     builddir: async.apply(temp.mkdir, 'didit-'),
-    source: [ 'builddir', function(next, results) {
+    revdir: async.apply(mkdirp, buildResultDir(spec)),
+    source: [ 'builddir', 'revdir', function(next, results) {
       git.cloneStudentSource(spec, results.builddir, next);
     } ],
     builder: [ 'source', function(next, results) {
