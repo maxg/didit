@@ -22,6 +22,11 @@ block content
         |  started #{locals.moment(build.started).calendar()}
         |  took #{moment.duration(build.finished - build.started).humanize()}
 
+    if build.err
+      div.alert.alert-error
+        h2 Build error&nbsp;
+          small= build.err.dmesg
+
     if authstaff && staffmode && build.json.hidden
       mixin testresults('Hidden tests', build.hidden, build.txt.hidden, build.json.hidden)
 
