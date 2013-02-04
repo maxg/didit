@@ -117,7 +117,7 @@ exports.fetchBuilder = function(spec, dest, callback) {
       results.id.stdout.on('data', function(data) { staffrev += data; });
       
       // wait until all steps are complete
-      var running = procs.length;
+      var running = procs.length * 2;
       function done(code) {
         if (code != 0) {
           next({ dmesg: 'error fetching builder' });
@@ -125,6 +125,7 @@ exports.fetchBuilder = function(spec, dest, callback) {
           next(staffrev.length > 0 ? null : { dmesg: 'error reading builder revision' }, staffrev);
         }
       }
+      procs.forEach(function(proc) { results[proc].stdout.on('end', async.apply(done, 0)); });
       procs.forEach(function(proc) { results[proc].on('exit', done); });
     }),
   }, function(err, results) {
