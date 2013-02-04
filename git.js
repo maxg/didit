@@ -5,6 +5,16 @@ var spawn = require('child_process').spawn;
 var config = require('./config');
 var log = require('./logger').cat('git');
 
+// spawn a process and log stderr
+// options must include a 'pipe' setting for stderr
+function spawnAndLog(command, args, options) {
+  var child = spawn(command, args, options);
+  byline(child.stderr).on('data', function(line) {
+    log.error({ err: line, command: command, args: args, options: options });
+  });
+  return child;
+}
+
 // clone student source
 // callback returns student commit metadata
 exports.cloneStudentSource = function(spec, dest, callback) {
@@ -14,12 +24,13 @@ exports.cloneStudentSource = function(spec, dest, callback) {
     // clone the student's repository
     clone: function(next) {
       log.info('cloneStudentSource', 'clone');
-      spawn('git', [ 'clone',
+      spawnAndLog('git', [ 'clone',
         '--quiet', '--no-checkout', '--depth', '10', '--branch', 'master',
         [ 'file:/', config.student.repos, config.student.semester, spec.kind, spec.proj, spec.users.join('-') ].join('/') + '.git',
         '.'
       ], {
-        cwd: dest
+        cwd: dest,
+        stdio: 'pipe'
       }).on('exit', function(code) {
         next(code == 0 ? null : { dmesg: 'error cloning source' });
       });
@@ -28,10 +39,11 @@ exports.cloneStudentSource = function(spec, dest, callback) {
     // check out the specified revision
     checkout: [ 'clone', function(next) {
       log.info('cloneStudentSource', 'checkout');
-      spawn('git', [ 'checkout',
+      spawnAndLog('git', [ 'checkout',
         '--quiet', spec.rev
       ], {
-        cwd: dest
+        cwd: dest,
+        stdio: 'pipe'
       }).on('exit', function(code) {
         next(code == 0 ? null : { dmesg: 'error checking out source revision' });
       });
