@@ -1,8 +1,10 @@
 .DS_store
 .vagrant
 config/aws.json
-config/*.js
+config/development.js
+config/production.js
 devel
 log/*.log
 node_modules
+public/bootstrap
 ssl-*.pem

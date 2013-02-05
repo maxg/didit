@@ -48,3 +48,11 @@ openssl genrsa -out ssl-private-key.pem 1024 && openssl req -new -key ssl-privat
 wget -q -O - http://ca.mit.edu/mitClient.crt | openssl x509 -inform der -out ssl-ca.pem
 sudo chown didit:`whoami` ssl-*
 sudo chmod o-r ssl-*
+
+# Go to Bootstrap directory
+cd /var/didit/public/bootstrap
+
+# Download Bootstrap
+wget -q --post-data=`node -pe "require('../../config/bootstrap.js')"` http://bootstrap.herokuapp.com -O bootstrap.zip
+unzip bootstrap.zip
+rm bootstrap.zip

@@ -14,12 +14,23 @@ exec {
 }
 
 package {
-  [ 'vim', 'python-software-properties', 'git', 'openjdk-6-jdk', 'ant', 'eclipse-jdt' ]:
+  [ 'vim', 'python-software-properties',
+    'unzip', 'make', 'libxml2-dev',
+    'git', 'openjdk-6-jdk', 'ant', 'eclipse-jdt' ]:
     ensure => 'installed';
   
   [ 'nodejs', 'npm' ]:
     ensure => 'installed',
     require => Exec['add-apt node'];
+}
+
+exec {
+  'get bootstrap':
+    command => 'wget -q --post-data=`node -pe "require(\'../../config/bootstrap.js\')"` http://bootstrap.herokuapp.com -O bootstrap.zip && unzip bootstrap.zip && rm bootstrap.zip',
+    path => [ '/bin', '/usr/bin' ],
+    cwd => '/vagrant/public/bootstrap',
+    require => Package['nodejs'],
+    creates => '/vagrant/public/bootstrap/css/bootstrap.min.css';
 }
 
 # Generate SSL certificate
