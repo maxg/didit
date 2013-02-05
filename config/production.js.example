@@ -14,7 +14,8 @@ module.exports = {
   },
   build: {
     eclipse: '/usr/lib/eclipse',
-    results: '/afs/athena.mit.edu/course/.../didit'
+    results: '/afs/athena.mit.edu/course/.../didit',
+    concurrency: 4
   },
   workflow: {
     domain: 'didit-...'

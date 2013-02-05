@@ -13,7 +13,8 @@ module.exports = {
   },
   build: {
     eclipse: '/usr/lib/eclipse',
-    results: '/vagrant/devel/builds'
+    results: '/vagrant/devel/builds',
+    concurrency: 4
   },
   workflow: {
     domain: 'didit-dev'
