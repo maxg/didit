@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#
+# Run a command in production.
+#
+
+export NODE_ENV=production
+user=didit
+host=`hostname`
+host=${host%%.*}
+
+if [[ "$EUID" -ne 0 ]]; then
+  echo "$0 requires root"
+fi
+
+if [[ -z "$@" ]]; then
+  echo "Usage: sudo $0 <cmd>"
+  exit 1
+fi
+
+dir=$(cd `dirname "$script"` && pwd)
+
+afspath=`node -pe "require('$dir/config/production.js').staff.repo"`
+export KINIT_PROG="aklog -path '$afspath'"
+
+sudo -u "$user" NODE_ENV="$NODE_ENV" KINIT_PROG="$KINIT_PROG" -- \
+  k5start -f "/etc/$host.keytab" -t -U -- "$@"
