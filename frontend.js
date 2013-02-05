@@ -21,10 +21,10 @@ var app = express();
 
 app.set('view engine', 'jade');
 
+app.use('/static', express.static(path.join(__dirname, 'public')));
 app.use(logger.express());
 app.use(express.cookieParser());
 app.use(express.bodyParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.locals({
   config: require('./config'),
