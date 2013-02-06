@@ -44,9 +44,11 @@ block content
 mixin testresults(title, success, output, results)
   if ( ! results) || (results.tests == 0)
     div.progress.progress-striped
-      div.bar(style='width: 100%')
-    div.alert.alert-info
-      h2 #{title} did not run
+      div.bar.bar-danger(style='width: 100%')
+    div.alert.alert-error
+      h2 #{title} FAILED TO RUN
+      if output
+        pre.pre-scrollable= output
   else
     div.progress.progress-striped
       - var ok = results.tests - results.failures - results.errors
