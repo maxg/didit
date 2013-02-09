@@ -78,10 +78,10 @@ function parseJUnitResults(code, report, callback) {
         }).forEach(function(prop) {
           suiteJSON.properties[prop.$.name.replace(propfix, '')] = prop.$.value;
         });
-        suiteJSON.sysout = suite['system-out'].filter(function(line) {
+        suiteJSON.sysout = (suite['system-out'] || []).filter(function(line) {
           return line.constructor == String;
         });
-        suiteJSON.syserr = suite['system-err'].filter(function(line) {
+        suiteJSON.syserr = (suite['system-err'] || []).filter(function(line) {
           return line.constructor == String;
         });
         suiteJSON.testcases = suite.testcase.map(function(test) {
