@@ -52,9 +52,9 @@ mixin testresults(title, success, output, results)
   else
     div.progress.progress-striped
       - var ok = results.tests - results.failures - results.errors
-      - var frac = results.tests == 0 ? 0 : ok / results.tests;
-      div.bar.bar-success(style="width: #{Math.ceil(frac*100)}%")
-      div.bar.bar-danger(style='width: #{Math.floor((1-frac)*100)}%')
+      - var frac = results.tests == 0 ? 0 : Math.floor(ok / results.tests * 100);
+      div.bar.bar-success(style="width: #{frac}%")
+      div.bar.bar-danger(style="width: #{100 - frac}%")
     div.alert(class="alert-#{success ? 'success' : 'yellow'}")
       h2 #{title} #{success ? 'passed' : 'FAILED'}&nbsp;
         mixin testcounts(results)
