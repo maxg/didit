@@ -24,5 +24,5 @@ div.well.well-small.sidebar-nav
         span.badge #{stats.completed}
         |  complete
       li.muted
-        span.badge(class="badge-#{stats.closed - stats.completed > 0 ? 'important' : 'default' }") #{stats.closed - stats.completed}
+        span.badge(class="badge-#{stats.failed > 0 ? 'important' : 'default' }") #{stats.failed}
         |  failed

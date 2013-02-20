@@ -130,6 +130,7 @@ function decide(decisionTask, next) {
   next();
 }
 
+module.statistics = {};
 exports.stats = function() {
   return module.statistics;
 };
@@ -189,10 +190,14 @@ exports.createServer = function(callback) {
     }, function(err, results) {
       if (err) {
         log.error(err, 'error checking stats');
-      } else {
-        results.interval = interval;
-        module.statistics = results;
+        return;
       }
+      results.failed = results.closed - results.completed;
+      if (results.failed > (module.statistics.failed || 0)) {
+        log.error(results, 'new workflow failures');
+      }
+      results.interval = interval;
+      module.statistics = results;
     });
   }
   setInterval(updateStats, 1000 * 120);
