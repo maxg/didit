@@ -25,7 +25,8 @@ var logger = bunyan.createLogger({
     req: bunyan.stdSerializers.req,
     res: bunyan.stdSerializers.res,
     spec: function(spec) {
-      return spec.kind+'/'+spec.proj+'/'+spec.users.join('-')+'/'+spec.rev;
+      var users = spec.users && spec.users.join('-');
+      return spec.kind+'/'+spec.proj+'/'+users+'/'+spec.rev;
     }
   }
 });
