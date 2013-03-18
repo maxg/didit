@@ -84,7 +84,7 @@ function parseJUnitResults(code, report, callback) {
         suiteJSON.syserr = (suite['system-err'] || []).filter(function(line) {
           return line.constructor == String;
         });
-        suiteJSON.testcases = suite.testcase.map(function(test) {
+        suiteJSON.testcases = (suite.testcase || []).map(function(test) {
           var testJSON = test.$;
           testJSON.error = test.error && test.error[0]._;
           testJSON.failure = test.failure && test.failure[0]._;
