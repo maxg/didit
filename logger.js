@@ -17,6 +17,20 @@ if (config.log.console) {
   pretty.unref(); // don't wait for pretty-printer to terminate
   streams.push({ stream: pretty.stdin });
 }
+if (config.log.mail) {
+  var mailer = require('./mailer');
+  streams.push({
+    level: 'warn',
+    type: 'raw',
+    stream: {
+      write: function(obj) {
+        if (obj.in == 'mailer') { return; }
+        mailer.sendMail(config.log.mail, 'Error report', 'error', obj, function() {});
+      },
+      end: function() {}
+    }
+  });
+}
 
 var logger = bunyan.createLogger({
   name: 'didit',

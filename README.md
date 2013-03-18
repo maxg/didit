@@ -45,6 +45,17 @@ In a student repository, simulate a push:
     echo `git rev-parse HEAD^1 HEAD` refs/heads/master | GIT_DIR=. hooks/post-receive
 
 
+AWS
+---
+
+Didit relies on:
+
+ * AWS **Simple Workflow Service** to drive the build workflow.
+   A workflow domain must be configured in the SWF console before running Didit.
+ * AWS **Simple Email Service** (optionally) to send emails.
+   The sender DNS domain must be verified in the SES console before sending email.
+
+
 Deployment
 ----------
 
@@ -67,6 +78,8 @@ In `/var/didit`...
 Resources
 ---------
 
+ * Amazon Simple Email Service
+   * [SES Management Console](https://console.aws.amazon.com/ses/home)
  * Amazon Simple Workflow Service
    * [Developer Guide](http://docs.aws.amazon.com/amazonswf/latest/developerguide/)
    * [API Reference](http://docs.aws.amazon.com/amazonswf/latest/apireference/)

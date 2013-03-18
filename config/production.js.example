@@ -12,6 +12,10 @@ module.exports = {
     port: 443,
     redirect: 80
   },
+  mail: {
+    sender: 'no-reply@...',
+    domain: 'mit.edu'
+  },
   build: {
     eclipse: '/usr/lib/eclipse',
     results: '/afs/athena.mit.edu/course/.../didit',
@@ -21,6 +25,7 @@ module.exports = {
     domain: 'didit-...'
   },
   log: {
-    console: false
+    console: false,
+    mail: [ 'maxg' ]
   }
 };

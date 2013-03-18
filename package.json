@@ -11,8 +11,10 @@
     "forever": "0.10.x",
     "glob": "3.1.x",
     "jade": "*",
+    "juice": "0.2.x",
     "mkdirp": "*",
     "moment": "1.7.x",
+    "nodemailer": "0.3.x",
     "temp": "*",
     "xml2js": "0.2.x"
   }

@@ -11,6 +11,10 @@ module.exports = {
   web: {
     port: 4443
   },
+  mail: {
+    sender: 'no-reply@...',
+    domain: 'mit.edu'
+  },
   build: {
     eclipse: '/usr/lib/eclipse',
     results: '/vagrant/devel/builds',

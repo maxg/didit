@@ -10,4 +10,7 @@ module.exports = require('./config/' + env);
 
 aws.config.loadFromPath('./config/aws.json');
 
-require('./logger').cat('config').info('using ' + env + ' configuration');
+process.nextTick(function() {
+  // logger depends on us
+  require('./logger').cat('config').info('using ' + env + ' configuration');
+});
