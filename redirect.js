@@ -10,6 +10,10 @@ var port = config.web.port == 443 ? '' : ':' + config.web.port;
 
 app.get('*', function(req, res, next) {
   log.info('redirecting', req.path);
+  if ( ! req.headers.host) {
+    res.send(400, 'Bad request: missing host');
+    return;
+  }
   res.redirect('https://' + req.host + port + req.path);
 });
 
