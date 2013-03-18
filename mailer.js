@@ -70,6 +70,9 @@ exports.sendMail = function(recipients, subject, template, locals, callback) {
     callback({ dmesg: 'no mailer transport' });
     return;
   }
+  if (config.mail.debug) {
+    recipients = recipients.map(function(user) { return config.mail.debug+'+'+user; });
+  }
   
   var filename = path.join(__dirname, 'views', 'mails', template + '.jade');
   

@@ -14,7 +14,8 @@ module.exports = {
   mail: {
     transport: 'SES',
     sender: 'no-reply@...',
-    domain: 'mit.edu'
+    domain: 'mit.edu',
+    debug: 'maxg'
   },
   build: {
     eclipse: '/usr/lib/eclipse',
