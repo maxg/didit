@@ -6,8 +6,6 @@ var os = require('os');
 var config = require('./config');
 var log = require('./logger').cat('decider');
 
-aws.config.loadFromPath('./config/aws.json');
-
 var swf = new aws.SimpleWorkflow();
 
 function registerTypes() {

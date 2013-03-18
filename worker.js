@@ -7,8 +7,6 @@ var config = require('./config');
 var builder = require('./builder');
 var log = require('./logger').cat('worker');
 
-aws.config.loadFromPath('./config/aws.json');
-
 var swf = new aws.SimpleWorkflow();
 
 var concurrency = config.build.concurrency || 1;
