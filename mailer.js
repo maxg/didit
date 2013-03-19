@@ -20,7 +20,9 @@ var emitter = new events.EventEmitter();
 module.transport = false;
 
 if (config.mail.transport && config.mail.sender && config.mail.domain) {
-  if (config.mail.transport == 'SMTP') {
+  if ( ! config.mail.owner) {
+    log.error('missing mail owner');
+  } else if (config.mail.transport == 'SMTP') {
     module.transport = queuingTransport();
     dns.resolveMx(config.mail.domain, setSMTPTransport);
   } else if (config.mail.transport == 'SES') {
@@ -75,6 +77,7 @@ exports.sendMail = function(recipients, subject, template, locals, callback) {
   }
   
   var filename = path.join(__dirname, 'views', 'mails', template + '.jade');
+  locals.config = config;
   
   async.waterfall([
     async.apply(fs.readFile, filename),

@@ -3,5 +3,5 @@ extends layout
 block content
   div.alert(class="alert-#{locals.level > 40 ? 'error' : 'yellow'}")
     h1 Didit #{locals.level > 40 ? 'ERROR' : 'warning'}
-    p= locals.msg || 'No message'
-    pre= JSON.stringify(locals, null, 2)
+    p= locals.err.msg || 'No message'
+    pre= JSON.stringify(locals.err, null, 2)

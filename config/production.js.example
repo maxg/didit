@@ -15,6 +15,7 @@ module.exports = {
   mail: {
     transport: 'SES',
     sender: 'no-reply@...',
+    owner: '...-staff@mit.edu',
     domain: 'mit.edu'
   },
   build: {

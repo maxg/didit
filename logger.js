@@ -25,7 +25,7 @@ if (config.log.mail) {
     stream: {
       write: function(obj) {
         if (obj.in == 'mailer') { return; }
-        mailer.sendMail(config.log.mail, 'Error report', 'error', obj, function() {});
+        mailer.sendMail(config.log.mail, 'Error report', 'error', { err: obj }, function() {});
       },
       end: function() {}
     }
