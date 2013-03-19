@@ -10,13 +10,6 @@ var decider = require('./decider');
 var logger = require('./logger');
 var log = logger.cat('frontend');
 
-moment.calendar = {
-  lastDay: '[yesterday] LT',
-  sameDay: '[today] LT',
-  lastWeek: 'dddd LT',
-  sameElse: 'L'
-};
-
 var app = express();
 
 app.set('view engine', 'jade');

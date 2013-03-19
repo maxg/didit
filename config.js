@@ -1,5 +1,6 @@
 var aws = require('aws-sdk');
 var fs = require('fs');
+var moment = require('moment');
 
 var env = process.env.NODE_ENV || 'development';
 module.exports = require('./config/' + env);
@@ -9,6 +10,15 @@ module.exports = require('./config/' + env);
 });
 
 aws.config.loadFromPath('./config/aws.json');
+
+moment.lang('en', {
+  calendar: {
+    lastDay: '[yesterday] LT',
+    sameDay: '[today] LT',
+    lastWeek: 'dddd LT',
+    sameElse: 'lll'
+  }
+});
 
 process.nextTick(function() {
   // logger depends on us

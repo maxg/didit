@@ -13,7 +13,7 @@
     "jade": "*",
     "juice": "0.2.x",
     "mkdirp": "*",
-    "moment": "1.7.x",
+    "moment": "2.0.x",
     "nodemailer": "0.3.x",
     "temp": "*",
     "xml2js": "0.2.x"
