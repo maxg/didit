@@ -190,7 +190,7 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
         });
         outofband.notify(req.params, buildId, req.params.users.concat(listeners), {
           url: url,
-          oldrev: (/[a-f0-9]+/.exec(req.body.oldrev) || [])[0]
+          oldrev: req.body.oldrev ? (/[a-f0-9]+/.exec(req.body.oldrev)[0]) : null
         });
       }
     });
