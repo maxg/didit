@@ -29,6 +29,6 @@ fi
   echo
 
   node_modules/forever/bin/forever -m 5 \
-    -l log/forever.log -o log/forever-out.log -e log/forever-err.log \
+    -l log/forever.log -o log/forever-out.log -e log/forever-err.log --append \
     "$script"
 ) >> log/forever.log 2>&1
