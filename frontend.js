@@ -188,7 +188,7 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
         }).map(function(user) {
           return user.trim();
         });
-        outofband.notify(req.params, buildId, req.params.users.concat(listeners), {
+        outofband.notify(req.params, buildId, listeners, {
           url: url,
           oldrev: req.body.oldrev ? (/[a-f0-9]+/.exec(req.body.oldrev)[0]) : null
         });

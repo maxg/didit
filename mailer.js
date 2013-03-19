@@ -63,6 +63,9 @@ function setSMTPTransport(err, addresses) {
 }
 
 function domainize(user) {
+  if (config.mail.debug) {
+    user = config.mail.debug + '+' + user;
+  }
   return user + '@' + config.mail.domain;
 }
 
@@ -72,9 +75,6 @@ exports.sendMail = function(recipients, subject, template, locals, callback) {
   if (module.transport == false) {
     callback({ dmesg: 'no mailer transport' });
     return;
-  }
-  if (config.mail.debug) {
-    recipients = recipients.map(function(user) { return config.mail.debug+'+'+user; });
   }
   
   var filename = path.join(__dirname, 'views', 'mails', template + '.jade');
@@ -92,8 +92,9 @@ exports.sendMail = function(recipients, subject, template, locals, callback) {
     function(html, next) {
       var mail = {
         from: 'Didit <' + config.mail.sender + '>',
-        replyTo: recipients.map(domainize).join(', '),
-        to: recipients.map(domainize).join(', '),
+        replyTo: (recipients.to || []).map(domainize).join(', '),
+        to: (recipients.to || []).map(domainize).join(', '),
+        cc: (recipients.cc || []).map(domainize).join(', '),
         subject: '[didit] ' + subject,
         html: html,
         generateTextFromHTML: true
@@ -118,7 +119,7 @@ if (require.main === module) {
       log.error('expected arguments: <user>(,<user)* <template> <json>');
       return;
     }
-    exports.sendMail(args[0].split(','), args[1] + ' test mail', args[1], JSON.parse(args[2]),
+    exports.sendMail({ to: args[0].split(',') }, args[1] + ' test mail', args[1], JSON.parse(args[2]),
       function(err, result) {
         if (err) { log.error(err, 'error'); }
         log.info(result, 'result');
