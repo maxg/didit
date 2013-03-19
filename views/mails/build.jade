@@ -1,0 +1,61 @@
+extends layout
+
+block content
+  p
+    strong
+      tt #{spec.kind}/#{spec.proj}
+      |  by&nbsp;
+      tt= spec.users.join('-')
+      |  rev&nbsp;
+      tt= spec.rev
+  
+  if locals.changelog && changelog.length > 0
+    div.alert.alert-info
+      h2 #{changelog.length} new commit#{changelog.length == 1 ? '' : 's'}&nbsp;
+      ul.labeled
+        each change in changelog
+          li
+            span.label &#x25e6;
+            strong #{change.rev}
+            |  #{change.author} #{'<'+change.authoremail+'>'} #{moment.unix(change.authortime).format('llll')}
+            br
+            | #{change.subject}
+  else
+    p No new commits
+  
+  if locals.build
+    p Build started #{moment(build.started).calendar()}.
+      a(href="#{locals.url}")  See the web report for full results
+      | .
+    div.alert(class="alert-#{build.compile ? 'success' : 'error'}")
+      h2 Compilation #{build.compile ? 'succeeded' : 'FAILED'}
+    - var results = build.json.public
+    if ( ! results) || (results.tests == 0)
+      div.alert.alert-yellow
+        h2 Public tests FAILED TO RUN
+    else
+      - var ok = results.tests - results.failures - results.errors
+      div.alert(class="alert-#{build.public ? 'success' : 'yellow'}")
+        h2 Public tests #{build.public ? 'passed' : 'FAILED'}
+        p
+          mixin testcounts(results)
+        ul.labeled
+          each suite in results.testsuites
+            li
+              if suite.errors > 0
+                span.label.label-info X
+              else if suite.failures > 0
+                span.label.label-important X
+              else
+                span.label.label-success &#x2713;
+              strong #{suite.package}#{suite.package ? '.' : ''}#{suite.name}&nbsp;
+              mixin testcounts(suite)
+  else
+    p No build.
+      a(href="#{locals.url}")  Check the web site for build server status
+      | .
+
+mixin testcounts(counted)
+  span #{counted.tests} test#{counted.tests == 1 ? '' : 's'},
+    | #{counted.failures} failure#{counted.failures == 1 ? '' : 's'},
+    | #{counted.errors} error#{counted.errors == 1 ? '' : 's'}

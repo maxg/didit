@@ -31,11 +31,19 @@ if [ -z "$didit" ]; then
   exit 0
 fi
 
+repolisten="$GIT_DIR/hooks/didit-listeners"
+if [ -f "$repolisten" ]; then
+  listeners=`sed '$!s/$/,/' "$repolisten" | tr -d '\n'` # comma-separated
+fi
+
 dir=$(cd "$GIT_DIR" && pwd) # get the absolute path
 head="${dir%/*/*/*.git}"    # chop off /:kind/:proj/:users.git
 tail="${dir#$head/}"        # -> :kind/:proj/:users.git
 repo="${tail%.git}"         # -> :kind/:proj/:users
+old="${oldrev:0:7}"
 rev="${newrev:0:7}"
 
 echo "Requesting Didit build for $repo rev $rev"
-curl --silent --insecure --no-buffer -d '' "https://$didit/build/$repo/$rev"
+curl --silent --insecure --no-buffer \
+     --data-urlencode "oldrev=$old" --data-urlencode "listeners=$listeners" \
+     "https://$didit/build/$repo/$rev"

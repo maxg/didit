@@ -7,6 +7,7 @@ var path = require('path');
 var config = require('./config');
 var builder = require('./builder');
 var decider = require('./decider');
+var outofband = require('./outofband');
 var logger = require('./logger');
 var log = logger.cat('frontend');
 
@@ -145,10 +146,10 @@ app.get('*', function(req, res) {
 
 app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
-  var url = '< https://'+req.host+'/'+req.params.kind+'/'+req.params.proj+'/'+req.params.users.join('-')+' >';
+  var url = 'https://'+req.host+'/'+req.params.kind+'/'+req.params.proj+'/'+req.params.users.join('-');
   builder.findBuild(req.params, function(err, build) {
     if (build) {
-      res.end('Revision already built: ' + url + '\n');
+      res.end('Revision already built: < ' + url + ' >\n');
       return;
     }
     builder.startBuild(req.params, function(err, buildId) {
@@ -157,7 +158,8 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
         return;
       }
       log.info('started build', buildId);
-      var monitor = builder.monitor(buildId, 'compile');
+      
+      var monitor = builder.monitor(buildId);
       monitor.on('start', function(input) {
         res.write('Started build\n');
       });
@@ -171,14 +173,26 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
         } else if (err) {
           res.write('Error running build: ' + (err.dmesg || 'unknown error') + '\n');
         }
-        res.end('Details: ' + url + '\n');
+        res.end('Details: < ' + url + ' >\n');
       });
       setTimeout(function() {
         monitor.cancel();
         if (res.writable) {
-          res.end('Build in progress...\nResults: ' + url + '\n');
+          res.end('Build in progress...\nResults: < ' + url + ' >\n');
         }
       }, 30000);
+      
+      if (req.body.listeners || req.params.users.length > 1) {
+        var listeners = (req.body.listeners || '').split(',').filter(function(user) {
+          return user.length > 0;
+        }).map(function(user) {
+          return user.trim();
+        });
+        outofband.notify(req.params, buildId, req.params.users.concat(listeners), {
+          url: url,
+          oldrev: (/[a-f0-9]+/.exec(req.body.oldrev) || [])[0]
+        });
+      }
     });
   });
 });

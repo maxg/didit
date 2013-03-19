@@ -5,6 +5,7 @@ var events = require('events');
 var fs = require('fs');
 var jade = require('jade');
 var juice = require('juice');
+var moment = require('moment');
 var nodemailer = require('nodemailer');
 var os = require('os');
 var path = require('path');
@@ -78,6 +79,7 @@ exports.sendMail = function(recipients, subject, template, locals, callback) {
   
   var filename = path.join(__dirname, 'views', 'mails', template + '.jade');
   locals.config = config;
+  locals.moment = moment;
   
   async.waterfall([
     async.apply(fs.readFile, filename),
