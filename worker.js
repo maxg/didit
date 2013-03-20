@@ -9,6 +9,7 @@ var log = require('./logger').cat('worker');
 
 var swf = new aws.SimpleWorkflow();
 
+var closed = false;
 var concurrency = config.build.concurrency || 1;
 var running = 0;
 var mon = new events.EventEmitter();
@@ -71,6 +72,10 @@ function pollForActivities() {
 }
 
 queue.empty = function() {
+  if (closed) {
+    log.info('closing server');
+    return;
+  }
   log.info({ running: running }, 'queue empty');
   if (running >= concurrency) {
     mon.once('done', pollForActivities);
@@ -79,7 +84,22 @@ queue.empty = function() {
   }
 };
 
-if (require.main === module) {
-  pollForActivities();
-  log.info({ concurrency: concurrency }, 'worker started');
+function stopPolling(callback) {
+  log.info('will close');
+  closed = true;
+  queue.drain = callback;
 }
+
+pollForActivities();
+log.info({ concurrency: concurrency }, 'worker started');
+
+process.on('SIGTERM', function() {
+  log.info('SIGTERM');
+  async.parallel([
+    stopPolling
+  ], function(err) {
+    if (err) { log.error(err, 'error closing servers'); }
+    log.info('exiting');
+    process.exit();
+  });
+});

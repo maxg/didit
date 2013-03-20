@@ -41,7 +41,7 @@ case "$cmd" in
     ;;
   stop)
     # kills ALL node processes owned by didit user
-    start-stop-daemon -v --stop --user "$user" --name node
+    start-stop-daemon -v --stop --retry 90 --user "$user" --name node
     ;;
   *)
     echo "Usage: commands are {start,stop}"

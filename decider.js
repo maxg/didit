@@ -128,6 +128,7 @@ function decide(decisionTask, next) {
   next();
 }
 
+module.closed = false;
 module.statistics = {};
 exports.stats = function() {
   return module.statistics;
@@ -138,6 +139,11 @@ exports.createServer = function(callback) {
   registerTypes();
   
   function pollForDecisionTasks() {
+    if (module.closed) {
+      log.info('closing server');
+      emitter.emit('close');
+      return;
+    }
     log.info('polling');
     swf.client.pollForDecisionTask({
       domain: config.workflow.domain,
@@ -202,6 +208,13 @@ exports.createServer = function(callback) {
   updateStats();
   
   callback();
+};
+
+// stop handling decision tasks
+exports.close = function(callback) {
+  log.info('will close');
+  module.closed = true;
+  emitter.once('close', callback);
 };
 
 // start the workflow for a build

@@ -1,3 +1,4 @@
+var async = require('async');
 var fs = require('fs');
 var http = require('http');
 var https = require('https');
@@ -17,7 +18,8 @@ var ssl = {
   ca: [ fs.readFileSync('./ssl-ca.pem') ],
   requestCert: true
 };
-https.createServer(ssl, web).listen(config.web.port, function() {
+var webserver = https.createServer(ssl, web);
+webserver.listen(config.web.port, function() {
   log.info('web started on HTTPS port ' + config.web.port);
 });
 
@@ -27,3 +29,14 @@ if (config.web.redirect) {
     log.info('redirect started on HTTP port ' + config.web.redirect);
   });
 }
+
+process.on('SIGTERM', function() {
+  log.info('SIGTERM');
+  async.parallel([
+    decider.close,
+    webserver.close.bind(webserver)
+  ], function(err) {
+    if (err) { log.error(err, 'error closing servers'); }
+    process.exit();
+  });
+});
