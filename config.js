@@ -19,6 +19,7 @@ moment.lang('en', {
     sameElse: 'lll'
   }
 });
+moment.compactFormat = 'YYYYMMDD[T]HHmmss';
 
 process.nextTick(function() {
   // logger depends on us
