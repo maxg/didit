@@ -139,10 +139,13 @@ exports.monitor = function(id) {
   function report(event, data) {
     log.info('monitor', id, event, data);
     mon.emit(event, data);
+    if (event == 'done' || event == 'failed') {
+      mon.cancel();
+    }
   }
   decider.on(id, report);
   mon.cancel = function() {
-    log.info('monitor', id, 'cancelling')
+    log.info('monitor', id, 'canceling')
     decider.removeListener(id, report);
   };
   return mon;
