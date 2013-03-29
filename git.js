@@ -1,6 +1,7 @@
 var async = require('async');
 var byline = require('byline');
 var glob = require('glob');
+var moment = require('moment');
 var path = require('path');
 var spawn = require('child_process').spawn;
 
@@ -21,10 +22,8 @@ function spawnAndLog(command, args, options) {
   return child;
 }
 
-function masterRev(dir, callback) {
-  var out = byline(spawnAndLog('git', [ 'rev-parse',
-    '--verify', 'refs/heads/master'
-  ], {
+function findRev(dir, gitargs, callback) {
+  var out = byline(spawnAndLog('git', gitargs, {
     cwd: dir,
     stdio: 'pipe'
   }).stdout);
@@ -56,7 +55,13 @@ exports.findStudentRepos = function(spec, callback) {
 };
 
 exports.studentSourceRev = function(spec, callback) {
-  masterRev(studentSourcePath(spec), callback);
+  findRev(studentSourcePath(spec), [ 'rev-parse', '--verify', 'refs/heads/master' ], callback);
+};
+
+exports.studentSourceRevAt = function(spec, when, callback) {
+  findRev(studentSourcePath(spec),
+          [ 'rev-list', '--max-count=1', '--before=' + when.format(moment.gitFormat), 'refs/heads/master' ],
+          callback);
 };
 
 // obtain commit log for student source
@@ -129,7 +134,7 @@ exports.cloneStudentSource = function(spec, dest, callback) {
 };
 
 exports.builderRev = function(callback) {
-  masterRev(config.staff.repo, callback);
+  findRev(config.staff.repo, [ 'rev-parse', '--verify', 'refs/heads/master' ], callback);
 };
 
 // fetch staff build materials
