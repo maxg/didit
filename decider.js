@@ -63,6 +63,7 @@ var deciders = {
   },
   ActivityTaskTimedOut: function(task, event) {
     log.warn('ActivityTaskTimedOut decider', event);
+    emitter.emit(task.workflowExecution.workflowId, 'failed', { details: 'Task timed out' });
     return [ {
       decisionType: 'FailWorkflowExecution',
       failWorkflowExecutionDecisionAttributes: {
@@ -72,6 +73,7 @@ var deciders = {
   },
   ScheduleActivityTaskFailed: function(task, event) {
     log.warn('ScheduleActivityTaskFailed decider', event);
+    emitter.emit(task.workflowExecution.workflowId, 'failed', { details: 'Schedule task failed' });
     return [ {
       decisionType: 'FailWorkflowExecution',
       failWorkflowExecutionDecisionAttributes: {
@@ -97,6 +99,20 @@ var deciders = {
         input: input
       }
     } ];
+  },
+  WorkflowExecutionFailed: function(task, event) {
+    log.warn('WorkflowExecutionFailed decider', event);
+    var attr = event.workflowExecutionFailedEventAttributes;
+    emitter.emit(task.workflowExecution.workflowId, 'failed', JSON.parse(attr));
+  },
+  WorkflowExecutionTimedOut: function(task, event) {
+    log.warn('WorkflowExecutionTimedOut decider', event);
+    emitter.emit(task.workflowExecution.workflowId, 'failed', { details: 'Workflow timed out' });
+  },
+  WorkflowExecutionCancelRequested: function(task, event) {
+    log.warn('WorkflowExecutionCancelRequested decider', event);
+    emitter.emit(task.workflowExecution.workflowId, 'failed', { details: 'Workflow canceled' });
+    return [ { decisionType: 'CancelWorkflowExecution' } ];
   }
 };
 
