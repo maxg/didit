@@ -101,7 +101,7 @@ exports.findBuild = function(spec, callback) {
       async.forEach(files, function(file, next) {
         fs.readFile(path.join(dir, file), function(err, data) {
           var targtype = file.split('.');
-          result[targtype[1]][targtype[0]] = targtype[1] == 'json' ? JSON.parse(data) : data;
+          result[targtype[1]][targtype[0]] = targtype[1] == 'json' ? JSON.parse(data) : data.toString();
           next(err);
         });
       }, function(err) {
