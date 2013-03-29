@@ -17,5 +17,8 @@
     "nodemailer": "0.3.x",
     "temp": "*",
     "xml2js": "0.2.x"
+  },
+  "engines": {
+    "node": "~0.8.18"
   }
 }
