@@ -8,7 +8,7 @@ var config = require('./config');
 var log = require('./logger').cat('ant');
 
 // run a compilation task
-// callback returns true iff Ant exists normally
+// callback returns an object where "success" is true iff Ant exits normally
 exports.compile = function(spec, builddir, target, output, callback) {
   log.info({ spec: spec }, 'compile', builddir, target, output);
   spawn('ant', [
@@ -18,12 +18,14 @@ exports.compile = function(spec, builddir, target, output, callback) {
   ], {
     cwd: builddir
   }).on('exit', function(code) {
-    callback(null, code == 0);
+    callback(null, {
+      success: code == 0
+    });
   });
 }
 
 // run a JUnit task and parse the XML report
-// callback returns true iff Ant exits normally and tests passed
+// callback returns an object where "success" is true iff Ant exits normally and tests passed
 exports.test = function(spec, builddir, target, output, callback) {
   log.info({ spec: spec }, 'test', builddir, target, output);
   spawn('ant', [
@@ -42,8 +44,11 @@ exports.test = function(spec, builddir, target, output, callback) {
         if (err) {
           err.dmesg = 'error writing test results';
         }
-        callback(err, code == 0 && results.tests > 0 && results.failures == 0 && results.errors == 0);
-      })
+        callback(err, {
+          success: code == 0 && results.tests > 0 && results.failures == 0 && results.errors == 0,
+          result: results
+        });
+      });
     });
   });
 };

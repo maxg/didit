@@ -176,7 +176,7 @@ exports.build = function(spec, progressCallback, resultCallback) {
       ant.compile(spec, results.builddir, 'compile', buildOutputBase(spec, results.builder, 'compile'), next);
     } ],
     compileProgress: [ 'compile', function(next, results) {
-      if ( ! results.compile) {
+      if ( ! results.compile.success) {
         progressCallback('Compilation error');
       }
       next();
@@ -197,6 +197,12 @@ exports.build = function(spec, progressCallback, resultCallback) {
     }
     results.started = started;
     results.finished = +new Date();
+    
+    // only store success values here
+    [ 'compile', 'public', 'hidden' ].forEach(function(step) {
+      if (results[step]) { results[step] = results[step].success; }
+    });
+    
     fs.writeFile(buildResultFile(spec), JSON.stringify(results), function(fserr) {
       if (fserr) { log.error({ err: fserr, results: results }, 'error writing results'); }
       resultCallback(err || fserr, results);
