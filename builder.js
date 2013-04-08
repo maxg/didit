@@ -8,6 +8,7 @@ var temp = require('temp');
 
 var config = require('./config');
 var decider = require('./decider');
+var grader = require('./grader');
 var log = require('./logger').cat('builder');
 
 var ant = require('./ant');
@@ -186,6 +187,10 @@ exports.build = function(spec, progressCallback, resultCallback) {
     } ],
     hidden: [ 'public', function(next, results) {
       ant.test(spec, results.builddir, 'hidden', buildOutputBase(spec, results.builder, 'hidden'), next);
+    } ],
+    grade: [ 'hidden', function(next, results) {
+      var result = { json: { public: results.public.result, hidden: results.hidden.result } };
+      grader.grade(spec, results.builddir, result, buildOutputBase(spec, results.builder, 'grade'), next);
     } ]
   }, function(err, results) {
     log.info('build complete');
@@ -202,6 +207,8 @@ exports.build = function(spec, progressCallback, resultCallback) {
     [ 'compile', 'public', 'hidden' ].forEach(function(step) {
       if (results[step]) { results[step] = results[step].success; }
     });
+    // and only store overall grade
+    results.grade = [ results.grade.grade, results.grade.outof ];
     
     fs.writeFile(buildResultFile(spec), JSON.stringify(results), function(fserr) {
       if (fserr) { log.error({ err: fserr, results: results }, 'error writing results'); }

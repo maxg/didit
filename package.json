@@ -7,6 +7,7 @@
     "aws-sdk": "0.9.x",
     "bunyan": "0.18.x",
     "byline": "2.0.x",
+    "csv": "0.2.x",
     "express": "3.0.x",
     "forever": "0.10.x",
     "glob": "3.1.x",
