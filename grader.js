@@ -1,9 +1,12 @@
 var async = require('async');
 var csv = require('csv');
 var fs = require('fs');
+var glob = require('glob');
+var mkdirp = require('mkdirp');
 var path = require('path');
 
 var config = require('./config');
+var git = require('./git');
 var log = require('./logger').cat('grader');
 
 // parse a CSV grade sheet
@@ -79,5 +82,81 @@ exports.grade = function(spec, builddir, build, output, callback) {
         callback(err, report);
       });
     });
+  });
+};
+
+function milestoneDir(spec, name) {
+  return path.join(config.build.results, 'milestones', config.student.semester, spec.kind, spec.proj, name);
+}
+
+exports.findMilestones = function(spec, callback) {
+  log.info({ spec: spec }, 'findMilestones');
+  var kind = spec.kind || '*';
+  var proj = spec.proj || '*';
+  glob(path.join('milestones', config.student.semester, kind, proj, '*'), {
+    cwd: config.build.results
+  }, function(err, files) {
+    callback(err, files.map(function(file) {
+      var parts = file.split(path.sep);
+      return { kind: parts[2], proj: parts[3], name: parts[4] };
+    }));
+  });
+};
+
+exports.findMilestone = function(spec, name, callback) {
+  log.info({ spec: spec, name: name });
+  var dir = milestoneDir(spec, name);
+  git.findStudentRepos(spec, function(err, repos) {
+    var reporevs = [];
+    async.forEach(repos, function(spec, next) {
+      async.forEach(spec.users, function(user, next) {
+        var json = path.join(dir, user + '.json');
+        fs.exists(json, function(graded) {
+          if (graded) {
+            fs.readFile(json, function(err, data) {
+              reporevs.push(JSON.parse(data));
+              next();
+            });
+          } else {
+            reporevs.push({ kind: spec.kind, proj: spec.proj, users: [ user ] });
+            next();
+          }
+        });
+      }, function(err) { next(err); });
+    }, function(err) {
+      async.sortBy(reporevs, function(reporev, use) {
+        use(null, config.staff.users.indexOf(reporev.users[0]) + reporev.users[0]);
+      }, function(err, reporevs) {
+        callback(err, {
+          kind: spec.kind,
+          proj: spec.proj,
+          name: name,
+          reporevs: reporevs
+        });
+      });
+    });
+  });
+};
+
+exports.createMilestone = function(spec, name, callback) {
+  if ( ! name.match(/^\w+$/)) {
+    callback({ dmesg: 'Invalid name' });
+  } else {
+    mkdirp(milestoneDir(spec, name), callback);
+  }
+};
+
+exports.gradeFromSweep = function(spec, milestone, usernames, sweep, callback) {
+  log.info({ spec: spec, milestone: milestone, usernames: usernames, sweep: !!sweep }, 'gradeFromSweep');
+  async.forEach(usernames, function(username, next) {
+    async.detect(sweep.reporevs, function(reporev, found) {
+      found(reporev.users.indexOf(username) >= 0 && reporev.kind == spec.kind && reporev.proj == spec.proj);
+    }, function(reporev) {
+      fs.writeFile(path.join(milestoneDir(spec, milestone), username + '.json'),
+                   JSON.stringify(reporev),
+                   function(err) { next(err); });
+    });
+  }, function(err) {
+    callback(err);
   });
 };

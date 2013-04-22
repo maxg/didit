@@ -1,0 +1,19 @@
+- var users = Math.max.apply(null, grades.map(function(r) { return r.users.length; }))
+- var spacer = new Array(Math.max(users, 0))
+
+| ,,
+each _ in spacer
+  | Username,
+| Revision,Grade,
+= "\n"
+
+each reporev in grades
+  | #{reporev.kind},#{reporev.proj},
+  each _, idx in spacer
+    | #{reporev.users[idx]},
+  | #{reporev.rev},
+  if reporev.grade
+    | #{reporev.grade.grade},#{reporev.grade.outof},
+    each test in reporev.grade.tests
+      | #{test.grade},
+  = "\n"

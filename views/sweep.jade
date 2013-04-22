@@ -4,27 +4,21 @@ append head
   title Sweep #{kind}/#{proj} #{datetime.format('llll')} - Didit
 
 block content
-  div.span3
-    include sidebar
-  div.span9
+  div.span12
     div.page-header
       h1 Sweep&nbsp;
-        tt #{kind}/#{proj}
-        |  #{datetime.calendar()}
-    - var spacer = new Array(Math.max.apply(null, sweep.reporevs.map(function(r) { return r.users.length })))
-    table.table.table-striped.table-condensed
-      thead
-        tr
-          th
-          th
-          each _ in spacer
-            th Username
-          th Revision
-      tbody
-        each reporev in sweep.reporevs
-          tr
-            td= reporev.kind
-            td= reporev.proj
-            each _, idx in spacer
-              td= reporev.users[idx]
-            td= reporev.rev
+        a(href="/#{kind}/#{proj}"): tt #{kind}/#{proj}
+        |  #{datetime.calendar()}&nbsp;
+        small: a(href="/sweep/#{kind}/#{proj}/#{datetime.format(moment.compactFormat)}.csv") .csv
+      p: button.btn.btn-baseline(href='#rebuild', data-toggle='modal') rebuild
+    
+    form#rebuild.modal.hide(action="/sweep/#{kind}/#{proj}/#{datetime.format(moment.compactFormat)}/rebuild", method='post')
+      div.modal-header
+        a.close(data-dismiss='modal') &times;
+        h3 Confirm rebuild
+      div.modal-footer
+        a.btn(href='#', data-dismiss='modal') Cancel
+        button.btn.btn-info Rebuild sweep with current builder
+    
+    include grades
+    mixin grades(sweep.reporevs)

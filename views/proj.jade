@@ -12,6 +12,7 @@ block content
         tt #{kind}/#{proj}
     
     if authstaff
+      
       form#confirm-sweep.modal.hide.form-horizontal(action="/sweep/#{kind}/#{proj}", method='post')
         div.modal-header
           a.close(data-dismiss='modal') &times;
@@ -26,6 +27,19 @@ block content
         div.modal-footer
           a.btn(href='#', data-dismiss='modal') Cancel
           button.btn.btn-info Sweep #{kind}/#{proj}
+      
+      form#create-milestone.modal.hide.form-horizontal(action="/milestone/#{kind}/#{proj}", method='post')
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3 Create milestone
+        div.modal-body
+          div.control-group
+            label.control-label(for='milestone-name') Name:
+            div.controls: input#milestone-name(type='text', name='name', placeholder='e.g. "beta", "final"')
+        div.modal-footer
+          a.btn(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Create #{kind}/#{proj} milestone
+      
       div.span5.pull-right
         div.well
           h3= sweeps.length > 0 ? 'Sweeps' : 'No sweeps'
@@ -34,6 +48,13 @@ block content
               a(href="/sweep/#{sweep.kind}/#{sweep.proj}/#{sweep.when.format(moment.compactFormat)}").
                 #{sweep.when.format('llll')}
           a.btn.btn-small.btn-info(href='#confirm-sweep', data-toggle='modal') New sweep
+        div.well
+          h3= milestones.length > 0 ? 'Milestones' : 'No milestones'
+          each milestone in milestones
+            h4
+              a(href="/milestone/#{kind}/#{proj}/#{milestone.name}") #{milestone.name}
+          a.btn.btn-small.btn-info(href='#create-milestone', data-toggle='modal') New milestone
+    
     h2= repos.length > 0 ? 'Repositories' : 'No repositories'
     each repo in repos
       h3: a(href="/#{repo.kind}/#{repo.proj}/#{repo.users.join('-')}")= repo.users.join('-')

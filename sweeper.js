@@ -56,7 +56,24 @@ exports.findSweep = function(params, callback) {
       callback(err, null);
       return;
     }
-    callback(null, JSON.parse(data));
+    var result = JSON.parse(data);
+    fs.readFile(sweepResultFile(params, params.datetime, 'grades'), function(err, data) {
+      if ( ! data) {
+        callback(null, result);
+        return;
+      }
+      var grades = JSON.parse(data);
+      async.forEach(result.reporevs, function(reporev, next) {
+        async.detect(grades, function(grade, found) {
+          found(grade && grade.spec.rev == reporev.rev && grade.spec.users.join('-') == reporev.users.join('-'));
+        }, function(grade) {
+          reporev.grade = grade;
+          next();
+        });
+      }, function(err) {
+        callback(err, result);
+      });
+    });
   });
 };
 
@@ -73,7 +90,7 @@ exports.scheduleSweep = function(spec, when, scheduleCallback, startCallback, fi
 
 // start a sweep for the given kind and project as of the given time
 // startCallback returns the list of student repos that will be swept
-// finishCallback returns nothing
+// finishCallback returns the grade report from the sweep
 exports.startSweep = function(spec, when, startCallback, finishCallback) {
   log.info({ spec: spec }, 'startSweep');
   var started = +new Date();
@@ -110,18 +127,18 @@ exports.startSweep = function(spec, when, startCallback, finishCallback) {
       }), function(err) { next(err); });
     } ],
     builder: git.builderRev,
-    builds: [ 'record', 'builder', function(next, results) {
+    buildAndGrade: [ 'record', 'builder', function(next, results) {
       buildSweep(spec, when, results.builder, next);
     } ]
-  }, function(err) {
+  }, function(err, results) {
     if (err) { log.error(err, 'sweeping error'); }
-    finishCallback(err);
+    finishCallback(err, results.grades);
   });
 };
 
 // rebuild a sweep given kind, project, and time
 // startCallback returns immediately
-// finishCallback returns nothing
+// finishCallback returns the new grade report
 exports.rebuildSweep = function(params, startCallback, finishCallback) {
   log.info({ params: params }, 'rebuildSweep');
   git.builderRev(function(err, staffrev) {
@@ -148,10 +165,22 @@ function buildSweep(spec, when, staffrev, callback) {
           set(null, build);                   // promised build -> build
         });
       }, function(err, builds) { next(err, builds); });
+    } ],
+    grade: [ 'builds', function(next, results) {
+      async.map(results.builds, function(build, set) {
+        if ( ! (build && build.json.grade)) {
+          log.warn({ build: build }, 'missing grade');
+        }
+        set(null, build && build.json.grade); // build -> grade report
+      }, function(err, grades) {
+        fs.writeFile(sweepResultFile(spec, when, 'grades'),
+                     JSON.stringify(grades),
+                     function(err) { next(err, grades); });
+      });
     } ]
-  }, function(err) {
+  }, function(err, results) {
     if (err) { log.error(err, 'sweeping build error'); }
-    callback(err);
+    callback(err, results.grades);
   });
 }
 

@@ -7,6 +7,7 @@ var path = require('path');
 var config = require('./config');
 var builder = require('./builder');
 var decider = require('./decider');
+var grader = require('./grader');
 var outofband = require('./outofband');
 var sweeper = require('./sweeper');
 var logger = require('./logger');
@@ -42,6 +43,7 @@ app.param('users', function(req, res, next, users) {
   next();
 });
 app.param('rev', '[a-f0-9]+');
+app.param('name', '\\w+');
 app.param('datetime', '\\d{8}T\\d{6}')
 app.param('datetime', function(req, res, next, datetime) {
   req.params.datetime = moment(datetime, moment.compactFormat);
@@ -103,8 +105,33 @@ app.get('/', function(req, res) {
   });
 });
 
-app.get('/sweep/:kind/:proj/:datetime', staffonly, function(req, res) {
+app.get('/milestone/:kind/:proj/:name:extension(.csv)?', staffonly, function(req, res) {
+  async.auto({
+    milestone: async.apply(grader.findMilestone, req.params, req.params.name),
+    sweeps: async.apply(sweeper.findSweeps, req.params)
+  }, function(err, results) {
+    if (req.params.extension == '.csv') {
+      res.set({ 'Content-Type': 'text/csv' });
+      res.render('csv/grades', { grades: results.milestone.reporevs });
+      return;
+    }
+    res.render('milestone', {
+      kind: req.params.kind,
+      proj: req.params.proj,
+      name: req.params.name,
+      milestone: results.milestone,
+      sweeps: results.sweeps
+    });
+  });
+});
+
+app.get('/sweep/:kind/:proj/:datetime:extension(.csv)?', staffonly, function(req, res) {
   sweeper.findSweep(req.params, function(err, sweep) {
+    if (req.params.extension == '.csv') {
+      res.set({ 'Content-Type': 'text/csv' });
+      res.render('csv/grades', { grades: sweep.reporevs });
+      return;
+    }
     res.status(err ? 404 : 200);
     res.render(err ? '404' : 'sweep', {
       kind: req.params.kind,
@@ -125,19 +152,23 @@ app.get('/u/:users', authorize, function(req, res) {
 });
 
 app.get('/:kind/:proj', authorize, function(req, res) {
-  var findAll = {};
   if ( ! res.locals.authstaff) {
     req.params.users = [ res.locals.authuser ];
-  } else {
-    findAll.sweeps = async.apply(sweeper.findSweeps, req.params);
   }
-  findAll.repos = async.apply(builder.findRepos, req.params);
+  var findAll = {
+    repos: async.apply(builder.findRepos, req.params)
+  };
+  if (res.locals.authstaff) {
+    findAll.sweeps = async.apply(sweeper.findSweeps, req.params);
+    findAll.milestones = async.apply(grader.findMilestones, req.params);
+  }
   async.auto(findAll, function(err, results) {
     res.render('proj', {
       kind: req.params.kind,
       proj: req.params.proj,
       repos: results.repos,
-      sweeps: results.sweeps
+      sweeps: results.sweeps,
+      milestones: results.milestones
     });
   });
 });
@@ -236,6 +267,55 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
 
 // all other POST requests must be authenticated
 app.post('*', authenticate);
+
+app.post('/grade/:kind/:proj/:name/sweep', staffonly, function(req, res) {
+  req.params.datetime = moment(req.body.datetime, moment.compactFormat);
+  var usernames = req.body.usernames.split('\n').map(function(user) {
+    return user.trim();
+  }).filter(function(user) {
+    return user.length > 0;
+  });
+  sweeper.findSweep(req.params, function(err, sweep) {
+    if (err) {
+      res.status(500);
+      res.render('500', {error: err.dmesg || 'Error finding sweep' });
+      return;
+    }
+    grader.gradeFromSweep(req.params, req.params.name, usernames, sweep, function(err) {
+      if (err) {
+        res.status(500);
+        res.render('500', { error: err.dmesg || 'Error assigning grades' });
+      } else {
+        res.redirect('/milestone/' + req.params.kind + '/' + req.params.proj + '/' + req.params.name);
+      }
+    });
+  });
+});
+
+app.post('/milestone/:kind/:proj', staffonly, function(req, res) {
+  grader.createMilestone(req.params, req.body.name.toLowerCase().trim(), function(err) {
+    if (err) {
+      res.status(500);
+      res.render('500', { error: err.dmesg || 'Error creating milestone' });
+    } else {
+      res.redirect('/' + req.params.kind + '/' + req.params.proj);
+    }
+  });
+});
+
+app.post('/sweep/:kind/:proj/:datetime/rebuild', staffonly, function(req, res) {
+  sweeper.rebuildSweep(req.params, function(err) {
+    if (err) {
+      res.status(500);
+      res.render('500', { error: err.dmesg || 'Error rebuilding sweep' });
+    } else {
+      res.redirect('/sweep/' + req.params.kind + '/' + req.params.proj
+                   + '/' + req.params.datetime.format(moment.compactFormat));
+    }
+  }, function(err) {
+    log.info({ spec: req.params, when: req.params.datetime }, 'finished rebuild');
+  });
+});
 
 app.post('/sweep/:kind/:proj', staffonly, function(req, res) {
   var datetime = moment(req.body.date + ' ' + req.body.time, moment.gitFormat);

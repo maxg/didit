@@ -13,7 +13,7 @@ body, input, button {
   margin-right: 5px;
 }
 
-tt {
+tt, .teletype {
   font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
   font-size: 90%;
 }
@@ -27,6 +27,15 @@ pre {
 
 .well .nav-list {
   padding: 0 5px 5px 5px;
+}
+
+.well h2:first-child,
+.well h3:first-child,
+.well h4:first-child {
+  margin-top: 0;
+}
+.well div:last-child {
+  margin-bottom: 0;
 }
 
 ul.testresults {
@@ -48,4 +57,8 @@ ul.testresults ul .label {
   margin-left: -30px;
   width: 10px;
   text-align: center;
+}
+
+.btn-baseline {
+  vertical-align: baseline;
 }
