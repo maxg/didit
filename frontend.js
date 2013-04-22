@@ -238,13 +238,23 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
 app.post('*', authenticate);
 
 app.post('/sweep/:kind/:proj', staffonly, function(req, res) {
-  sweeper.startSweep(req.params, function(err) {
+  var datetime = moment(req.body.date + ' ' + req.body.time, moment.gitFormat);
+  if ( ! datetime.isValid()) {
+    res.status(500);
+    res.render('500', { error: 'Invalid date and time' });
+    return;
+  }
+  sweeper.scheduleSweep(req.params, datetime, function(err) {
     if (err) {
       res.status(500);
       res.render('500', { error: err.dmesg || 'Error starting sweep' });
     } else {
       res.redirect('/' + req.params.kind + '/' + req.params.proj);
     }
+  }, function(err) {
+    log.info({ spec: req.params, when: datetime }, 'started sweep');
+  }, function(err) {
+    log.info({ spec: req.params, when: datetime }, 'finished sweep');
   });
 });
 
