@@ -15,6 +15,9 @@ if (config.log.console) {
     stdio: [ 'pipe', process.stdout, process.stderr ]
   });
   pretty.unref(); // don't wait for pretty-printer to terminate
+  pretty.stdin.on('error', function(err) { // don't allow pretty-printer errors to propagate
+    console.error('Error writing to console log', err);
+  });
   streams.push({ stream: pretty.stdin });
 }
 if (config.log.mail) {
