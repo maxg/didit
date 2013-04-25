@@ -46,7 +46,7 @@ exports.notify = function(spec, buildId, listeners, options) {
     }
   }, function(err, results) {
     log.info({ spec: spec, build: !!results.build, changelog: !!results.changelog }, 'sending mail');
-    var subject = [ spec.kind, spec.proj, spec.users.join('-') ].join('/') + ' rev ' + spec.rev;
+    var subject = [ spec.kind, spec.proj, spec.users.join('-') ].join('/');
     mailer.sendMail({ to: spec.users, cc: listeners }, subject, 'build', {
       spec: spec,
       url: options.url,
