@@ -90,7 +90,13 @@ exports.findBuild = function(spec, callback) {
       callback(err, null);
       return;
     }
-    var result = JSON.parse(data);
+    try {
+      var result = JSON.parse(data);
+    } catch (err) {
+      log.error(err, { spec: spec, file: 'result' });
+      callback(err);
+      return;
+    }
     result.spec = buildJSONable(spec);
     result.txt = {};
     result.json = {};
@@ -101,7 +107,13 @@ exports.findBuild = function(spec, callback) {
       async.forEach(files, function(file, next) {
         fs.readFile(path.join(dir, file), function(err, data) {
           var targtype = file.split('.');
-          result[targtype[1]][targtype[0]] = targtype[1] == 'json' ? JSON.parse(data) : data.toString();
+          try {
+            result[targtype[1]][targtype[0]] = targtype[1] == 'json' ? JSON.parse(data) : data.toString();
+          } catch (err) {
+            log.error(err, { spec: spec, file: file });
+            next(err);
+            return;
+          }
           next(err);
         });
       }, function(err) {
