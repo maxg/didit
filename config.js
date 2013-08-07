@@ -6,7 +6,7 @@ var env = process.env.NODE_ENV || 'development';
 module.exports = require('./config/' + env);
 
 [ 'footer', 'swf' ].forEach(function(config) {
-  module.exports[config] = JSON.parse(fs.readFileSync('./config/' + config + '.json'));
+  module.exports[config] = JSON.parse(fs.readFileSync('./config/' + config + '.json'), { encoding: 'utf8' });
 });
 
 aws.config.loadFromPath('./config/aws.json');

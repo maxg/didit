@@ -82,7 +82,7 @@ exports.sendMail = function(recipients, subject, template, locals, callback) {
   locals.moment = moment;
   
   async.waterfall([
-    async.apply(fs.readFile, filename),
+    async.apply(fs.readFile, filename, { encoding: 'utf8' }),
     function(data, next) {
       next(null, jade.compile(data, { filename: filename })(locals));
     },

@@ -57,7 +57,7 @@ function parseJUnitResults(code, report, callback) {
     callback(null, result);
     return;
   }
-  fs.readFile(report, function(err, data) {
+  fs.readFile(report, { encoding: 'utf8' }, function(err, data) {
     if (err) {
       log.warn('parseJUnitResults', 'no report file');
       callback(null, result);

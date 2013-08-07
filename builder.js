@@ -24,7 +24,7 @@ function buildJSONable(spec) {
 function buildResultDir(spec, staffrev) {
   return path.join(
     config.build.results, config.student.semester,
-    spec.kind, spec.proj, spec.users.join('-'), spec.rev, staffrev
+    spec.kind, spec.proj, spec.users.join('-'), spec.rev, staffrev || ''
   );
 }
 
@@ -84,7 +84,7 @@ exports.findBuilds = function(spec, callback) {
 // find a build of a repo by kind, project, users, and revision
 exports.findBuild = function(spec, callback) {
   log.info({ spec: spec }, 'findBuild');
-  fs.readFile(buildResultFile(spec), function(err, data) {
+  fs.readFile(buildResultFile(spec), { encoding: 'utf8' }, function(err, data) {
     if (err) {
       err.dmesg = err.dmesg || 'error reading build result file';
       callback(err, null);
@@ -104,8 +104,8 @@ exports.findBuild = function(spec, callback) {
     glob('*.*', {
       cwd: dir
     }, function(err, files) {
-      async.forEach(files, function(file, next) {
-        fs.readFile(path.join(dir, file), function(err, data) {
+      async.each(files, function(file, next) {
+        fs.readFile(path.join(dir, file), { encoding: 'utf8' }, function(err, data) {
           var targtype = file.split('.');
           try {
             result[targtype[1]][targtype[0]] = targtype[1] == 'json' ? JSON.parse(data) : data.toString();
