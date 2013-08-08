@@ -13,16 +13,19 @@ div.well.well-small.sidebar-nav
         li: a(href='/u/' + user)= user
       li.divider
     li.nav-header Recent Builds
-      li.muted: small.
-        #{moment.unix(stats.interval.oldestDate).calendar()}
-        + #{moment.duration(stats.interval.latestDate - stats.interval.oldestDate, 'seconds').humanize()}
-      li.muted
-        span.badge(class="badge-#{stats.open > stats.completed ? 'warning' : 'info'}").
-          #{stats.open}
-        |  pending
-      li.muted
-        span.badge #{stats.completed}
-        |  complete
-      li.muted
-        span.badge(class="badge-#{stats.failed > 0 ? 'important' : 'default' }") #{stats.failed}
-        |  failed
+      if ! stats.interval
+        li.muted waiting for statistics...
+      else
+        li.muted: small.
+          #{moment.unix(stats.interval.oldestDate).calendar()}
+          + #{moment.duration(stats.interval.latestDate - stats.interval.oldestDate, 'seconds').humanize()}
+        li.muted
+          span.badge(class="badge-#{stats.open > stats.completed ? 'warning' : 'info'}").
+            #{stats.open}
+          |  pending
+        li.muted
+          span.badge #{stats.completed}
+          |  complete
+        li.muted
+          span.badge(class="badge-#{stats.failed > 0 ? 'important' : 'default' }") #{stats.failed}
+          |  failed
