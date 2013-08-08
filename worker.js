@@ -7,7 +7,7 @@ var config = require('./config');
 var builder = require('./builder');
 var log = require('./logger').cat('worker');
 
-var swf = new aws.SimpleWorkflow();
+var swf = new aws.SimpleWorkflow({ params: { domain: config.workflow.domain } });
 
 var closed = false;
 var concurrency = config.build.concurrency || 1;
@@ -24,8 +24,7 @@ var queue = async.queue(function perform(task, next) {
   var spec = JSON.parse(task.input);
   builder.build(spec, function(progress) {
     log.info('signal progress', progress);
-    swf.client.signalWorkflowExecution({
-      domain: config.workflow.domain,
+    swf.signalWorkflowExecution({
       workflowId: task.workflowExecution.workflowId,
       runId: task.workflowExecution.runId,
       signalName: config.swf.signals.progress,
@@ -36,7 +35,7 @@ var queue = async.queue(function perform(task, next) {
       }
     })
   }, function(err, result) {
-    swf.client.respondActivityTaskCompleted({
+    swf.respondActivityTaskCompleted({
       taskToken: task.taskToken,
       result: JSON.stringify({
         spec: spec,
@@ -54,8 +53,7 @@ var queue = async.queue(function perform(task, next) {
 
 function pollForActivities() {
   log.info({ running: running }, 'polling');
-  swf.client.pollForActivityTask({
-    domain: config.workflow.domain,
+  swf.pollForActivityTask({
     taskList: config.swf.activities,
     identity: [ 'worker', os.hostname(), process.pid ].join('-')
   }, function(err, data) {

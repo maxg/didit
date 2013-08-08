@@ -6,11 +6,10 @@ var os = require('os');
 var config = require('./config');
 var log = require('./logger').cat('decider');
 
-var swf = new aws.SimpleWorkflow();
+var swf = new aws.SimpleWorkflow({ params: { domain: config.workflow.domain } });
 
 function registerTypes() {
-  swf.client.registerWorkflowType({
-    domain: config.workflow.domain,
+  swf.registerWorkflowType({
     name: config.swf.workflow.name,
     version: config.swf.workflow.version,
     defaultTaskList: config.swf.decisions,
@@ -27,8 +26,7 @@ function registerTypes() {
     }
   });
   
-  swf.client.registerActivityType({
-    domain: config.workflow.domain,
+  swf.registerActivityType({
     name: config.swf.activity.name,
     version: config.swf.activity.version,
     defaultTaskList: config.swf.activities,
@@ -112,7 +110,7 @@ function decide(decisionTask, next) {
     if (deciders[event.eventType]) {
       var decisions = deciders[event.eventType](decisionTask, event);
       log.info('decisions', decisions);
-      swf.client.respondDecisionTaskCompleted({
+      swf.respondDecisionTaskCompleted({
         taskToken: decisionTask.taskToken,
         decisions: decisions || []
       }, function(err, data) {
@@ -145,8 +143,7 @@ exports.createServer = function(callback) {
       return;
     }
     log.info('polling');
-    swf.client.pollForDecisionTask({
-      domain: config.workflow.domain,
+    swf.pollForDecisionTask({
       taskList: config.swf.decisions,
       identity: [ 'decider', os.hostname(), process.pid ].join('-'),
       reverseOrder: true
@@ -167,24 +164,21 @@ exports.createServer = function(callback) {
     };
     async.auto({
       open: function(next) {
-        swf.client.countOpenWorkflowExecutions({
-          domain: config.workflow.domain,
+        swf.countOpenWorkflowExecutions({
           startTimeFilter: interval
         }, function(err, data) {
           next(err, data ? data.count : null);
         })
       },
       closed: function(next) {
-        swf.client.countClosedWorkflowExecutions({
-          domain: config.workflow.domain,
+        swf.countClosedWorkflowExecutions({
           startTimeFilter: interval
         }, function(err, data) {
           next(err, data ? data.count : null);
         })
       },
       completed: function(next) {
-        swf.client.countClosedWorkflowExecutions({
-          domain: config.workflow.domain,
+        swf.countClosedWorkflowExecutions({
           startTimeFilter: interval,
           closeStatusFilter: { status: 'COMPLETED' }
         }, function(err, data) {
@@ -220,8 +214,7 @@ exports.close = function(callback) {
 // start the workflow for a build
 exports.startWorkflow = function(id, spec, callback) {
   log.info({ spec: spec }, 'startWorkflow', id);
-  swf.client.startWorkflowExecution({
-    domain: config.workflow.domain,
+  swf.startWorkflowExecution({
     workflowId: id,
     workflowType: config.swf.workflow,
     input: JSON.stringify(spec)
