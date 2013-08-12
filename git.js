@@ -13,7 +13,7 @@ function studentSourcePath(spec) {
 // options must include a 'pipe' setting for stderr
 function spawnAndLog(command, args, options) {
   var child = spawn(command, args, options);
-  byline(child.stderr).on('data', function(line) {
+  byline(child.stderr, { encoding: 'utf8' }).on('data', function(line) {
     log.error({ err: line, command: command, args: args, options: options });
   });
   return child;
@@ -31,7 +31,7 @@ exports.studentSourceLog = function(spec, range, callback) {
   ].concat(range).concat([ '--' ]), {
     cwd: studentSourcePath(spec),
     stdio: 'pipe'
-  }).stdout);
+  }).stdout, { encoding: 'utf8' });
   out.on('data', function(line) {
     var res = {};
     line.split('\0').forEach(function(val, idx) { res[names[idx]] = val; });
@@ -98,9 +98,11 @@ exports.fetchBuilder = function(spec, dest, callback) {
     
     // obtain the staff repository revision
     id: function(next) {
-      next(null, spawn('git', [ 'get-tar-commit-id' ], {
+      var child = spawn('git', [ 'get-tar-commit-id' ], {
         stdio: 'pipe'
-      }));
+      });
+      child.stdout.setEncoding('utf8')
+      next(null, child);
     },
     
     // untar the staff builder
