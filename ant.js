@@ -33,7 +33,7 @@ exports.test = function(spec, builddir, target, output, callback) {
   ], {
     cwd: builddir
   }).on('exit', function(code) {
-    parseJUnitResults(code, path.join(builddir, 'TESTS-TestSuites.xml'), function(err, results) {
+    exports.parseJUnitResults(code, path.join(builddir, 'TESTS-TestSuites.xml'), function(err, results) {
       if (err) {
         callback(err);
         return;
@@ -50,7 +50,7 @@ exports.test = function(spec, builddir, target, output, callback) {
 
 // parse a JUnit test report
 // callback returns a JSONable structure
-function parseJUnitResults(code, report, callback) {
+exports.parseJUnitResults = function(code, report, callback) {
   var result = { testsuites: [], tests: 0, failures: 0, errors: 0 };
   if (code != 0) {
     log.info('parseJUnitResults', 'not reading errorful report file');
