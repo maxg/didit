@@ -1,0 +1,30 @@
+extends layout
+
+append head
+  title Sweep #{kind}/#{proj} #{datetime.format('llll')} - Didit
+
+block content
+  div.span3
+    include sidebar
+  div.span9
+    div.page-header
+      h1 Sweep&nbsp;
+        tt #{kind}/#{proj}
+        |  #{datetime.calendar()}
+    - var spacer = new Array(Math.max.apply(null, sweep.reporevs.map(function(r) { return r.users.length })))
+    table.table.table-striped.table-condensed
+      thead
+        tr
+          th
+          th
+          each _ in spacer
+            th Username
+          th Revision
+      tbody
+        each reporev in sweep.reporevs
+          tr
+            td= reporev.kind
+            td= reporev.proj
+            each _, idx in spacer
+              td= reporev.users[idx]
+            td= reporev.rev

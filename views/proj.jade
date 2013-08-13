@@ -10,6 +10,23 @@ block content
     div.page-header
       h1
         tt #{kind}/#{proj}
+    
+    if authstaff
+      form#confirm-sweep.modal.hide(action="/sweep/#{kind}/#{proj}", method='post')
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3 Confirm sweep
+        div.modal-footer
+          a.btn(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Sweep #{kind}/#{proj}
+      div.span5.pull-right
+        div.well
+          h3= sweeps.length > 0 ? 'Sweeps' : 'No sweeps'
+            a.btn.btn-small.btn-info.pull-right(href='#confirm-sweep', data-toggle='modal') Sweep now
+          each sweep in sweeps
+            h4
+              a(href="/sweep/#{sweep.kind}/#{sweep.proj}/#{sweep.started.format(moment.compactFormat)}").
+                #{sweep.started.format('llll')}
     h2= repos.length > 0 ? 'Repositories' : 'No repositories'
     each repo in repos
       h3: a(href="/#{repo.kind}/#{repo.proj}/#{repo.users.join('-')}")= repo.users.join('-')

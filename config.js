@@ -19,6 +19,8 @@ moment.lang('en', {
     sameElse: 'lll'
   }
 });
+moment.compactFormat = 'YYYYMMDD[T]HHmmss';
+moment.gitFormat = 'YYYY-MM-DD HH:mm';
 
 process.nextTick(function() {
   // logger depends on us

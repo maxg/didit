@@ -8,6 +8,7 @@ var config = require('./config');
 var builder = require('./builder');
 var decider = require('./decider');
 var outofband = require('./outofband');
+var sweeper = require('./sweeper');
 var logger = require('./logger');
 var log = logger.cat('frontend');
 
@@ -41,9 +42,14 @@ app.param('users', function(req, res, next, users) {
   next();
 });
 app.param('rev', '[a-f0-9]+');
+app.param('datetime', '\\d{8}T\\d{6}')
+app.param('datetime', function(req, res, next, datetime) {
+  req.params.datetime = moment(datetime, moment.compactFormat);
+  next();
+});
 
-// all GET requests must be authenticated by certificate
-app.get('*', function(req, res, next) {
+// authenticate the user by certificate
+function authenticate(req, res, next) {
   var cert = req.connection.getPeerCertificate();
   if ( ! req.connection.authorized) {
     res.status(401);
@@ -57,7 +63,7 @@ app.get('*', function(req, res, next) {
     res.locals.staffmode = res.locals.authstaff && req.cookies.staffmode == 'true';
     next();
   }
-});
+}
 
 // check that the authenticated user is allowed to make the request
 function authorize(req, res, next) {
@@ -69,6 +75,19 @@ function authorize(req, res, next) {
     next();
   }
 }
+
+// check that the authenticated user is staff
+function staffonly(req, res, next) {
+  log.info('staffonly', req.params, res.locals.authuser);
+  if ( ! res.locals.authstaff) {
+    res.render('401', { error: 'You are not staff' });
+  } else {
+    next();
+  }
+}
+
+// all GET requests must be authenticated
+app.get('*', authenticate);
 
 app.get('*', function(req, res, next) {
   res.locals.stats = decider.stats();
@@ -84,6 +103,18 @@ app.get('/', function(req, res) {
   });
 });
 
+app.get('/sweep/:kind/:proj/:datetime', staffonly, function(req, res) {
+  sweeper.findSweep(req.params, function(err, sweep) {
+    res.status(err ? 404 : 200);
+    res.render(err ? '404' : 'sweep', {
+      kind: req.params.kind,
+      proj: req.params.proj,
+      datetime: req.params.datetime,
+      sweep: sweep
+    });
+  });
+});
+
 app.get('/u/:users', authorize, function(req, res) {
   builder.findRepos(req.params, function(err, repos) {
     res.render('users', {
@@ -94,14 +125,19 @@ app.get('/u/:users', authorize, function(req, res) {
 });
 
 app.get('/:kind/:proj', authorize, function(req, res) {
+  var findAll = {};
   if ( ! res.locals.authstaff) {
     req.params.users = [ res.locals.authuser ];
+  } else {
+    findAll.sweeps = async.apply(sweeper.findSweeps, req.params);
   }
-  builder.findRepos(req.params, function(err, repos) {
+  findAll.repos = async.apply(builder.findRepos, req.params);
+  async.auto(findAll, function(err, results) {
     res.render('proj', {
       kind: req.params.kind,
       proj: req.params.proj,
-      repos: repos
+      repos: results.repos,
+      sweeps: results.sweeps
     });
   });
 });
@@ -144,6 +180,7 @@ app.get('*', function(req, res) {
   res.render('404');
 });
 
+// build requests are not authenticated (the requester would have to guess a SHA)
 app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   var url = 'https://'+req.host+'/'+req.params.kind+'/'+req.params.proj+'/'+req.params.users.join('-');
@@ -194,6 +231,20 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
         });
       }
     });
+  });
+});
+
+// all other POST requests must be authenticated
+app.post('*', authenticate);
+
+app.post('/sweep/:kind/:proj', staffonly, function(req, res) {
+  sweeper.startSweep(req.params, function(err) {
+    if (err) {
+      res.status(500);
+      res.render('500', { error: err.dmesg || 'Error starting sweep' });
+    } else {
+      res.redirect('/' + req.params.kind + '/' + req.params.proj);
+    }
   });
 });
 

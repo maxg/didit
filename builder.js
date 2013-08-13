@@ -8,6 +8,7 @@ var temp = require('temp');
 
 var config = require('./config');
 var decider = require('./decider');
+var grader = require('./grader');
 var log = require('./logger').cat('builder');
 
 var ant = require('./ant');
@@ -151,10 +152,13 @@ exports.monitor = function(id) {
   function report(event, data) {
     log.info('monitor', id, event, data);
     mon.emit(event, data);
+    if (event == 'done' || event == 'failed') {
+      mon.cancel();
+    }
   }
   decider.on(id, report);
   mon.cancel = function() {
-    log.info('monitor', id, 'cancelling')
+    log.info('monitor', id, 'canceling')
     decider.removeListener(id, report);
   };
   return mon;
@@ -185,7 +189,7 @@ exports.build = function(spec, progressCallback, resultCallback) {
       ant.compile(spec, results.builddir, 'compile', buildOutputBase(spec, results.builder, 'compile'), next);
     } ],
     compileProgress: [ 'compile', function(next, results) {
-      if ( ! results.compile) {
+      if ( ! results.compile.success) {
         progressCallback('Compilation error');
       }
       next();
@@ -195,6 +199,10 @@ exports.build = function(spec, progressCallback, resultCallback) {
     } ],
     hidden: [ 'public', function(next, results) {
       ant.test(spec, results.builddir, 'hidden', buildOutputBase(spec, results.builder, 'hidden'), next);
+    } ],
+    grade: [ 'hidden', function(next, results) {
+      var result = { json: { public: results.public.result, hidden: results.hidden.result } };
+      grader.grade(spec, results.builddir, result, buildOutputBase(spec, results.builder, 'grade'), next);
     } ]
   }, function(err, results) {
     log.info('build complete');
@@ -206,6 +214,14 @@ exports.build = function(spec, progressCallback, resultCallback) {
     }
     results.started = started;
     results.finished = +new Date();
+    
+    // only store success values here
+    [ 'compile', 'public', 'hidden' ].forEach(function(step) {
+      if (results[step]) { results[step] = results[step].success; }
+    });
+    // and only store overall grade
+    results.grade = [ results.grade.grade, results.grade.outof ];
+    
     fs.writeFile(buildResultFile(spec), JSON.stringify(results), function(fserr) {
       if (fserr) { log.error({ err: fserr, results: results }, 'error writing results'); }
       resultCallback(err || fserr, results);

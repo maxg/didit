@@ -1,5 +1,8 @@
 var async = require('async');
 var byline = require('byline');
+var glob = require('glob');
+var moment = require('moment');
+var path = require('path');
 var spawn = require('child_process').spawn;
 
 var config = require('./config');
@@ -18,6 +21,48 @@ function spawnAndLog(command, args, options) {
   });
   return child;
 }
+
+function findRev(dir, gitargs, callback) {
+  var out = byline(spawnAndLog('git', gitargs, {
+    cwd: dir,
+    stdio: 'pipe'
+  }).stdout);
+  var rev = null;
+  out.on('data', function(line) { rev = line; });
+  out.on('end', function() {
+    if (rev) {
+      callback(null, rev.substring(0, 7));
+    } else {
+      callback({ dmesg: 'no revision' });
+    }
+  });
+}
+
+// find all the student repos matching a kind, project and/or users
+exports.findStudentRepos = function(spec, callback) {
+  var kind = spec.kind || '*';
+  var proj = spec.proj || '*';
+  var users = spec.users ? '?(*-)' + spec.users.join('-') + '?(-*)' : '*';
+  log.info('findRepos', kind, proj, users);
+  glob(path.join(config.student.semester, kind, proj, users + '.git'), {
+    cwd: config.student.repos
+  }, function(err, dirs) {
+    callback(err, dirs.map(function(dir) {
+      var parts = dir.split(path.sep);
+      return { kind: parts[1], proj: parts[2], users: parts[3].split('.')[0].split('-') };
+    }));
+  });
+};
+
+exports.studentSourceRev = function(spec, callback) {
+  findRev(studentSourcePath(spec), [ 'rev-parse', '--verify', 'refs/heads/master' ], callback);
+};
+
+exports.studentSourceRevAt = function(spec, when, callback) {
+  findRev(studentSourcePath(spec),
+          [ 'rev-list', '--max-count=1', '--before=' + when.format(moment.gitFormat), 'refs/heads/master' ],
+          callback);
+};
 
 // obtain commit log for student source
 // callback returns an array of commit info objects
@@ -86,6 +131,10 @@ exports.cloneStudentSource = function(spec, dest, callback) {
   }, function(err, results) {
     callback(err, results ? results.log : null);
   });
+};
+
+exports.builderRev = function(callback) {
+  findRev(config.staff.repo, [ 'rev-parse', '--verify', 'refs/heads/master' ], callback);
 };
 
 // fetch staff build materials
