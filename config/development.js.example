@@ -9,7 +9,8 @@ module.exports = {
     users: [ 'maxg' ]
   },
   web: {
-    port: 4443
+    port: 4443,
+    certDomain: 'MIT.EDU'
   },
   mail: {
     transport: 'SES',

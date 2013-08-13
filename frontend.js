@@ -52,7 +52,7 @@ app.get('*', function(req, res, next) {
       cert: cert
     });
   } else {
-    res.locals.authuser = cert.subject.emailAddress.replace('@MIT.EDU', '');
+    res.locals.authuser = cert.subject.emailAddress.replace('@' + config.web.certDomain, '');
     res.locals.authstaff = config.staff.users.indexOf(res.locals.authuser) >= 0;
     res.locals.staffmode = res.locals.authstaff && req.cookies.staffmode == 'true';
     next();
