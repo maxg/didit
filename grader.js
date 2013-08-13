@@ -40,7 +40,7 @@ exports.grade = function(spec, builddir, build, output, callback) {
   
   var sheet = path.join(builddir, 'grade.csv');
   if ( ! fs.existsSync(sheet)) {
-    log.info('not reading missing grade sheet')
+    log.info('not reading missing grade sheet');
     callback(null, report);
     return;
   }
@@ -50,7 +50,7 @@ exports.grade = function(spec, builddir, build, output, callback) {
       callback(null, report);
       return;
     }
-    async.forEach(rows, function(row, next) {
+    async.each(rows, function(row, next) {
       async.waterfall([
         function(next) {        // find the test suite
           async.detect(build.json.hidden.testsuites || [], function(suite, found) {

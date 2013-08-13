@@ -26,7 +26,7 @@ function findRev(dir, gitargs, callback) {
   var out = byline(spawnAndLog('git', gitargs, {
     cwd: dir,
     stdio: 'pipe'
-  }).stdout);
+  }).stdout, { encoding: 'utf8' });
   var rev = null;
   out.on('data', function(line) { rev = line; });
   out.on('end', function() {

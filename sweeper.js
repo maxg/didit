@@ -46,7 +46,7 @@ exports.findSweeps = function(spec, callback) {
 
 exports.findSweep = function(params, callback) {
   log.info({ params: params }, 'findSweep');
-  fs.readFile(sweepResultFile(params, params.datetime), function(err, data) {
+  fs.readFile(sweepResultFile(params, params.datetime), { encoding: 'utf8' }, function(err, data) {
     if (err) {
       log.error({ params: params }, 'error reading sweep result file');
       callback(err, null);
@@ -67,7 +67,7 @@ exports.startSweep = function(spec, callback) {
       });
     },
     revisions: [ 'repos', function(next, results) {
-      async.forEachLimit(shuffle(results.repos), config.build.concurrency || 2, function(spec, next) {
+      async.eachLimit(shuffle(results.repos), config.build.concurrency || 2, function(spec, next) {
         git.studentSourceRev(spec, function(err, rev) {
           if (err) {
             log.warn({ spec: spec }, 'error getting revision');
@@ -92,7 +92,7 @@ exports.startSweep = function(spec, callback) {
     } ],
     builder: [ 'record', git.builderRev ],
     builds: [ 'builder', function(next, results) {
-      async.forEachSeries(results.repos, function(spec, next) {
+      async.eachSeries(results.repos, function(spec, next) {
         ensureBuild(spec, results.builder, next);
       }, function(err) { next(err); });
     } ]
