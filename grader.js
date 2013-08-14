@@ -7,7 +7,7 @@ var config = require('./config');
 var log = require('./logger').cat('grader');
 
 // parse a CSV grade sheet
-function parseGradeSheet(filename, callback) {
+exports.parseGradeSheet = function(filename, callback) {
   var sheet = csv().from.path(filename);
   sheet.transform(function(row) {
     if (row[0] == 'junit') { // "junit" rows define graded tests
@@ -17,7 +17,8 @@ function parseGradeSheet(filename, callback) {
     }
   });
   sheet.to.array(function(rows) { callback(null, rows); });
-}
+  sheet.on('error', function(err) { callback(err); });
+};
 
 // assign points given by "row" based on results of "test"
 function gradeTest(row, test) {
@@ -44,7 +45,7 @@ exports.grade = function(spec, builddir, build, output, callback) {
     callback(null, report);
     return;
   }
-  parseGradeSheet(sheet, function(err, rows) {
+  exports.parseGradeSheet(sheet, function(err, rows) {
     if (err) {
       log.error(err, 'parseGradeSheet error');
       callback(null, report);
