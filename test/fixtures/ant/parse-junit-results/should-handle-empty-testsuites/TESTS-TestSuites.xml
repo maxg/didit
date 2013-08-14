@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites>
+  <testsuite errors="0" failures="0" name="Only" package="" tests="0">
+    <properties>
+      <property name="ant.project.invoked-targets" value="test" />
+    </properties>
+    <system-out />
+    <system-err />
+  </testsuite>
+</testsuites>

@@ -1,0 +1,9 @@
+<project>
+  <path id="eclipse.junit.jar">
+    <fileset dir="${eclipse.home}" includes="**/junit.jar"/>
+  </path>
+  <target name="compile">
+    <property name="eclipse.junit.jar" refid="eclipse.junit.jar"/>
+    <echo>${eclipse.junit.jar}</echo>
+  </target>
+</project>

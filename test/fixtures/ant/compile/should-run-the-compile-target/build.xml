@@ -1,0 +1,5 @@
+<project>
+  <target name="compile">
+    <echo>compiling</echo>
+  </target>
+</project>

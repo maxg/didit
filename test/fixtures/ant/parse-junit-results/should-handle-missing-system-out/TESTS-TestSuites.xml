@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites>
+  <testsuite errors="0" failures="0" name="Only" package="" tests="1">
+    <testcase classname="Only" name="pass" />
+    <properties>
+      <property name="ant.project.invoked-targets" value="test" />
+    </properties>
+    <system-err><![CDATA[text on stderr
+]]></system-err>
+  </testsuite>
+</testsuites>

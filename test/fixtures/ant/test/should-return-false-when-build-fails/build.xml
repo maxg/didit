@@ -1,0 +1,32 @@
+<project>
+
+  <property name="build.sysclasspath" value="ignore"/>
+
+  <path id="eclipse.junit.jar">
+    <fileset dir="${eclipse.home}" includes="**/org.junit_4*/junit.jar"/>
+    <fileset dir="${eclipse.home}" includes="**/org.junit4_4*/junit.jar"/>
+    <fileset dir="${eclipse.home}" includes="**/org.hamcrest.core_*.jar"/>
+  </path>
+
+  <target name="test">
+    <javac srcdir="." destdir=".">
+      <classpath>
+        <path refid="eclipse.junit.jar"/>
+      </classpath>
+    </javac>
+    <junit timeout="1000">
+      <formatter type="xml" usefile="true"/>
+      <batchtest>
+        <fileset dir="." includes="*.class"/>
+      </batchtest>
+      <classpath>
+        <path refid="eclipse.junit.jar"/>
+        <pathelement location="."/>
+      </classpath>
+    </junit>
+    <junitreport>
+      <fileset dir="." includes="TEST-*.xml"/>
+    </junitreport>
+    <fail/>
+  </target>
+</project>
