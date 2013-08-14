@@ -1,0 +1,15 @@
+module.exports = {
+  web: {
+    port: 4443,
+    redirect: 8080
+  },
+  build: {
+    eclipse: '/usr/lib/eclipse'
+  },
+  workflow: {
+    domain: 'didit-test'
+  },
+  log: {
+    console: false
+  }
+};

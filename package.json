@@ -19,6 +19,11 @@
     "temp": "~0.5.1",
     "xml2js": "~0.2.8"
   },
+  "devDependencies": {
+    "mocha": "~1.12.0",
+    "request": "~2.25.0",
+    "should": "~1.2.2",
+  },
   "engines": {
     "node": "~0.10.15"
   }
