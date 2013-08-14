@@ -1,8 +1,11 @@
 var async = require('async');
 var fs = require('fs');
+var mkdirp = require('mkdirp');
 var ncp = require('ncp');
 var path = require('path');
 var temp = require('temp');
+
+var config = require('../config');
 
 module.exports = function() {
   return new Fixture();
@@ -18,10 +21,32 @@ Fixture.prototype.files = function(test, callback) {
   fs.readdir(srcdir, (function(err, files) {
     if (err) { return callback(); }
     async.eachSeries(files, (function(file, next) {
-      ncp(path.join(srcdir, file), path.join(this.fixdir, file), next);
+      if (this.special[file]) {
+        this.special[file](path.join(srcdir, file), next);
+      } else {
+        ncp(path.join(srcdir, file), path.join(this.fixdir, file), next);
+      }
     }).bind(this), callback);
   }).bind(this));
 };
+
+Fixture.prototype.special = {
+  'build-results': recursiveCopier(path.join(config.build.results, config.student.semester)),
+};
+
+function recursiveCopier(destination) {
+  return function(dirname, callback) {
+    async.waterfall([
+      async.apply(mkdirp, destination),
+      function(_, next) { fs.readdir(dirname, next); },
+      function(files, done) {
+        async.each(files, function(file, next) {
+          ncp(path.join(dirname, file), path.join(destination, file), next);
+        }, done);
+      }
+    ], callback);
+  };
+}
 
 Fixture.prototype.mktemp = function() {
   if ( ! this.fixdir) {

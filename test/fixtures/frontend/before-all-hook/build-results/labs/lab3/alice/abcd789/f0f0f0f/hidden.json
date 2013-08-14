@@ -1,0 +1,24 @@
+{
+  "testsuites":[
+    {
+      "errors": "1",
+      "failures": "0",
+      "name": "HiddenFailingTest",
+      "package": "",
+      "tests": "1",
+      "properties": {},
+      "sysout": [],
+      "syserr": [],
+      "testcases": [
+        {
+          "classname":"HiddenFailingTest",
+          "name":"thisTestWillFail",
+          "error": "java.lang.RuntimeException: Goodbye\n"
+        }
+      ]
+    }
+  ],
+  "tests": 1,
+  "failures": 0,
+  "errors": 1
+}

@@ -1,0 +1,23 @@
+{
+  "testsuites":[
+    {
+      "errors": "0",
+      "failures": "0",
+      "name": "PublicPassingTest",
+      "package": "",
+      "tests": "1",
+      "properties": {},
+      "sysout": [],
+      "syserr": [],
+      "testcases": [
+        {
+          "classname":"PublicPassingTest",
+          "name":"thisTestWillPass"
+        }
+      ]
+    }
+  ],
+  "tests": 1,
+  "failures": 0,
+  "errors": 0
+}
