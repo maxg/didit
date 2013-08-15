@@ -1,0 +1,21 @@
+<project name="abcplayer">
+  
+  <target name="compile">
+  </target>
+  
+  <target name="hidden">
+    <echoxml file="TEST-0-fakery.xml">
+      <testsuite name="Fake" tests="1" failures="0" errors="0">
+        <properties>
+          <property name="didit.desc" value="Fake hidden test"/>
+        </properties>
+        <testcase name="entirelyFake"/>
+      </testsuite>
+    </echoxml>
+    
+    <junitreport>
+      <fileset dir="." includes="TEST-*.xml"/>
+    </junitreport>
+  </target>
+  
+</project>
