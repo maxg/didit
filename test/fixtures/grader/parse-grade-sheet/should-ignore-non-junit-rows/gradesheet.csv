@@ -1,0 +1,10 @@
+,,,,
+
+,,
+foo
+bar,baz
+JUNIT,pkg,SpecTest,testNull,5
+junit,pkg,SpecTest,testZero,5
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+5
+quux,

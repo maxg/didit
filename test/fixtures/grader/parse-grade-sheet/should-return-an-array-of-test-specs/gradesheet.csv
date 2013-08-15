@@ -1,0 +1,4 @@
+junit,pkg,FirstTest,testOne,5
+junit,pkg,FirstTest,testTwo,10
+junit,,SecondTest,testThree,5
+junit,,SecondTest,testFour,10
