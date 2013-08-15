@@ -36,6 +36,7 @@ Fixture.prototype.filesTo = function(test, source, destination, callback) {
 
 Fixture.prototype.special = {
   'student-repos': recursiveCopier(path.join(config.student.repos, config.student.semester)),
+  'staff-repo.git': recursiveCopier(config.staff.repo),
   'build-results': recursiveCopier(path.join(config.build.results, config.student.semester)),
 };
 
