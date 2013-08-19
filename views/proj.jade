@@ -21,9 +21,9 @@ block content
           div.control-group
             label.control-label(for='sweep-date') Record revisions as of:
             div.controls
-              input#sweep-date.input-small(type='date', name='date', value="#{moment().format('YYYY-MM-DD')}")
+              input#sweep-date.input-medium(type='date', name='date', value="#{moment().format('YYYY-MM-DD')}")
               | &nbsp;
-              input#sweep-time.input-small(type='time', name='time', value="#{moment().format('HH:mm')}")
+              input#sweep-time.input-medium(type='time', name='time', value="#{moment().format('HH:mm')}")
         div.modal-footer
           a.btn(href='#', data-dismiss='modal') Cancel
           button.btn.btn-info Sweep #{kind}/#{proj}
@@ -35,7 +35,8 @@ block content
         div.modal-body
           div.control-group
             label.control-label(for='milestone-name') Name:
-            div.controls: input#milestone-name(type='text', name='name', placeholder='e.g. "beta", "final"')
+            div.controls
+              input#milestone-name(type='text', name='name', placeholder='e.g. "beta", "final"', pattern='\\w+')
         div.modal-footer
           a.btn(href='#', data-dismiss='modal') Cancel
           button.btn.btn-info Create #{kind}/#{proj} milestone
