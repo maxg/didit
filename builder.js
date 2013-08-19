@@ -220,7 +220,9 @@ exports.build = function(spec, progressCallback, resultCallback) {
       if (results[step]) { results[step] = results[step].success; }
     });
     // and only store overall grade
-    results.grade = [ results.grade.grade, results.grade.outof ];
+    if (results.grade) {
+      results.grade = [ results.grade.grade, results.grade.outof ];
+    }
     
     fs.writeFile(buildResultFile(spec), JSON.stringify(results), function(fserr) {
       if (fserr) { log.error({ err: fserr, results: results }, 'error writing results'); }
