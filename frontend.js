@@ -44,7 +44,7 @@ app.param('users', function(req, res, next, users) {
 });
 app.param('rev', '[a-f0-9]+');
 app.param('name', '\\w+');
-app.param('datetime', '\\d{8}T\\d{6}')
+app.param('datetime', '\\d{8}T\\d{6}');
 app.param('datetime', function(req, res, next, datetime) {
   req.params.datetime = moment(datetime, moment.compactFormat);
   next();

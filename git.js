@@ -69,7 +69,7 @@ exports.studentSourceRevAt = function(spec, when, callback) {
 exports.studentSourceLog = function(spec, range, callback) {
   log.info({ spec: spec, range: range}, 'studentSourceLog');
   var names = [ 'rev', 'author', 'authoremail', 'authortime', 'committer', 'committeremail', 'committertime', 'subject' ];
-  var format = [ '%h', '%an', '%ae', '%at', '%cn', '%ce', '%ct', '%s' ].join('%x00')
+  var format = [ '%h', '%an', '%ae', '%at', '%cn', '%ce', '%ct', '%s' ].join('%x00');
   var lines = [];
   var out = byline(spawnAndLog('git', [ 'log',
     '--pretty=format:' + format
@@ -150,7 +150,7 @@ exports.fetchBuilder = function(spec, dest, callback) {
       var child = spawn('git', [ 'get-tar-commit-id' ], {
         stdio: 'pipe'
       });
-      child.stdout.setEncoding('utf8')
+      child.stdout.setEncoding('utf8');
       next(null, child);
     },
     

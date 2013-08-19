@@ -1,7 +1,7 @@
 var https = require('https');
 var express = require('express');
 
-var config = require('./config')
+var config = require('./config');
 var log = require('./logger').cat('redirect');
 
 var app = express();

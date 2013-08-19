@@ -12,7 +12,7 @@ exports.notify = function(spec, buildId, listeners, options) {
     built: function(next) {
       var timer = setTimeout(function() {
         monitor.cancel();
-        log.warn({ spec: spec }, 'no build after waiting')
+        log.warn({ spec: spec }, 'no build after waiting');
         next(null);
       }, 1000 * 60 * 60);
       monitor.once('done', function(output) {

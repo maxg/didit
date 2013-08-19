@@ -18,7 +18,7 @@ function registerTypes() {
     defaultChildPolicy: config.swf.default.childPolicy
   }, function(err, data) {
     if (data) {
-      log.info('registered build workflow', config.swf.workflow.version, data)
+      log.info('registered build workflow', config.swf.workflow.version, data);
     } else if (err.code == 'TypeAlreadyExistsFault') {
       log.info('using build workflow', config.swf.workflow.version);
     } else {
@@ -184,14 +184,14 @@ exports.createServer = function(callback) {
           startTimeFilter: interval
         }, function(err, data) {
           next(err, data ? data.count : null);
-        })
+        });
       },
       closed: function(next) {
         swf.countClosedWorkflowExecutions({
           startTimeFilter: interval
         }, function(err, data) {
           next(err, data ? data.count : null);
-        })
+        });
       },
       completed: function(next) {
         swf.countClosedWorkflowExecutions({
@@ -199,7 +199,7 @@ exports.createServer = function(callback) {
           closeStatusFilter: { status: 'COMPLETED' }
         }, function(err, data) {
           next(err, data ? data.count : null);
-        })
+        });
       }
     }, function(err, results) {
       if (err) {
@@ -237,10 +237,10 @@ exports.startWorkflow = function(id, spec, callback) {
   }, function(err, data) {
     if (err) {
       log.error(err, 'startWorkflowExecution error');
-      err.dmesg = 'failed to start workflow execution'
+      err.dmesg = 'failed to start workflow execution';
     }
     callback(err);
-  })
+  });
 };
 
 // add a listener for events by build id

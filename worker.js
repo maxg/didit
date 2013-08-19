@@ -33,7 +33,7 @@ var queue = async.queue(function perform(task, next) {
       if (err) {
         log.error(err, 'error signaling workflow');
       }
-    })
+    });
   }, function(err, result) {
     swf.respondActivityTaskCompleted({
       taskToken: task.taskToken,

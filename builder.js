@@ -119,8 +119,8 @@ exports.findBuild = function(spec, callback) {
         });
       }, function(err) {
         callback(err, result);
-      })
-    })
+      });
+    });
   });
 };
 
@@ -158,7 +158,7 @@ exports.monitor = function(id) {
   }
   decider.on(id, report);
   mon.cancel = function() {
-    log.info('monitor', id, 'canceling')
+    log.info('monitor', id, 'canceling');
     decider.removeListener(id, report);
   };
   return mon;
