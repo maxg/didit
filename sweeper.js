@@ -56,13 +56,25 @@ exports.findSweep = function(params, callback) {
       callback(err, null);
       return;
     }
-    var result = JSON.parse(data);
+    try {
+      var result = JSON.parse(data);
+    } catch(err) {
+      log.error(err, { params: params, file: 'sweep' });
+      callback(err);
+      return;
+    }
     fs.readFile(sweepResultFile(params, params.datetime, 'grades'), function(err, data) {
       if ( ! data) {
         callback(null, result);
         return;
       }
-      var grades = JSON.parse(data);
+      try {
+        var grades = JSON.parse(data);
+      } catch(err) {
+        log.error(err, { params: params, file: 'grades' });
+        callback(err);
+        return;
+      }
       async.forEach(result.reporevs, function(reporev, next) {
         async.detect(grades, function(grade, found) {
           found(grade && grade.spec.rev == reporev.rev && grade.spec.users.join('-') == reporev.users.join('-'));
