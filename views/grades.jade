@@ -1,28 +1,29 @@
 mixin grades(grades)
   - var users = Math.max.apply(null, grades.map(function(r) { return r.users.length; }))
   - var spacer = new Array(Math.max(users, 0))
-  table.table.table-striped.table-condensed
-    thead
-      tr
-        th
-        th
-        each _ in spacer
-          th Username
-        th Revision
-        th(colspan=2) Grade
-    tbody
-      each reporev in grades
-        tr(class="#{reporev.grade ? '' : 'info'}")
-          td= reporev.kind
-          td= reporev.proj
-          each _, idx in spacer
-            td= reporev.users[idx]
-          td: tt: a(href="/#{reporev.kind}/#{reporev.proj}/#{reporev.users.join('-')}/#{reporev.rev}")= reporev.rev
-          if reporev.grade
-            td: .text-right= reporev.grade.grade
-            td.muted /&nbsp;#{reporev.grade.outof}
-            each test in reporev.grade.tests
-              td= test.grade
-          else
-            td: .text-right -
-            td.muted / -
+  div.grades
+    table.table.table-striped.table-condensed.grades
+      thead
+        tr
+          th
+          th
+          each _ in spacer
+            th Username
+          th Revision
+          th(colspan=2) Grade
+      tbody
+        each reporev in grades
+          tr(class="#{reporev.grade ? '' : 'info'}")
+            td= reporev.kind
+            td= reporev.proj
+            each _, idx in spacer
+              td= reporev.users[idx]
+            td: tt: a(href="/#{reporev.kind}/#{reporev.proj}/#{reporev.users.join('-')}/#{reporev.rev}")= reporev.rev
+            if reporev.grade
+              td: .text-right= reporev.grade.grade
+              td.muted /&nbsp;#{reporev.grade.outof}
+              each test in reporev.grade.tests
+                td= test.grade
+            else
+              td: .text-right -
+              td.muted / -

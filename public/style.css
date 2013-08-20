@@ -59,6 +59,14 @@ ul.testresults ul .label {
   text-align: center;
 }
 
+div.grades {
+  overflow: auto;
+}
+
+table.grades td:nth-child(n+8) {
+  padding-left: 0;
+}
+
 .btn-baseline {
   vertical-align: baseline;
 }
