@@ -181,21 +181,21 @@ exports.createServer = function(callback) {
     async.auto({
       open: function(next) {
         swf.countOpenWorkflowExecutions({
-          startTimeFilter: interval
+          startTimeFilter: { oldestDate: 0 }
         }, function(err, data) {
           next(err, data ? data.count : null);
         });
       },
       closed: function(next) {
         swf.countClosedWorkflowExecutions({
-          startTimeFilter: interval
+          closeTimeFilter: interval
         }, function(err, data) {
           next(err, data ? data.count : null);
         });
       },
       completed: function(next) {
         swf.countClosedWorkflowExecutions({
-          startTimeFilter: interval,
+          closeTimeFilter: interval,
           closeStatusFilter: { status: 'COMPLETED' }
         }, function(err, data) {
           next(err, data ? data.count : null);
