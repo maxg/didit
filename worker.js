@@ -59,6 +59,7 @@ function pollForActivities() {
   }, function(err, data) {
     if (err) {
       log.error(err, 'error polling for activity');
+      setTimeout(pollForActivities, 1000 * 60 * 4);
     } else {
       running++;
       queue.push(data, function() {

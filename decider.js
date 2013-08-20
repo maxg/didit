@@ -166,6 +166,7 @@ exports.createServer = function(callback) {
     }, function(err, data) {
       if (err) {
         log.error(err, 'error polling for decision');
+        setTimeout(pollForDecisionTasks, 1000 * 60 * 4);
       } else {
         decide(data, pollForDecisionTasks);
       }
