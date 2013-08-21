@@ -41,13 +41,16 @@ block content
           a.btn(href='#', data-dismiss='modal') Cancel
           button.btn.btn-info Create #{kind}/#{proj} milestone
       
-      div.span5.pull-right
+      div.span6.pull-right
         div.well
           h3= sweeps.length > 0 ? 'Sweeps' : 'No sweeps'
           each sweep in sweeps
             h4
               a(href="/sweep/#{sweep.kind}/#{sweep.proj}/#{sweep.when.format(moment.compactFormat)}").
                 #{sweep.when.format('llll')}
+          each sweep in schedSweeps
+            h4.muted #{sweep.when.format('llll')}&nbsp;
+              span.badge #{sweep.when.fromNow()}
           a.btn.btn-small.btn-info(href='#confirm-sweep', data-toggle='modal') New sweep
         div.well
           h3= milestones.length > 0 ? 'Milestones' : 'No milestones'

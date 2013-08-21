@@ -160,6 +160,7 @@ app.get('/:kind/:proj', authorize, function(req, res) {
   };
   if (res.locals.authstaff) {
     findAll.sweeps = async.apply(sweeper.findSweeps, req.params);
+    findAll.schedSweeps = async.apply(sweeper.scheduledSweeps, req.params);
     findAll.milestones = async.apply(grader.findMilestones, req.params);
   }
   async.auto(findAll, function(err, results) {
@@ -168,6 +169,7 @@ app.get('/:kind/:proj', authorize, function(req, res) {
       proj: req.params.proj,
       repos: results.repos,
       sweeps: results.sweeps,
+      schedSweeps: results.schedSweeps,
       milestones: results.milestones
     });
   });

@@ -10,7 +10,10 @@ block content
         a(href="/#{kind}/#{proj}"): tt #{kind}/#{proj}
         |  #{datetime.calendar()}&nbsp;
         small: a(href="/sweep/#{kind}/#{proj}/#{datetime.format(moment.compactFormat)}.csv") .csv
-      p: button.btn.btn-baseline(href='#rebuild', data-toggle='modal') rebuild
+      if sweep.finished
+        p: button.btn.btn-baseline(href='#rebuild', data-toggle='modal') rebuild
+      else
+        p Started #{moment(sweep.started).fromNow()}...
     
     form#rebuild.modal.hide(action="/sweep/#{kind}/#{proj}/#{datetime.format(moment.compactFormat)}/rebuild", method='post')
       div.modal-header

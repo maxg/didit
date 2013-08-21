@@ -89,15 +89,32 @@ exports.findSweep = function(params, callback) {
   });
 };
 
+var scheduledSweepTimers = [];
+
 // schedule a sweep for the given kind and project at a past or future time; see startSweep(...)
 // scheduleCallback returns synchronously
 exports.scheduleSweep = function(spec, when, scheduleCallback, startCallback, finishCallback) {
   log.info({ spec: spec, when: when }, 'scheduleSweep');
-  var none = function() {};
-  setTimeout(function() {
-    exports.startSweep(spec, when, startCallback || none, finishCallback || none);
+  if (when.isAfter(moment().add(14, 'days'))) {
+    scheduleCallback({ dmesg: 'cannot schedule sweep so far in the future' });
+    return;
+  }
+  var timer = setTimeout(function() {
+    exports.startSweep(spec, when, function(err, repos) {
+      scheduledSweepTimers.splice(scheduledSweepTimers.indexOf(timer), 1);
+      if (startCallback) { startCallback(err, repos); }
+    }, finishCallback || function() {});
   }, when.diff(moment()));
+  timer.sweep = { kind: spec.kind, proj: spec.proj, when: when };
+  scheduledSweepTimers.push(timer);
   scheduleCallback();
+};
+
+// find scheduled sweeps by kind and project
+exports.scheduledSweeps = function(spec, callback) {
+  callback(null, scheduledSweepTimers.filter(function(timer) {
+    return timer.sweep.kind == spec.kind && timer.sweep.proj == spec.proj;
+  }).map(function(timer) { return timer.sweep; }));
 };
 
 // start a sweep for the given kind and project as of the given time
@@ -107,12 +124,26 @@ exports.startSweep = function(spec, when, startCallback, finishCallback) {
   log.info({ spec: spec }, 'startSweep');
   var started = +new Date();
   async.auto({
-    repos: function(next) {
+    resultdir: function(next) {
+      mkdirp(sweepResultDir(spec, when), next);
+    },
+    placeholder: [ 'resultdir', function(next, results) {
+      fs.writeFile(sweepResultFile(spec, when, 'sweep'), JSON.stringify({
+        spec: spec,
+        when: +when,
+        started: started,
+        reporevs: []
+      }), function(err) {
+        log.error(err, { spec: spec, when: when, file: 'sweep' });
+        next();
+      });
+    } ],
+    repos: [ 'placeholder', function(next) {
       git.findStudentRepos(spec, function(err, repos) {
         startCallback(err, repos);
         next(err, repos);
       });
-    },
+    } ],
     revisions: [ 'repos', function(next, results) {
       async.eachLimit(shuffle(results.repos), config.build.concurrency || 2, function(spec, next) {
         git.studentSourceRevAt(spec, when, function(err, rev) {
@@ -126,10 +157,7 @@ exports.startSweep = function(spec, when, startCallback, finishCallback) {
         });
       }, function(err) { next(err); });
     } ],
-    resultdir: [ 'revisions', function(next, results) {
-      mkdirp(sweepResultDir(spec, when), next);
-    } ],
-    record: [ 'resultdir', function(next, results) {
+    record: [ 'revisions', function(next, results) {
       fs.writeFile(sweepResultFile(spec, when, 'sweep'), JSON.stringify({
         spec: spec,
         when: +when,
