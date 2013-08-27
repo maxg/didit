@@ -41,6 +41,12 @@ describe('grader', function() {
         done(err);
       });
     });
+    it('should ignore empty grade sheet', function(done) {
+      grader.parseGradeSheet(path.join(fix.fixdir, 'gradesheet.csv'), function(err, rows) {
+        rows.should.eql([]);
+        done(err);
+      });
+    });
     it('should fail with invalid grade sheet', function(done) {
       grader.parseGradeSheet(path.join(fix.fixdir, 'gradesheet.csv'), function(err, rows) {
         err.should.exist;

@@ -19,7 +19,9 @@ exports.parseGradeSheet = function(filename, callback) {
       return null;
     }
   });
-  sheet.to.array(function(rows) { callback(null, rows); });
+  sheet.to.array(function(rows) { callback(null, rows.filter(function(row) {
+    return ! (row instanceof Array);
+  })); });
   sheet.on('error', function(err) { callback(err); });
 };
 
