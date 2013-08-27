@@ -112,7 +112,10 @@ app.get('/milestone/:kind/:proj/:name:extension(.csv)?', staffonly, function(req
   }, function(err, results) {
     if (req.params.extension == '.csv') {
       res.set({ 'Content-Type': 'text/csv' });
-      res.render('csv/grades', { grades: results.milestone.reporevs });
+      res.render('csv/grades', {
+        title: 'Milestone ' + req.params.name,
+        reporevs: results.milestone.reporevs
+      });
       return;
     }
     res.render('milestone', {
@@ -129,7 +132,10 @@ app.get('/sweep/:kind/:proj/:datetime:extension(.csv)?', staffonly, function(req
   sweeper.findSweep(req.params, function(err, sweep) {
     if (req.params.extension == '.csv') {
       res.set({ 'Content-Type': 'text/csv' });
-      res.render('csv/grades', { grades: sweep.reporevs });
+      res.render('csv/grades', {
+        title: 'Sweep ' + req.params.datetime.format('llll'),
+        reporevs: sweep.reporevs
+      });
       return;
     }
     res.status(err ? 404 : 200);

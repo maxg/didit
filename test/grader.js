@@ -53,14 +53,14 @@ describe('grader', function() {
     it('should ignore missing grade sheet', function(done) {
       sandbox.stub(grader, 'parseGradeSheet').throws();
       grader.grade(nospec, fix.fixdir, {}, path.join(fix.fixdir, 'grade'), function(err, report) {
-        report.should.eql({ spec: nospec, grade: 0, outof: 0, tests: [] });
+        report.should.eql({ spec: nospec, score: 0, outof: 0, testsuites: [] });
         done(err);
       });
     });
     it('should ignore invalid grade sheet', function(done) {
       sandbox.stub(grader, 'parseGradeSheet').yields(new Error(), null);
       grader.grade(nospec, fix.fixdir, {}, path.join(fix.fixdir, 'grade'), function(err, report) {
-        report.should.eql({ spec: nospec, grade: 0, outof: 0, tests: [] });
+        report.should.eql({ spec: nospec, score: 0, outof: 0, testsuites: [] });
         done(err);
       });
     });
@@ -70,9 +70,18 @@ describe('grader', function() {
           { package: 'pkg', name: 'SecondTest', testcases: [ { name: 'testTwo' }, { name: 'testThree' } ] }
         ] } }
       }, path.join(fix.fixdir, 'grade'), function(err, report) {
-        report.grade.should.equal(10);
+        report.score.should.equal(10);
         report.outof.should.equal(20);
-        report.tests.should.includeEql({ test: { name: 'testTwo' }, grade: 10, outof: 10 });
+        report.testsuites.should.includeEql({
+          package: 'pkg', name: 'FirstTest', missing: true, testcases: [
+            { name: 'testOne', missing: true, grade: { score: 0, outof: 10 } }
+          ]
+        });
+        report.testsuites.should.includeEql({
+          package: 'pkg', name: 'SecondTest', testcases: [
+            { name: 'testTwo', grade: { score: 10, outof: 10 } }
+          ]
+        });
         done(err);
       });
     });
@@ -84,7 +93,7 @@ describe('grader', function() {
         ] } }
       }, path.join(fix.fixdir, 'grade'), function(err, report) {
         fix.readFile('grade.json', function(fserr, data) {
-          report.grade.should.equal(20);
+          report.score.should.equal(20);
           report.outof.should.equal(20);
           JSON.parse(data).should.eql(report);
           done(err || fserr);

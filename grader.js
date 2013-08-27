@@ -26,8 +26,8 @@ exports.parseGradeSheet = function(filename, callback) {
 // assign points given by "row" based on results of "test"
 function gradeTest(row, test) {
   var outof = +row.pts;
-  var grade = ( ! test) || test.failure || test.error ? 0 : outof;
-  return { test: test, grade: grade, outof: outof };
+  var score = ( ! test) || test.missing || test.failure || test.error ? 0 : outof;
+  return { score: score, outof: outof };
 }
 
 // read grade sheet and grade the results of hidden tests
@@ -37,9 +37,9 @@ exports.grade = function(spec, builddir, build, output, callback) {
   
   var report = {
     spec: spec,
-    grade: 0,
+    score: 0,
     outof: 0,
-    tests: []
+    testsuites: []
   };
   
   var sheet = path.join(builddir, 'grade.csv');
@@ -54,27 +54,51 @@ exports.grade = function(spec, builddir, build, output, callback) {
       callback(null, report);
       return;
     }
-    async.each(rows, function(row, next) {
-      async.waterfall([
-        function(next) {        // find the test suite
-          async.detect(build.json.hidden.testsuites || [], function(suite, found) {
+    var testsuites = (
+      build.json.hidden && build.json.hidden.testsuites || []).concat(
+      build.json.public && build.json.public.testsuites || []);
+    async.eachSeries(rows, function(row, next) {
+      async.auto({
+        reportsuite: function(next) { // find the test suite in the report
+          async.detectSeries(report.testsuites, function(suite, found) {
             found(suite.package == row.pkg && suite.name == row.cls);
-          }, function(suite) { next(null, suite || {}); });
+          }, function(suite) { next(null, suite); });
         },
-        function(suite, next) { // find the test
-          async.detect(suite.testcases || [], function(test, found) {
+        buildsuite: function(next) { // find the test suite in the build
+          async.detectSeries(testsuites, function(suite, found) {
+            found(suite.package == row.pkg && suite.name == row.cls);
+          }, function(suite) { next(null, suite); });
+        },
+        test: [ 'buildsuite', function(next, results) { // find the test
+          async.detect(results.buildsuite && results.buildsuite.testcases || [], function(test, found) {
             found(test.name == row.test);
           }, function(test) { next(null, test); });
+        } ]
+      }, function(err, results) { // and add this test to the grade report
+        if ( ! results.reportsuite) {
+          report.testsuites.push(results.reportsuite = {
+              package: row.pkg,
+              name: row.cls,
+              testcases: []
+          });
+          if ( ! results.buildsuite) {
+            results.reportsuite.missing = true;
+          }
         }
-      ], function(err, test) {  // and add this test to the grade report
-        if ( ! test) { log.info({ row: row }, 'test missing'); }
-        var result = gradeTest(row, test);
-        report.grade += result.grade;
-        report.outof += result.outof;
-        report.tests.push(result);
+        if ( ! results.test) {
+          log.info({ row: row }, 'test missing');
+          results.test = {
+            name: row.test,
+            missing: true
+          };
+        }
+        results.reportsuite.testcases.push(results.test);
+        results.test.grade = gradeTest(row, results.test);
+        report.score += results.test.grade.score;
+        report.outof += results.test.grade.outof;
         next();
       });
-    }, function() {             // write the grade report to disk
+    }, function() { // write the grade report to disk
       fs.writeFile(output + '.json', JSON.stringify(report), function(err) {
         if (err) {
           err.dmesg = 'error writing grade report';

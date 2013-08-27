@@ -1,19 +1,39 @@
-- var users = Math.max.apply(null, grades.map(function(r) { return r.users.length; }))
+- var users = Math.max.apply(null, reporevs.map(function(r) { return r.users.length; }))
 - var spacer = new Array(Math.max(users, 0))
+
+| "#{title}","Exported #{moment().format('llll')} by #{authuser}",
+each _ in spacer
+  | ,
+| ,,,
+each reporev in reporevs
+  if reporev.grade
+    each suite in reporev.grade.testsuites
+      | #{suite.package}#{suite.package ? '.' : ''}#{suite.name}
+      each test in suite.testcases
+        | ,
+    - break
+= "\n"
 
 | ,,
 each _ in spacer
   | Username,
-| Revision,Grade,
+| Revision,Grade,out of,
+each reporev in reporevs
+  if reporev.grade
+    each suite in reporev.grade.testsuites
+      each test in suite.testcases
+        | "#{test.name}",
+    - break
 = "\n"
 
-each reporev in grades
+each reporev in reporevs
   | #{reporev.kind},#{reporev.proj},
   each _, idx in spacer
     | #{reporev.users[idx]},
-  | #{reporev.rev},
+  | ="#{reporev.rev}",
   if reporev.grade
-    | #{reporev.grade.grade},#{reporev.grade.outof},
-    each test in reporev.grade.tests
-      | #{test.grade},
+    | #{reporev.grade.score},#{reporev.grade.outof},
+    each suite in reporev.grade.testsuites
+      each test in suite.testcases
+        | #{test.grade && test.grade.score},
   = "\n"

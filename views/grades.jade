@@ -1,5 +1,5 @@
-mixin grades(grades)
-  - var users = Math.max.apply(null, grades.map(function(r) { return r.users.length; }))
+mixin grades(reporevs)
+  - var users = Math.max.apply(null, reporevs.map(function(r) { return r.users.length; }))
   - var spacer = new Array(Math.max(users, 0))
   div.grades
     table.table.table-striped.table-condensed.grades
@@ -12,7 +12,7 @@ mixin grades(grades)
           th Revision
           th(colspan=2) Grade
       tbody
-        each reporev in grades
+        each reporev in reporevs
           tr(class="#{reporev.grade ? '' : 'info'}")
             td= reporev.kind
             td= reporev.proj
@@ -20,10 +20,13 @@ mixin grades(grades)
               td= reporev.users[idx]
             td: tt: a(href="/#{reporev.kind}/#{reporev.proj}/#{reporev.users.join('-')}/#{reporev.rev}")= reporev.rev
             if reporev.grade
-              td: .text-right= reporev.grade.grade
+              td: .text-right= reporev.grade.score
               td.muted /&nbsp;#{reporev.grade.outof}
-              each test in reporev.grade.tests
-                td= test.grade
+              each suite in reporev.grade.testsuites
+                td.splitter
+                each test in suite.testcases
+                  if test.grade
+                    td= test.grade.score
             else
               td: .text-right -
               td.muted / -

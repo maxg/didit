@@ -63,8 +63,16 @@ div.grades {
   overflow: auto;
 }
 
-table.grades td:nth-child(n+8) {
+table.grades td:nth-child(n+7) {
   padding-left: 0;
+}
+
+table.grades td.splitter {
+  border-left: 1px solid #ddd;
+}
+
+table.grades td.splitter + td.splitter {
+  display: none;
 }
 
 .btn-baseline {

@@ -1,0 +1,42 @@
+<project name="abcplayer">
+  
+  <target name="compile">
+  </target>
+  
+  <target name="public">
+    <echoxml file="TEST-0-fakery.xml">
+      <testsuite name="FakePublic" tests="2" failures="1" errors="0">
+        <properties>
+          <property name="didit.desc" value="Fake public tests"/>
+        </properties>
+        <testcase name="publicPass"/>
+        <testcase name="publicFail">
+          <failure type="Fake">Fake failure!</failure>
+        </testcase>
+      </testsuite>
+    </echoxml>
+    
+    <junitreport>
+      <fileset dir="." includes="TEST-*.xml"/>
+    </junitreport>
+  </target>
+  
+  <target name="hidden">
+    <echoxml file="TEST-0-fakery.xml">
+      <testsuite name="FakeHidden" tests="2" failures="0" errors="1">
+        <properties>
+          <property name="didit.desc" value="Fake hidden tests"/>
+        </properties>
+        <testcase name="hiddenPass"/>
+        <testcase name="hiddenError">
+          <error type="Fake">Fake error!</error>
+        </testcase>
+      </testsuite>
+    </echoxml>
+    
+    <junitreport>
+      <fileset dir="." includes="TEST-*.xml"/>
+    </junitreport>
+  </target>
+  
+</project>

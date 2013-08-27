@@ -1,0 +1,6 @@
+,,,,Public,
+junit,,FakePublic,publicPass,1,
+junit,,FakePublic,publicFail,2,
+,,,,Hidden,
+junit,,FakeHidden,hiddenPass,4,
+junit,,FakeHidden,hiddenError,8,

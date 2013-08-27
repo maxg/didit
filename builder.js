@@ -221,7 +221,7 @@ exports.build = function(spec, progressCallback, resultCallback) {
     });
     // and only store overall grade
     if (results.grade) {
-      results.grade = [ results.grade.grade, results.grade.outof ];
+      results.grade = [ results.grade.score, results.grade.outof ];
     }
     
     fs.writeFile(buildResultFile(spec), JSON.stringify(results), function(fserr) {
