@@ -43,7 +43,7 @@ block content
       
       div.span6.pull-right
         div.well
-          h3= sweeps.length > 0 ? 'Sweeps' : 'No sweeps'
+          h3= sweeps.length + schedSweeps.length > 0 ? 'Sweeps' : 'No sweeps'
           each sweep in sweeps
             h4
               a(href="/sweep/#{sweep.kind}/#{sweep.proj}/#{sweep.when.format(moment.compactFormat)}").
