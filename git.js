@@ -93,11 +93,23 @@ exports.cloneStudentSource = function(spec, dest, callback) {
   log.info({ spec: spec, dest: dest }, 'cloneStudentSource');
   async.auto({
     
+    depth: function(next) {
+      var out = byline(spawnAndLog('git', [ 'rev-list',
+        spec.rev + '..master', '--'
+      ], {
+        cwd: studentSourcePath(spec),
+        stdio: 'pipe'
+      }).stdout, { encoding: 'utf8' });
+      var count = 0;
+      out.on('data', function() { count++; });
+      out.on('end', function() { next(null, count); });
+    },
+    
     // clone the student's repository
-    clone: function(next) {
+    clone: [ 'depth', function(next, results) {
       log.info('cloneStudentSource', 'clone');
       spawnAndLog('git', [ 'clone',
-        '--quiet', '--no-checkout', '--depth', '10', '--branch', 'master',
+        '--quiet', '--no-checkout', '--depth', results.depth + 2, '--branch', 'master',
         'file://' + studentSourcePath(spec),
         '.'
       ], {
@@ -106,7 +118,7 @@ exports.cloneStudentSource = function(spec, dest, callback) {
       }).on('exit', function(code) {
         next(code == 0 ? null : { dmesg: 'error cloning source' });
       });
-    },
+    } ],
     
     // check out the specified revision
     checkout: [ 'clone', function(next) {
