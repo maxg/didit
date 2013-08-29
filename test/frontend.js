@@ -1,6 +1,7 @@
 var async = require('async');
 var http = require('http');
 var request = require('request');
+var sinon = require('sinon');
 
 var fixtures = require('./fixtures');
 var mocks = require('./mocks');
@@ -8,10 +9,12 @@ var mocks = require('./mocks');
 describe('frontend', function() {
   
   var config = require('../config');
+  var builder = require('../builder');
   var frontend = require('../frontend');
   
   var fix = fixtures();
   var mock = mocks.HTTPS();
+  var sandbox = sinon.sandbox.create();
   var root = 'http://localhost:' + config.web.port + '/';
   var server = http.createServer().on('request', mock.listener).on('request', frontend);
   
@@ -24,7 +27,8 @@ describe('frontend', function() {
   
   afterEach(function() {
     mock.clear();
-  })
+    sandbox.restore();
+  });
   
   after(function(done) {
     server.close(done);
@@ -70,6 +74,14 @@ describe('frontend', function() {
         done(err);
       });
     });
+    it('should reject illegal username', function(done) {
+      mock.user('eve');
+      sandbox.stub(builder, 'findRepos').throws();
+      request(root + 'u/alice.bob', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        done(err);
+      });
+    });
   });
   
   describe('GET /:kind/:proj', function() {
@@ -84,6 +96,22 @@ describe('frontend', function() {
       mock.user('eve');
       request(root + 'labs/lab1', function(err, res, body) {
         body.should.match(/labs\/lab1\/alice/).and.match(/labs\/lab1\/bob/).and.not.match(/lab2/);
+        done(err);
+      });
+    });
+    it('should reject illegal kind', function(done) {
+      mock.user('eve');
+      sandbox.stub(builder, 'findRepos').throws();
+      request(root + 'labs!/lab1', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        done(err);
+      });
+    });
+    it('should reject illegal project', function(done) {
+      mock.user('eve');
+      sandbox.stub(builder, 'findRepos').throws();
+      request(root + 'labs/lab!', function(err, res, body) {
+        res.statusCode.should.equal(404);
         done(err);
       });
     });
@@ -175,6 +203,14 @@ describe('frontend', function() {
         body.should.match(/Compilation succeeded/);
         body.should.match(/Public tests passed/).and.match(/thisTestWillPass/);
         body.should.match(/Hidden tests FAILED/).and.match(/thisTestWillFail/);
+        done(err);
+      });
+    });
+    it('should reject illegal revision', function(done) {
+      mock.user('alice');
+      sandbox.stub(builder, 'findBuild').throws();
+      request(root + 'labs/lab3/alice/abcd789!', function(err, res, body) {
+        res.statusCode.should.equal(404);
         done(err);
       });
     });
