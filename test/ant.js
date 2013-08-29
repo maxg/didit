@@ -220,5 +220,13 @@ describe('ant', function() {
         done(err);
       });
     });
+    it('should report payloads', function(done) {
+      ant.parseJUnitResults(0, path.join(fix.fixdir, 'TESTS-TestSuites.xml'), function(err, result) {
+        result.testsuites[0].testcases[0].payload.should.eql({
+          type: 'txt', data: new Buffer('Hello, world!').toString('base64')
+        });
+        done(err);
+      });
+    });
   });
 });
