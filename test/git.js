@@ -27,6 +27,10 @@ describe('git', function() {
     fix.forget();
   });
   
+  after(function(done) {
+    fix.remove(done);
+  });
+  
   describe('findStudentRepos', function() {
     it('should return repo specifications', function(done) {
       git.findStudentRepos({}, function(err, found) {

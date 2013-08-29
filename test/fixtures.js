@@ -3,6 +3,7 @@ var fs = require('fs');
 var mkdirp = require('mkdirp');
 var ncp = require('ncp');
 var path = require('path');
+var rimraf = require('rimraf');
 var temp = require('temp');
 
 var config = require('../config');
@@ -22,7 +23,7 @@ Fixture.prototype.files = function(test, callback) {
     if (err) { return callback(); }
     async.eachSeries(files, (function(file, next) {
       if (this.special[file]) {
-        this.special[file](path.join(srcdir, file), next);
+        recursiveCopier(this.special[file])(path.join(srcdir, file), next);
       } else {
         ncp(path.join(srcdir, file), path.join(this.fixdir, file), next);
       }
@@ -35,9 +36,9 @@ Fixture.prototype.filesTo = function(test, source, destination, callback) {
 };
 
 Fixture.prototype.special = {
-  'student-repos': recursiveCopier(path.join(config.student.repos, config.student.semester)),
-  'staff-repo.git': recursiveCopier(config.staff.repo),
-  'build-results': recursiveCopier(path.join(config.build.results, config.student.semester)),
+  'student-repos': path.join(config.student.repos, config.student.semester),
+  'staff-repo.git': config.staff.repo,
+  'build-results': path.join(config.build.results, config.student.semester),
 };
 
 function recursiveCopier(destination) {
@@ -66,6 +67,13 @@ Fixture.prototype.readFile = function(filename, callback) {
 
 Fixture.prototype.forget = function() {
   this.fixdir = undefined;
+};
+
+Fixture.prototype.remove = function(callback) {
+  var special = this.special;
+  async.parallel(Object.keys(special).map(function(name) {
+    return async.apply(rimraf, special[name]);
+  }), callback);
 };
 
 function testTitle(test) {

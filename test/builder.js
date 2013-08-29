@@ -38,6 +38,10 @@ describe('builder', function() {
     fix.files(this.test, done);
   });
   
+  after(function(done) {
+    fix.remove(done);
+  });
+  
   describe('findProjectsSync', function() {
     it('should return project specifications', function() {
       var specs = builder.findProjectsSync();
