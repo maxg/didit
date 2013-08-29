@@ -190,7 +190,11 @@ exports.fetchBuilder = function(spec, dest, callback) {
       
       // get staff repository revision
       var staffrev = '';
-      results.id.stdout.on('data', function(data) { staffrev += data; });
+      results.id.stdin.on('error', function(err) { log.warn({ err: err }, 'ignoring id.stdin error'); });
+      results.id.stdout.on('data', function(data) {
+        staffrev += data;
+        if (staffrev.length >= 7) { results.id.stdin.end(); }
+      });
       
       // wait until all steps are complete
       var running = procs.length * 2;
