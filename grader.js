@@ -111,6 +111,20 @@ exports.grade = function(spec, builddir, build, output, callback) {
   });
 };
 
+exports.findTest = function(build, category, suitename, testname, callback) {
+  log.info({ spec: build.spec, test: [ category, suitename, testname ] }, 'findTest');
+  var json = build.json[category];
+  async.detectSeries(json && json.testsuites || [], function(suite, found) {
+    found(suite.name == suitename);
+  }, function(suite) {
+    async.detectSeries(suite && suite.testcases || [], function(test, found) {
+      found(test.name == testname);
+    }, function(test) {
+      callback(test ? null : { dmesg: 'not found' }, test);
+    });
+  });
+};
+
 function milestoneDir(spec, name) {
   return path.join(config.build.results, 'milestones', config.student.semester, spec.kind, spec.proj, name);
 }

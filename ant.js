@@ -93,6 +93,10 @@ exports.parseJUnitResults = function(code, report, callback) {
           var testJSON = test.$;
           testJSON.error = test.error && test.error[0]._;
           testJSON.failure = test.failure && test.failure[0]._;
+          if (test.payload) {
+            testJSON.payload = test.payload[0].$;
+            testJSON.payload.data = test.payload[0]._;
+          }
           return testJSON;
         });
         result.testsuites.push(suiteJSON);

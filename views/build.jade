@@ -28,9 +28,9 @@ block content
           small= build.err.dmesg
 
     if authstaff && staffmode && build.json.hidden
-      mixin testresults('Hidden tests', build.hidden, build.txt.hidden, build.json.hidden)
+      mixin testresults('Hidden tests', build, 'hidden')
 
-    mixin testresults('Public tests', build.public, build.txt.public, build.json.public)
+    mixin testresults('Public tests', build, 'public')
 
     div.progress.progress-striped(class="progress-#{build.compile ? 'success' : 'danger'}")
       div.bar(style='width: 100%')
@@ -41,7 +41,10 @@ block content
       else
         h3 No output
 
-mixin testresults(title, success, output, results)
+mixin testresults(title, build, category)
+  - var success = build[category];
+  - var output = build.txt[category];
+  - var results = build.json[category];
   if ( ! results) || (results.tests == 0)
     div.progress.progress-striped
       div.bar.bar-danger(style='width: 100%')
@@ -62,9 +65,9 @@ mixin testresults(title, success, output, results)
       ul.testresults
         each suite in results.testsuites
           li
-            mixin suiteresults(suite)
+            mixin suiteresults(suite, category)
 
-mixin suiteresults(suite)
+mixin suiteresults(suite, category)
   h3 #{suite.package}#{suite.package ? '.' : ''}#{suite.name}&nbsp;
     mixin testcounts(suite)
   p= suite.properties.desc
@@ -78,6 +81,10 @@ mixin suiteresults(suite)
         else
           span.label.label-success &#x2713;
         h4 #{test.name} #{test.error ? 'ERROR' : ''}#{test.failure ? 'FAILED' : ''}
+          if test.payload
+            small
+              a(href="/#{kind}/#{proj}/#{users.join('-')}/#{rev}/payload/#{category}/#{suite.name}/#{test.name}.#{test.payload.type}")
+                |  + attachment
         p
         if test.error || test.failure
           pre.pre-scrollable= test.error || test.failure

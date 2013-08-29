@@ -49,6 +49,12 @@ app.param('datetime', function(req, res, next, datetime) {
   req.params.datetime = moment(datetime, moment.compactFormat);
   next();
 });
+app.param('category', 'public|hidden');
+app.param('filename', function(req, res, next, filename) {
+  var parts = filename.split('.');
+  req.params.filename = { name: parts[0], exts: parts.slice(1) };
+  next();
+});
 
 // authenticate the user by certificate
 function authenticate(req, res, next) {
@@ -210,6 +216,25 @@ app.get('/:kind/:proj/:users/:rev', authorize, function(req, res) {
       users: req.params.users,
       rev: req.params.rev,
       build: build
+    });
+  });
+});
+
+app.get('/:kind/:proj/:users/:rev/payload/:category/:suite/:filename', authorize, function(req, res) {
+  if (req.params.category != 'public' && ! res.locals.authstaff) {
+    return res.status(404).render('404');
+  }
+  builder.findBuild(req.params, function(err, build) {
+    if (err) { return res.status(404).render('404'); }
+    var testname = req.params.filename.name;
+    grader.findTest(build, req.params.category, req.params.suite, testname, function(err, test) {
+      if (err || ! test.payload) { return res.status(404).render('404'); }
+      
+      req.params.filename.exts.forEach(function(ext) {
+        if (ext == 'gz') { return res.set('Content-Encoding', 'gzip'); }
+        res.type(ext);
+      });
+      res.send(new Buffer(test.payload.data, 'base64'));
     });
   });
 });
