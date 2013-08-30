@@ -10,8 +10,9 @@ block content
         a(href="/#{kind}/#{proj}"): tt #{kind}/#{proj}
         |  #{name}&nbsp;
         small: a(href="/milestone/#{kind}/#{proj}/#{name}.csv") .csv
-      p
-        button.btn.btn-baseline(href='#grade-from-sweep', data-toggle='modal') assign grades
+      div.btn-toolbar
+        div.btn-group
+          button.btn(href='#grade-from-sweep', data-toggle='modal') assign grades by sweep
     
     form#grade-from-sweep.modal.hide(action="/grade/#{kind}/#{proj}/#{name}/sweep", method='post')
       div.modal-header
