@@ -301,6 +301,59 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
 // all other POST requests must be authenticated
 app.post('*', authenticate);
 
+app.post('/grade/:kind/:proj/:name/revs', staffonly, function(req, res) {
+  var userBuilds = {};
+  var accepts = [];
+  var rejects = [];
+  async.each(Object.keys(req.body.revision), function(users, next) {
+    if ( ! req.body.revision[users]) { return next(); }
+    var revtext = req.body.revision[users].toString();
+    var rev = (/^[a-f0-9]{7}/.exec(revtext) || [])[0];
+    users = users.split('-');
+    if ( ! rev) {
+      log.warn({ params: req.params, users: users, rev: revtext }, 'invalid rev for grade');
+      rejects.push({ users: users, rev: revtext });
+      return next();
+    }
+    builder.findRepos({
+      kind: req.params.kind, proj: req.params.proj, users: users
+    }, function(err, repos) {
+      if (err || repos.length != 1) {
+        log.warn({ params: req.params, users: users, rev: rev }, 'no repo for grade');
+        rejects.push({ users: users, rev: rev });
+        return next();
+      }
+      builder.findBuild({
+        kind: repos[0].kind, proj: repos[0].proj, users: repos[0].users, rev: rev
+      }, function(err, build) {
+        if (err) {
+          log.warn({ params: req.params, users: users, rev: rev }, 'no build for grade');
+          rejects.push({ users: users, rev: rev });
+        } else {
+          accepts.push({ users: users, rev: build.spec.rev });
+          users.forEach(function(user) { userBuilds[user] = build; });
+        }
+        next();
+      });
+    });
+  }, function(err) {
+    grader.gradeFromBuilds(req.params, req.params.name, userBuilds, function(err) {
+      if (err) {
+        res.status(500);
+        res.render('500', { error: err.dmesg || 'Error assigning grades' });
+      } else {
+        res.render('graded', {
+          kind: req.params.kind,
+          proj: req.params.proj,
+          name: req.params.name,
+          accepts: accepts,
+          rejects: rejects
+        });
+      }
+    });
+  });
+});
+
 app.post('/grade/:kind/:proj/:name/sweep', staffonly, function(req, res) {
   req.params.datetime = moment(req.body.datetime, moment.compactFormat);
   var usernames = req.body.usernames.split('\n').map(function(user) {

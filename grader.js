@@ -186,9 +186,22 @@ exports.createMilestone = function(spec, name, callback) {
   }
 };
 
+exports.gradeFromBuilds = function(spec, milestone, userBuilds, callback) {
+  log.info({ spec: spec, milestone: milestone, userBuilds: !!userBuilds }, 'gradeFromBuilds');
+  async.each(Object.keys(userBuilds), function(username, next) {
+    var build = userBuilds[username];
+    build.spec.grade = build.json.grade;
+    fs.writeFile(path.join(milestoneDir(spec, milestone), username + '.json'),
+                 JSON.stringify(build.spec),
+                 function(err) { next(err); });
+  }, function(err) {
+    callback(err);
+  });
+};
+
 exports.gradeFromSweep = function(spec, milestone, usernames, sweep, callback) {
   log.info({ spec: spec, milestone: milestone, usernames: usernames, sweep: !!sweep }, 'gradeFromSweep');
-  async.forEach(usernames, function(username, next) {
+  async.each(usernames, function(username, next) {
     async.detect(sweep.reporevs, function(reporev, found) {
       found(reporev.users.indexOf(username) >= 0 && reporev.kind == spec.kind && reporev.proj == spec.proj);
     }, function(reporev) {
