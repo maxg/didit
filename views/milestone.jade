@@ -14,6 +14,10 @@ block content
         div.btn-group
           button.btn(href='#grade-from-sweep', data-toggle='modal') assign grades by sweep
           button.btn(href='#grade-from-revs', data-toggle='modal') assign grades by revision
+        if milestone.released
+          button.btn.btn-success.active grades released
+        else
+          button.btn(href='#release', data-toggle='modal') release grades
     
     form#grade-from-sweep.modal.hide(action="/grade/#{kind}/#{proj}/#{name}/sweep", method='post')
       div.modal-header
@@ -45,6 +49,16 @@ block content
       div.modal-footer
         a.btn(href='#', data-dismiss='modal') Cancel
         button.btn.btn-info Assign grades for #{kind}/#{proj} #{name}
+    
+    form#release.modal.hide(action="/milestone/#{kind}/#{proj}/#{name}/release", method='post')
+      div.modal-header
+        a.close(data-dismiss='modal') &times;
+        h3 Confirm grades release
+      div.modal-body
+        p Students will be able to access grade reports for this milestone.
+      div.modal-footer
+        a.btn(href='#', data-dismiss='modal') Cancel
+        button.btn.btn-info Release grades for #{kind}/#{proj} #{name}
     
     include grades
     mixin grades(milestone.reporevs)

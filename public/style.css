@@ -59,6 +59,33 @@ ul.testresults ul .label {
   text-align: center;
 }
 
+table.testresults td {
+  vertical-align: top;
+}
+
+table.testresults tr.testsuite td {
+  border-top: none;
+  vertical-align: bottom;
+}
+
+table.testresults td:first-child,
+table.testresults td:last-child {
+  max-width: 1em;
+}
+
+table.testresults h3 {
+  margin-bottom: 0;
+}
+
+table.testresults .label-square {
+  width: 10px;
+  text-align: center;
+}
+
+table.testresults pre {
+  margin: 4px 0 0 0;
+}
+
 div.grades {
   overflow: auto;
 }
