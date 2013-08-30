@@ -270,6 +270,20 @@ app.get('/:kind/:proj/:users/:rev/payload/:category/:suite/:filename', authorize
   });
 });
 
+app.get('/:kind/:proj/:users/:rev/grade', staffonly, function(req, res) {
+  builder.findBuild(req.params, function(err, build) {
+    res.status(err ? 404 : 200);
+    res.render(err ? 'missing' : 'grade', {
+      kind: req.params.kind,
+      proj: req.params.proj,
+      users: req.params.users,
+      rev: req.params.rev,
+      grade: build && build.json.grade,
+      build: build
+    });
+  });
+});
+
 app.get('*', function(req, res) {
   res.status(404);
   res.render('404');
