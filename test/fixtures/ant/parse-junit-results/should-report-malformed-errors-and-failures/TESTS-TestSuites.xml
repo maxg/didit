@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites>
+  <testsuite errors="0" failures="0" name="Failure" package="" tests="1">
+    <testcase classname="Failure" name="fail">
+      <failure>Total failure</failure>
+    </testcase>
+    <properties>
+      <property name="ant.project.invoked-targets" value="test" />
+    </properties>
+    <system-out />
+    <system-err />
+  </testsuite>
+  <testsuite errors="0" failures="0" name="Error" package="" tests="1">
+    <testcase classname="Error" name="error">
+      <error>Catastrophic error</error>
+    </testcase>
+    <properties>
+      <property name="ant.project.invoked-targets" value="test" />
+    </properties>
+    <system-out />
+    <system-err />
+  </testsuite>
+</testsuites>

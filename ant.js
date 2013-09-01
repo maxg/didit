@@ -78,10 +78,12 @@ exports.parseJUnitResults = function(code, report, callback) {
       (xml.testsuites.testsuite || []).forEach(function(suite) {
         var suiteJSON = suite.$;
         suiteJSON.properties = {};
-        suite.properties[0].property.filter(function(prop) {
-          return propfix.test(prop.$.name);
-        }).forEach(function(prop) {
-          suiteJSON.properties[prop.$.name.replace(propfix, '')] = prop.$.value;
+        (suite.properties || []).forEach(function(properties) {
+          properties.property.filter(function(prop) {
+            return propfix.test(prop.$.name);
+          }).forEach(function(prop) {
+            suiteJSON.properties[prop.$.name.replace(propfix, '')] = prop.$.value;
+          });
         });
         suiteJSON.sysout = (suite['system-out'] || []).filter(function(line) {
           return line.constructor == String;
@@ -91,8 +93,8 @@ exports.parseJUnitResults = function(code, report, callback) {
         });
         suiteJSON.testcases = (suite.testcase || []).map(function(test) {
           var testJSON = test.$;
-          testJSON.error = test.error && test.error[0]._;
-          testJSON.failure = test.failure && test.failure[0]._;
+          testJSON.error = test.error && (test.error[0]._ || test.error[0]);
+          testJSON.failure = test.failure && (test.failure[0]._ || test.failure[0]);
           if (test.payload) {
             testJSON.payload = test.payload[0].$;
             testJSON.payload.data = test.payload[0]._;

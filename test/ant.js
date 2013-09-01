@@ -214,9 +214,30 @@ describe('ant', function() {
         done(err);
       });
     });
+    it('should report malformed errors and failures', function(done) {
+      var expected = {
+        Failure: /Total failure/,
+        Error: /Catastrophic error/
+      };
+      ant.parseJUnitResults(0, path.join(fix.fixdir, 'TESTS-TestSuites.xml'), function(err, result) {
+        result.testsuites.should.have.length(2);
+        result.testsuites.forEach(function(suite) {
+          suite.testcases.should.have.length(1);
+          suite.testcases[0][suite.name.toLowerCase()].should.match(expected[suite.name]);
+        });
+        done(err);
+      });
+    });
     it('should report didit properties', function(done) {
       ant.parseJUnitResults(0, path.join(fix.fixdir, 'TESTS-TestSuites.xml'), function(err, result) {
         result.testsuites[0].properties['test.property'].should.equal('testing');
+        done(err);
+      });
+    });
+    it('should handle no properties', function(done) {
+      ant.parseJUnitResults(0, path.join(fix.fixdir, 'TESTS-TestSuites.xml'), function(err, result) {
+        result.testsuites[0].properties.should.eql({});
+        result.testsuites[0].testcases[0].name.should.eql('pass');
         done(err);
       });
     });
