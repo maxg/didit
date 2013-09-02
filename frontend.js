@@ -234,7 +234,7 @@ app.get('/:kind/:proj/:users/:rev/payload/:category/:suite/:filename', authorize
         if (ext == 'gz') { return res.set('Content-Encoding', 'gzip'); }
         res.type(ext);
       });
-      res.send(new Buffer(test.payload.data, 'base64'));
+      res.send(new Buffer(test.payload.data || '', 'base64'));
     });
   });
 });
