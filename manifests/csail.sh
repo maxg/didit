@@ -4,20 +4,25 @@
 # CSAIL VM setup script.
 #
 
-node_ver='v0.8.18'
+node_ver='v0.10.17'
 node_dist='linux-x64'
 
 # Install packages
+echo "# WebUpd8 Team Oracle Java Installer PPA
+deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main
+deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main
+" | sudo tee -a /etc/apt/sources.list.d/webupd8team-java.list
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
 sudo apt-get update
-sudo apt-get install vim git openjdk-6-jdk ant eclipse-jdt authbind
+sudo apt-get install vim git oracle-java7-installer ant eclipse-jdt authbind
 
 # Install Node.js
 curl "http://nodejs.org/dist/$node_ver/node-$node_ver-$node_dist.tar.gz" | sudo tar zx --directory /usr/local
-sudo ln -s "/usr/local/node-$node_ver-$node_dist/bin/node" /usr/local/bin/node
-sudo ln -s "/usr/local/node-$node_ver-$node_dist/bin/node-waf" /usr/local/bin/node-waf
-sudo ln -s "/usr/local/node-$node_ver-$node_dist/bin/npm" /usr/local/bin/npm
+sudo ln -s -f "/usr/local/node-$node_ver-$node_dist/bin/node" /usr/local/bin/node
+sudo ln -s -f "/usr/local/node-$node_ver-$node_dist/bin/node-waf" /usr/local/bin/node-waf
+sudo ln -s -f "/usr/local/node-$node_ver-$node_dist/bin/npm" /usr/local/bin/npm
 sudo mkdir -p /usr/local/share/man/man1
-sudo ln -s "/usr/local/node-$node_ver-$node_dist/share/man/man1/node.1" /usr/local/share/man/man1/node.1
+sudo ln -s -f "/usr/local/node-$node_ver-$node_dist/share/man/man1/node.1" /usr/local/share/man/man1/node.1
 
 # Check out Didit
 sudo mkdir /var/didit
