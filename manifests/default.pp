@@ -13,7 +13,7 @@ exec {
 package {
   [ 'vim', 'python-software-properties',
     'unzip', 'make', 'g++', 'libxml2-dev',
-    'git', 'openjdk-6-jdk', 'ant', 'eclipse-jdt' ]:
+    'git', 'openjdk-7-jdk', 'ant', 'eclipse-jdt' ]:
     ensure => 'installed';
   
   [ 'nodejs' ]:
