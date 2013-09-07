@@ -83,7 +83,9 @@ exports.grade = function(spec, builddir, build, output, callback) {
               name: row.cls,
               testcases: []
           });
-          if ( ! results.buildsuite) {
+          if (results.buildsuite) {
+            results.reportsuite.properties = results.buildsuite.properties;
+          } else {
             results.reportsuite.missing = true;
           }
         }

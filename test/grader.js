@@ -73,7 +73,9 @@ describe('grader', function() {
     it('should return results', function(done) {
       grader.grade(nospec, fix.fixdir, {
         json: { hidden: { testsuites: [
-          { package: 'pkg', name: 'SecondTest', testcases: [ { name: 'testTwo' }, { name: 'testThree' } ] }
+          { package: 'pkg', name: 'SecondTest', properties: {}, testcases: [
+            { name: 'testTwo' }, { name: 'testThree' }
+          ] }
         ] } }
       }, path.join(fix.fixdir, 'grade'), function(err, report) {
         report.score.should.equal(10);
@@ -84,7 +86,7 @@ describe('grader', function() {
           ]
         });
         report.testsuites.should.includeEql({
-          package: 'pkg', name: 'SecondTest', testcases: [
+          package: 'pkg', name: 'SecondTest', properties: {}, testcases: [
             { name: 'testTwo', grade: { score: 10, outof: 10 } }
           ]
         });
@@ -94,8 +96,8 @@ describe('grader', function() {
     it('should record results', function(done) {
       grader.grade(nospec, fix.fixdir, {
         json: { hidden: { testsuites: [
-          { package: 'pkg', name: 'FirstTest', testcases: [ { name: 'testOne' } ] },
-          { package: 'pkg', name: 'SecondTest', testcases: [ { name: 'testTwo' } ] }
+          { package: 'pkg', name: 'FirstTest', properties: {}, testcases: [ { name: 'testOne' } ] },
+          { package: 'pkg', name: 'SecondTest', properties: {}, testcases: [ { name: 'testTwo' } ] }
         ] } }
       }, path.join(fix.fixdir, 'grade'), function(err, report) {
         fix.readFile('grade.json', function(fserr, data) {
