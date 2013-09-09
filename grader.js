@@ -131,6 +131,10 @@ function milestoneDir(spec, name) {
   return path.join(config.build.results, 'milestones', config.student.semester, spec.kind, spec.proj, name);
 }
 
+exports.isMilestoneReleasedSync = function(spec, name) {
+  return fs.existsSync(path.join(milestoneDir(spec, name), 'released'));
+};
+
 exports.findMilestones = function(spec, callback) {
   log.info({ spec: spec }, 'findMilestones');
   var kind = spec.kind || '*';
@@ -138,15 +142,17 @@ exports.findMilestones = function(spec, callback) {
   glob(path.join('milestones', config.student.semester, kind, proj, '*'), {
     cwd: config.build.results
   }, function(err, files) {
-    callback(err, files.map(function(file) {
+    async.map(files, function(file, set) {
       var parts = file.split(path.sep);
-      return { kind: parts[2], proj: parts[3], name: parts[4] };
-    }));
+      var spec = { kind: parts[2], proj: parts[3], name: parts[4] };
+      spec.released = exports.isMilestoneReleasedSync(spec, spec.name);
+      set(null, spec);
+    }, callback);
   });
 };
 
 exports.findMilestone = function(spec, name, callback) {
-  log.info({ spec: spec, name: name });
+  log.info({ spec: spec, name: name }, 'findMilestone');
   var dir = milestoneDir(spec, name);
   git.findStudentRepos(spec, function(err, repos) {
     var reporevs = [];
@@ -173,10 +179,29 @@ exports.findMilestone = function(spec, name, callback) {
           kind: spec.kind,
           proj: spec.proj,
           name: name,
+          released: exports.isMilestoneReleasedSync(spec, name),
           reporevs: reporevs
         });
       });
     });
+  });
+};
+
+exports.findMilestoneGrade = function(spec, name, callback) {
+  log.info({ spec: spec, name: name }, 'findMilestoneGrade');
+  var json = path.join(milestoneDir(spec, name), spec.users.join('-') + '.json');
+  fs.readFile(json, function(err, data) {
+    if (err) {
+      log.error(err, 'error reading milestone grade');
+      callback(err);
+      return;
+    }
+    try {
+      callback(null, JSON.parse(data).grade);
+    } catch (err) {
+      log.error(err, { spec: spec, name: name, file: json });
+      callback(err);
+    }
   });
 };
 
@@ -188,9 +213,35 @@ exports.createMilestone = function(spec, name, callback) {
   }
 };
 
+exports.releaseMilestone = function(spec, name, callback) {
+  var dir = milestoneDir(spec, name);
+  if ( ! fs.existsSync(dir)) {
+    log.error({ spec: spec, name: name }, 'releaseMilestone no such directory');
+    callback({ dmesg: 'No milestone directory' });
+    return;
+  }
+  fs.open(path.join(dir, 'released'), 'w', function(err, fd) {
+    if (fd) { fs.closeSync(fd); }
+    callback(err);
+  });
+};
+
+exports.gradeFromBuilds = function(spec, milestone, userBuilds, callback) {
+  log.info({ spec: spec, milestone: milestone, userBuilds: !!userBuilds }, 'gradeFromBuilds');
+  async.each(Object.keys(userBuilds), function(username, next) {
+    var build = userBuilds[username];
+    build.spec.grade = build.json.grade;
+    fs.writeFile(path.join(milestoneDir(spec, milestone), username + '.json'),
+                 JSON.stringify(build.spec),
+                 function(err) { next(err); });
+  }, function(err) {
+    callback(err);
+  });
+};
+
 exports.gradeFromSweep = function(spec, milestone, usernames, sweep, callback) {
   log.info({ spec: spec, milestone: milestone, usernames: usernames, sweep: !!sweep }, 'gradeFromSweep');
-  async.forEach(usernames, function(username, next) {
+  async.each(usernames, function(username, next) {
     async.detect(sweep.reporevs, function(reporev, found) {
       found(reporev.users.indexOf(username) >= 0 && reporev.kind == spec.kind && reporev.proj == spec.proj);
     }, function(reporev) {

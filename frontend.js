@@ -111,6 +111,33 @@ app.get('/', function(req, res) {
   });
 });
 
+app.get('/milestone/:kind/:proj/:users/:name', authorize, function(req, res) {
+  var released = grader.isMilestoneReleasedSync(req.params, req.params.name);
+  if ( ! (res.locals.authstaff || released)) {
+    res.status(404);
+    res.render(404);
+    return;
+  }
+  async.auto({
+    grade: async.apply(grader.findMilestoneGrade, req.params, req.params.name),
+    build: [ 'grade', function(next, results) {
+      builder.findBuild(results.grade.spec, next);
+    } ]
+  }, function(err, results) {
+    res.status(err ? 404 : 200);
+    res.render(err ? 'missing' : 'grade', {
+      kind: req.params.kind,
+      proj: req.params.proj,
+      users: req.params.users,
+      rev: results.build && results.build.spec.rev,
+      name: req.params.name,
+      released: released,
+      grade: results.grade,
+      build: results.build
+    });
+  })
+});
+
 app.get('/milestone/:kind/:proj/:name:extension(.csv)?', staffonly, function(req, res) {
   async.auto({
     milestone: async.apply(grader.findMilestone, req.params, req.params.name),
@@ -188,16 +215,20 @@ app.get('/:kind/:proj', authorize, function(req, res) {
 });
 
 app.get('/:kind/:proj/:users', authorize, function(req, res) {
-  builder.findBuilds(req.params, function(err, builds) {
+  async.auto({
+    builds: async.apply(builder.findBuilds, req.params),
+    milestones: async.apply(grader.findMilestones, req.params)
+  }, function(err, results) {
     var locals = {
       kind: req.params.kind,
       proj: req.params.proj,
       users: req.params.users,
-      builds: builds,
-      current: null
+      builds: results.builds,
+      current: null,
+      milestones: results.milestones
     };
-    if (builds.length > 0) {
-      builder.findBuild(builds[0], function(err, build) {
+    if (results.builds.length > 0) {
+      builder.findBuild(results.builds[0], function(err, build) {
         locals.current = build;
         res.render('repo', locals);
       });
@@ -235,6 +266,20 @@ app.get('/:kind/:proj/:users/:rev/payload/:category/:suite/:filename', authorize
         res.type(ext);
       });
       res.send(new Buffer(test.payload.data || '', 'base64'));
+    });
+  });
+});
+
+app.get('/:kind/:proj/:users/:rev/grade', staffonly, function(req, res) {
+  builder.findBuild(req.params, function(err, build) {
+    res.status(err ? 404 : 200);
+    res.render(err ? 'missing' : 'grade', {
+      kind: req.params.kind,
+      proj: req.params.proj,
+      users: req.params.users,
+      rev: req.params.rev,
+      grade: build && build.json.grade,
+      build: build
     });
   });
 });
@@ -301,6 +346,59 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
 // all other POST requests must be authenticated
 app.post('*', authenticate);
 
+app.post('/grade/:kind/:proj/:name/revs', staffonly, function(req, res) {
+  var userBuilds = {};
+  var accepts = [];
+  var rejects = [];
+  async.each(Object.keys(req.body.revision), function(users, next) {
+    if ( ! req.body.revision[users]) { return next(); }
+    var revtext = req.body.revision[users].toString();
+    var rev = (/^[a-f0-9]{7}/.exec(revtext) || [])[0];
+    users = users.split('-');
+    if ( ! rev) {
+      log.warn({ params: req.params, users: users, rev: revtext }, 'invalid rev for grade');
+      rejects.push({ users: users, rev: revtext });
+      return next();
+    }
+    builder.findRepos({
+      kind: req.params.kind, proj: req.params.proj, users: users
+    }, function(err, repos) {
+      if (err || repos.length != 1) {
+        log.warn({ params: req.params, users: users, rev: rev }, 'no repo for grade');
+        rejects.push({ users: users, rev: rev });
+        return next();
+      }
+      builder.findBuild({
+        kind: repos[0].kind, proj: repos[0].proj, users: repos[0].users, rev: rev
+      }, function(err, build) {
+        if (err) {
+          log.warn({ params: req.params, users: users, rev: rev }, 'no build for grade');
+          rejects.push({ users: users, rev: rev });
+        } else {
+          accepts.push({ users: users, rev: build.spec.rev });
+          users.forEach(function(user) { userBuilds[user] = build; });
+        }
+        next();
+      });
+    });
+  }, function(err) {
+    grader.gradeFromBuilds(req.params, req.params.name, userBuilds, function(err) {
+      if (err) {
+        res.status(500);
+        res.render('500', { error: err.dmesg || 'Error assigning grades' });
+      } else {
+        res.render('graded', {
+          kind: req.params.kind,
+          proj: req.params.proj,
+          name: req.params.name,
+          accepts: accepts,
+          rejects: rejects
+        });
+      }
+    });
+  });
+});
+
 app.post('/grade/:kind/:proj/:name/sweep', staffonly, function(req, res) {
   req.params.datetime = moment(req.body.datetime, moment.compactFormat);
   var usernames = req.body.usernames.split('\n').map(function(user) {
@@ -334,6 +432,17 @@ app.post('/milestone/:kind/:proj', staffonly, function(req, res) {
       res.redirect('/' + req.params.kind + '/' + req.params.proj);
     }
   });
+});
+
+app.post('/milestone/:kind/:proj/:name/release', staffonly, function(req, res) {
+  grader.releaseMilestone(req.params, req.params.name, function(err) {
+    if (err) {
+      res.status(500);
+      res.render('500', { error: err.dmesg || 'Error releasing milestone grades' });
+    } else {
+      res.redirect('/milestone/' + req.params.kind + '/' + req.params.proj + '/' + req.params.name);
+    }
+  })
 });
 
 app.post('/sweep/:kind/:proj/:datetime/rebuild', staffonly, function(req, res) {
