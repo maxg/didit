@@ -36,7 +36,6 @@ block content
       a(href="/#{build.spec.kind}/#{build.spec.proj}/#{build.spec.users.join('-')}/#{build.spec.rev}")
         tt= build.spec.rev
     p.muted(title="#{build.source && build.source.subject}") author
-      - console.log(build)
       if build.source && build.source.author
         |  #{build.source.author} committed #{locals.moment(parseInt(build.source.committertime)*1000).calendar()}
       else

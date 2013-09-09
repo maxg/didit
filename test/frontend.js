@@ -215,4 +215,33 @@ describe('frontend', function() {
       });
     });
   });
+  
+  describe('GET /:kind/:proj/:users/:rev/grade', function() {
+    it('should render a grade report', function(done) {
+      mock.user('eve');
+      request(root + 'labs/lab3/alice/abcd789/grade', function(err, res, body) {
+        body.should.match(/not linked to milestone/i);
+        body.should.match(/auto-grading result/i).and.match(/5\D*\/\D*15/);
+        body.should.match(/thisTestWillPass/).and.match(/thisTestWillFail/);
+        done(err);
+      });
+    });
+    it('should fail with missing build', function(done) {
+      mock.user('eve');
+      request(root + 'labs/lab1/alice/abcd789/grade', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        body.should.match(/Not found/);
+        done(err);
+      });
+    });
+    it('should only allow staff', function(done) {
+      mock.user('alice');
+      sandbox.stub(builder, 'findBuild').throws();
+      request(root + 'labs/lab3/alice/abcd789/grade', function(err, res, body) {
+        body.should.match(/alice/).and.match(/You are not staff/);
+        body.should.not.match(/grade|grading/i);
+        done(err);
+      });
+    });
+  });
 });
