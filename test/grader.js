@@ -12,6 +12,10 @@ describe('grader', function() {
   var sandbox = sinon.sandbox.create();
   var nospec = { ignored: true };
   
+  before(function(done) {
+    fix.files(this.test, done);
+  });
+  
   beforeEach(function(done) {
     fix.files(this.currentTest, done);
   });
@@ -107,6 +111,18 @@ describe('grader', function() {
           done(err || fserr);
         });
       });
+    });
+  });
+  
+  describe('isMilestoneReleasedSync', function() {
+    it('should return true for released milestone', function() {
+      grader.isMilestoneReleasedSync({ kind: 'labs', proj: 'lab3' }, 'beta').should.be.true;
+    });
+    it('should return false for un-released milestone', function() {
+      grader.isMilestoneReleasedSync({ kind: 'labs', proj: 'lab3' }, 'final').should.be.false;
+    });
+    it('should return false for missing milestone', function() {
+      grader.isMilestoneReleasedSync({ kind: 'labs', proj: 'lab3' }, 'alpha').should.be.false;
     });
   });
 });

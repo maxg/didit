@@ -39,6 +39,8 @@ Fixture.prototype.special = {
   'student-repos': path.join(config.student.repos, config.student.semester),
   'staff-repo.git': config.staff.repo,
   'build-results': path.join(config.build.results, config.student.semester),
+  'sweeps': path.join(config.build.results, 'sweeps', config.student.semester),
+  'milestones': path.join(config.build.results, 'milestones', config.student.semester),
 };
 
 function recursiveCopier(destination) {
