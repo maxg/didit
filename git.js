@@ -12,6 +12,10 @@ function studentSourcePath(spec) {
   return [ config.student.repos, config.student.semester, spec.kind, spec.proj, spec.users.join('-') ].join('/') + '.git';
 }
 
+function builderDir(spec) {
+  return [ config.staff.semester, spec.kind, spec.proj, 'grading' ].join('/');
+}
+
 // spawn a process and log stderr
 // options must include a 'pipe' setting for stderr
 function spawnAndLog(command, args, options) {
@@ -145,15 +149,23 @@ exports.cloneStudentSource = function(spec, dest, callback) {
   });
 };
 
-exports.builderRev = function(callback) {
-  findRev(config.staff.repo, [ 'rev-parse', '--verify', 'refs/heads/master' ], callback);
+exports.builderRev = function(spec, callback) {
+  findRev(config.staff.repo,
+          [ 'rev-list', '--max-count=1', 'master', '--', builderDir(spec) ],
+          callback);
+};
+
+exports.builderRevBefore = function(spec, upto, callback) {
+  findRev(config.staff.repo,
+          [ 'rev-list', '--max-count=1', upto, '--', builderDir(spec) ],
+          callback);
 };
 
 // fetch staff build materials
 // callback returns staff commit hash
 exports.fetchBuilder = function(spec, dest, callback) {
   log.info({ spec: spec, dest: dest }, 'fetchBuilder');
-  var pathParts = [ config.staff.semester, spec.kind, spec.proj, 'grading' ];
+  var dir = builderDir(spec);
   var procs = [ 'id', 'tar' ];
   async.auto({
     
@@ -169,7 +181,7 @@ exports.fetchBuilder = function(spec, dest, callback) {
     // untar the staff builder
     tar: function(next) {
       next(null, spawn('tar', [ 'x',
-        '--strip-components', pathParts.length
+        '--strip-components', dir.split('/').length
       ], {
         cwd: dest,
         stdio: 'pipe'
@@ -181,7 +193,7 @@ exports.fetchBuilder = function(spec, dest, callback) {
       log.info('fetchBuilder', 'archive');
       var git = spawn('git', [ 'archive',
         '--remote', [ 'file:/', config.staff.repo ].join('/'), 'master', '--',
-        pathParts.join('/')
+        dir
       ], {
         cwd: dest,
         stdio: 'pipe'
@@ -208,8 +220,15 @@ exports.fetchBuilder = function(spec, dest, callback) {
       procs.forEach(function(proc) { results[proc].stdout.on('end', async.apply(done, 0)); });
       procs.forEach(function(proc) { results[proc].on('exit', done); });
     }),
+    
+    // find the builder revision for this project
+    staffrev: [ 'archive', function(next, results) {
+      exports.builderRevBefore(spec, results.archive.trim(), function(err, staffrev) {
+        next(err, staffrev);
+      });
+    } ]
   }, function(err, results) {
-    callback(err, results ? results.archive.substring(0, 7) : null);
+    callback(err, results ? results.staffrev.substring(0, 7) : null);
   });
 };
 

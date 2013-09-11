@@ -166,7 +166,7 @@ exports.startSweep = function(spec, when, startCallback, finishCallback) {
         reporevs: results.repos
       }), function(err) { next(err); });
     } ],
-    builder: git.builderRev,
+    builder: async.apply(git.builderRev, spec),
     buildAndGrade: [ 'record', 'builder', function(next, results) {
       buildSweep(spec, when, results.builder, next);
     } ]
@@ -181,7 +181,7 @@ exports.startSweep = function(spec, when, startCallback, finishCallback) {
 // finishCallback returns the new grade report
 exports.rebuildSweep = function(params, startCallback, finishCallback) {
   log.info({ params: params }, 'rebuildSweep');
-  git.builderRev(function(err, staffrev) {
+  git.builderRev(params, function(err, staffrev) {
     buildSweep(params, params.datetime, staffrev, finishCallback || function() {});
     startCallback(err);
   });

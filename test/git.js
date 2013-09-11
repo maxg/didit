@@ -138,7 +138,34 @@ describe('git', function() {
   
   describe('builderRev', function() {
     it('should return current revision', function(done) {
-      git.builderRev(function(err, staffrev) {
+      git.builderRev({ kind: 'labs', proj: 'lab2' }, function(err, staffrev) {
+        staffrev.should.equal('df5a5e0');
+        done(err);
+      });
+    });
+    it('should return old revision', function(done) {
+      git.builderRev({ kind: 'labs', proj: 'lab1' }, function(err, staffrev) {
+        staffrev.should.equal('1178dcf');
+        done(err);
+      });
+    });
+  });
+  
+  describe('builderRevBefore', function() {
+    it('should return current revision', function(done) {
+      git.builderRevBefore({ kind: 'labs', proj: 'lab2' }, 'df5a5e0', function(err, staffrev) {
+        staffrev.should.equal('df5a5e0');
+        done(err);
+      });
+    });
+    it('should return most recent revision', function(done) {
+      git.builderRevBefore({ kind: 'labs', proj: 'lab1' }, 'df5a5e0', function(err, staffrev) {
+        staffrev.should.equal('1178dcf');
+        done(err);
+      });
+    });
+    it('should return old revision', function(done) {
+      git.builderRevBefore({ kind: 'labs', proj: 'lab1' }, '1178dcf', function(err, staffrev) {
         staffrev.should.equal('1178dcf');
         done(err);
       });
