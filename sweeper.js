@@ -134,7 +134,7 @@ exports.startSweep = function(spec, when, startCallback, finishCallback) {
         started: started,
         reporevs: []
       }), function(err) {
-        log.error(err, { spec: spec, when: when, file: 'sweep' });
+        if (err) { log.error(err, { spec: spec, when: when, file: 'sweep' }); }
         next();
       });
     } ],
