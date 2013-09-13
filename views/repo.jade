@@ -33,7 +33,8 @@ block content
           h2 Milestones
           each milestone in milestones
             h3
-              a(href="/milestone/#{kind}/#{proj}/#{users.join('-')}/#{milestone.name}")= milestone.name
+              a(class="#{milestone.released ? '' : 'text-warning'}",
+                href="/milestone/#{kind}/#{proj}/#{users.join('-')}/#{milestone.name}")= milestone.name
 
     h2= builds.length > 0 ? 'Revisions' : 'No revisions'
     each build in builds
