@@ -192,7 +192,7 @@ exports.findMilestoneGrade = function(spec, name, callback) {
   var json = path.join(milestoneDir(spec, name), spec.users.join('-') + '.json');
   fs.readFile(json, function(err, data) {
     if (err) {
-      log.error(err, 'error reading milestone grade');
+      err.dmesg = err.dmesg || 'error reading milestone grade';
       callback(err);
       return;
     }

@@ -1,5 +1,8 @@
 extends layout
 
+append head
+  title Not Found - Didit
+
 block content
   div.span3
     include sidebar
@@ -9,6 +12,9 @@ block content
         tt= proj
         |  by&nbsp;
         tt= users.join('-')
-        |  rev&nbsp;
-        tt= rev
+        if name
+          |  #{name}
+        else
+          |  rev&nbsp;
+          tt= rev
     h2 Not found
