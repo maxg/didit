@@ -30,7 +30,7 @@ each reporev in reporevs
   | #{reporev.kind},#{reporev.proj},
   each _, idx in spacer
     | #{reporev.users[idx]},
-  | ="#{reporev.rev}",
+  | "=""#{reporev.rev}""",
   if reporev.grade
     | #{reporev.grade.score},#{reporev.grade.outof},
     each suite in reporev.grade.testsuites
