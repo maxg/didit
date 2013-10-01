@@ -106,7 +106,7 @@ exports.sendMail = function(recipients, subject, template, locals, callback) {
     if (err) {
       log.error(err, 'error sending mail');
     }
-    callback(err, result.message);
+    callback(err, result && result.message);
   });
 };
 
