@@ -38,6 +38,16 @@ pre {
   margin-bottom: 0;
 }
 
+.alert.collapse-oneshot {
+  display: block;
+}
+.alert.collapse-oneshot:not(.collapsed) {
+  display: none;
+}
+.alert.collapse:not(.in) {
+  display: none;
+}
+
 ul.testresults {
   margin-left: 0;
   list-style: none;

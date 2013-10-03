@@ -28,9 +28,9 @@ block content
           small= build.err.dmesg
 
     if authstaff && staffmode && build.json.hidden
-      mixin testresults('Hidden tests', build, 'hidden')
+      mixin testresults('Hidden tests', build, 'hidden', ! build.compile)
 
-    mixin testresults('Public tests', build, 'public')
+    mixin testresults('Public tests', build, 'public', ! build.compile)
 
     div.progress.progress-striped(class="progress-#{build.compile ? 'success' : 'danger'}")
       div.bar(style='width: 100%')
@@ -41,14 +41,16 @@ block content
       else
         h3 No output
 
-mixin testresults(title, build, category)
+mixin testresults(title, build, category, collapse)
   - var success = build[category];
   - var output = build.txt[category];
   - var results = build.json[category];
   if ( ! results) || (results.tests == 0)
     div.progress.progress-striped
       div.bar.bar-danger(style='width: 100%')
-    div.alert.alert-error
+    if collapse
+      mixin testcollapse(category, 'danger')
+    div.alert.alert-error(id="testresults-#{category}", class="#{collapse ? 'collapse' : ''}")
       h2 #{title} FAILED TO RUN
       if output
         pre.pre-scrollable= output
@@ -58,7 +60,9 @@ mixin testresults(title, build, category)
       - var frac = results.tests == 0 ? 0 : Math.floor(ok / results.tests * 100);
       div.bar.bar-success(style="width: #{frac}%")
       div.bar.bar-danger(style="width: #{100 - frac}%")
-    div.alert(class="alert-#{success ? 'success' : 'yellow'}")
+    if collapse
+      mixin testcollapse(category, 'warning')
+    div.alert(id="testresults-#{category}", class="alert-#{success ? 'success' : 'yellow'} #{collapse ? 'collapse' : ''}")
       h2 #{title} #{success ? 'passed' : 'FAILED'}&nbsp;
         mixin testcounts(results)
       pre.pre-scrollable= output
@@ -98,3 +102,7 @@ mixin testcounts(counted)
   small #{counted.tests} test#{counted.tests == 1 ? '' : 's'},
     | #{counted.failures} failure#{counted.failures == 1 ? '' : 's'},
     | #{counted.errors} error#{counted.errors == 1 ? '' : 's'}
+
+mixin testcollapse(category, style)
+  a.alert.alert-yellow.collapse-oneshot.collapsed(href="#testresults-#{category}", data-toggle='collapse')
+    | show #{category} test results from failed compilation
