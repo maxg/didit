@@ -133,10 +133,10 @@ describe('frontend', function() {
         done(err);
       });
     });
-    it('should include the current build', function(done) {
+    it('without repo should include the current build', function(done) {
       mock.user('bob');
       request(root + 'labs/lab2/bob', function(err, res, body) {
-        body.should.match(/Latest Build/);
+        body.should.match(/Latest build/);
         body.should.match(/Compilation succeeded/).and.match(/Public tests FAILED/);
         body.should.not.match(/Hidden tests/);
         done(err);

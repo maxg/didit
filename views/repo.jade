@@ -13,18 +13,24 @@ block content
         |  by&nbsp;
         tt= users.join('-')
 
-    if current
+    if head || current
       div.span6.pull-right.well
-        h2 Latest Build
-        h3
-          a(href="/#{current.spec.kind}/#{current.spec.proj}/#{current.spec.users.join('-')}/#{current.spec.rev}")
-            tt= current.spec.rev
-          | &nbsp;
-          small built #{locals.moment(current.finished).calendar()}
-        div.alert(class="alert-#{current.public ? 'success' : 'yellow'}")
-          h4 Public tests #{current.public ? 'passed' : 'FAILED'}
-        div.alert(class="alert-#{current.compile ? 'success' : 'error'}")
-          h4 Compilation #{current.compile ? 'succeeded' : 'FAILED'}
+        h2= head ? 'Latest revision' : 'Latest build'
+        if current
+          h3
+            a(href="/#{current.spec.kind}/#{current.spec.proj}/#{current.spec.users.join('-')}/#{current.spec.rev}")
+              tt= current.spec.rev
+            | &nbsp;
+            small built #{locals.moment(current.finished).calendar()}
+          div.alert(class="alert-#{current.public ? 'success' : 'yellow'}")
+            h4 Public tests #{current.public ? 'passed' : 'FAILED'}
+          div.alert(class="alert-#{current.compile ? 'success' : 'error'}")
+            h4 Compilation #{current.compile ? 'succeeded' : 'FAILED'}
+        else
+          h3
+            tt.muted= head
+            | &nbsp;
+            small no build completed
 
     if milestones
       - milestones = milestones.filter(function(m) { return m.released || (authstaff && staffmode); });

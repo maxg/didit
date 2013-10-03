@@ -1,5 +1,6 @@
 var async = require('async');
 var byline = require('byline');
+var fs = require('fs');
 var glob = require('glob');
 var moment = require('moment');
 var path = require('path');
@@ -20,6 +21,9 @@ function builderDir(spec) {
 // options must include a 'pipe' setting for stderr
 function spawnAndLog(command, args, options) {
   var child = spawn(command, args, options);
+  child.on('error', function(err) {
+    log.error({ err: err, command: command, args: args, options: options });
+  });
   byline(child.stderr, { encoding: 'utf8' }).on('data', function(line) {
     log.error({ err: line, command: command, args: args, options: options });
   });
@@ -27,6 +31,10 @@ function spawnAndLog(command, args, options) {
 }
 
 function findRev(dir, gitargs, callback) {
+  if ( ! fs.existsSync(dir)) {
+    callback({ dmesg: 'no repository' });
+    return;
+  }
   var out = byline(spawnAndLog('git', gitargs, {
     cwd: dir,
     stdio: 'pipe'
@@ -89,7 +97,7 @@ exports.studentSourceLog = function(spec, range, callback) {
   out.on('end', function() {
     callback(null, lines);
   });
-}
+};
 
 // clone student source
 // callback returns student commit metadata

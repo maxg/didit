@@ -34,6 +34,11 @@ pre {
 .well h4:first-child {
   margin-top: 0;
 }
+.well h2 small,
+.well h3 small,
+.well h4 small {
+  white-space: nowrap;
+}
 .well div:last-child {
   margin-bottom: 0;
 }

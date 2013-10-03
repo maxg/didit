@@ -7,6 +7,7 @@ var path = require('path');
 var config = require('./config');
 var builder = require('./builder');
 var decider = require('./decider');
+var git = require('./git');
 var grader = require('./grader');
 var outofband = require('./outofband');
 var sweeper = require('./sweeper');
@@ -217,18 +218,23 @@ app.get('/:kind/:proj', authorize, function(req, res) {
 app.get('/:kind/:proj/:users', authorize, function(req, res) {
   async.auto({
     builds: async.apply(builder.findBuilds, req.params),
-    milestones: async.apply(grader.findMilestones, req.params)
+    milestones: async.apply(grader.findMilestones, req.params),
+    head: [ 'builds', 'milestones', async.apply(git.studentSourceRev, req.params) ]
   }, function(err, results) {
     var locals = {
       kind: req.params.kind,
       proj: req.params.proj,
       users: req.params.users,
       builds: results.builds,
+      head: results.head,
       current: null,
       milestones: results.milestones
     };
-    if (results.builds.length > 0) {
-      builder.findBuild(results.builds[0], function(err, build) {
+    if (results.head || (results.builds.length > 0)) {
+      var spec = results.head ? {
+        kind: locals.kind, proj: locals.proj, users: locals.users, rev: results.head
+      } : results.builds[0];
+      builder.findBuild(spec, function(err, build) {
         locals.current = build;
         res.render('repo', locals);
       });
