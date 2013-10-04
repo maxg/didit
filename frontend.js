@@ -486,6 +486,18 @@ app.post('/sweep/:kind/:proj', staffonly, function(req, res) {
   });
 });
 
+app.post('/:kind/:proj/:users/:rev/rebuild', staffonly, function(req, res) {
+  builder.startBuild(req.params, function(err, buildId) {
+    if (err) {
+      res.status(500);
+      res.render('500', { error: err.dmesg || 'Error starting rebuild' });
+    } else {
+      res.redirect('/' + req.params.kind + '/' + req.params.proj
+                   + '/' + req.params.users.join('-') + '/' + req.params.rev);
+    }
+  });
+});
+
 app.use(function(err, req, res, next) {
   log.error(err, 'application error');
   res.status(500);

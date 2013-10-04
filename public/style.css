@@ -120,3 +120,7 @@ table.grades td.splitter + td.splitter {
 .btn-baseline {
   vertical-align: baseline;
 }
+
+.btn-toolbar.pull-right {
+  margin-top: 0;
+}

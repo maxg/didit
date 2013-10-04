@@ -14,6 +14,9 @@ block content
         tt= users.join('-')
         |  rev&nbsp;
         tt= rev
+      if authstaff && staffmode
+        div.btn-toolbar.pull-right
+          button.btn.btn-mini(href='#rebuild', data-toggle='modal') rebuild
       p.muted builder&nbsp;
         if build.builder
           tt= build.builder
@@ -21,6 +24,20 @@ block content
           span.label.label-warning unknown
         |  started #{locals.moment(build.started).calendar()}
         |  took #{moment.duration(build.finished - build.started).humanize()}
+
+    if authstaff && staffmode
+      form#rebuild.modal.hide(action="/#{kind}/#{proj}/#{users.join('-')}/#{rev}/rebuild", method='post')
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3 Confirm rebuild
+        div.modal-body
+          p Existing results will be discarded during the rebuild,
+            br
+            | even if the project was built with the current builder.
+          p The build page will update after the new build is complete.
+        div.modal-footer
+          a.btn(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Discard results and force rebuild
 
     if build.err
       div.alert.alert-error
