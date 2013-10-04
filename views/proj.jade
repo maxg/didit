@@ -13,7 +13,7 @@ block content
     
     if authstaff
       
-      form#confirm-sweep.modal.hide.form-horizontal(action="/sweep/#{kind}/#{proj}", method='post')
+      form#confirm-sweep.modal.hide.form-horizontal(action="/sweep/#{kind}/#{proj}", method='post', tabindex='-1')
         div.modal-header
           a.close(data-dismiss='modal') &times;
           h3 Confirm sweep
@@ -28,7 +28,7 @@ block content
           a.btn(href='#', data-dismiss='modal') Cancel
           button.btn.btn-info Sweep #{kind}/#{proj}
       
-      form#create-milestone.modal.hide.form-horizontal(action="/milestone/#{kind}/#{proj}", method='post')
+      form#create-milestone.modal.hide.form-horizontal(action="/milestone/#{kind}/#{proj}", method='post', tabindex='-1')
         div.modal-header
           a.close(data-dismiss='modal') &times;
           h3 Create milestone

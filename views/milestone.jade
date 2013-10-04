@@ -19,7 +19,7 @@ block content
         else
           button.btn(href='#release', data-toggle='modal') release grades
     
-    form#grade-from-sweep.modal.hide(action="/grade/#{kind}/#{proj}/#{name}/sweep", method='post')
+    form#grade-from-sweep.modal.hide(action="/grade/#{kind}/#{proj}/#{name}/sweep", method='post', tabindex='-1')
       div.modal-header
         a.close(data-dismiss='modal') &times;
         h3 Choose students and sweep
@@ -36,7 +36,7 @@ block content
         a.btn(href='#', data-dismiss='modal') Cancel
         button.btn.btn-info Assign grades for #{kind}/#{proj} #{name}
     
-    form.form-horizontal#grade-from-revs.modal.hide(action="/grade/#{kind}/#{proj}/#{name}/revs", method='post')
+    form.form-horizontal#grade-from-revs.modal.hide(action="/grade/#{kind}/#{proj}/#{name}/revs", method='post', tabindex='-1')
       div.modal-header
         a.close(data-dismiss='modal') &times;
         h3 Choose students and revisions
@@ -50,7 +50,7 @@ block content
         a.btn(href='#', data-dismiss='modal') Cancel
         button.btn.btn-info Assign grades for #{kind}/#{proj} #{name}
     
-    form#release.modal.hide(action="/milestone/#{kind}/#{proj}/#{name}/release", method='post')
+    form#release.modal.hide(action="/milestone/#{kind}/#{proj}/#{name}/release", method='post', tabindex='-1')
       div.modal-header
         a.close(data-dismiss='modal') &times;
         h3 Confirm grades release

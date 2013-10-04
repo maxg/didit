@@ -15,7 +15,7 @@ block content
       else
         p Started #{moment(sweep.started).fromNow()}...
     
-    form#rebuild.modal.hide(action="/sweep/#{kind}/#{proj}/#{datetime.format(moment.compactFormat)}/rebuild", method='post')
+    form#rebuild.modal.hide(action="/sweep/#{kind}/#{proj}/#{datetime.format(moment.compactFormat)}/rebuild", method='post', tabindex='-1')
       div.modal-header
         a.close(data-dismiss='modal') &times;
         h3 Confirm rebuild

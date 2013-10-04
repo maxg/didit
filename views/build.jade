@@ -26,7 +26,7 @@ block content
         |  took #{moment.duration(build.finished - build.started).humanize()}
 
     if authstaff && staffmode
-      form#rebuild.modal.hide(action="/#{kind}/#{proj}/#{users.join('-')}/#{rev}/rebuild", method='post')
+      form#rebuild.modal.hide(action="/#{kind}/#{proj}/#{users.join('-')}/#{rev}/rebuild", method='post', tabindex='-1')
         div.modal-header
           a.close(data-dismiss='modal') &times;
           h3 Confirm rebuild
