@@ -29,15 +29,18 @@ block content
     
     div.pull-right.well(style='margin:0')
       p.muted Auto-grading result:
-      h3.pull-right(style='margin:0') #{grade.score}&nbsp;
-        small / #{grade.outof}
+      if grade
+        h3.pull-right(style='margin:0') #{grade.score}&nbsp;
+          small / #{grade.outof}
+      else
+        h3.pull-right.label.label-important NO GRADE
     
     h2 Auto-graded rev&nbsp;
       a(href="/#{build.spec.kind}/#{build.spec.proj}/#{build.spec.users.join('-')}/#{build.spec.rev}")
         tt= build.spec.rev
-    p.muted(title="#{build.source && build.source.subject}") author
+    p.muted(title="#{build.source && build.source.subject}") author&nbsp;
       if build.source && build.source.author
-        |  #{build.source.author} committed #{locals.moment(parseInt(build.source.committertime)*1000).calendar()}
+        | #{build.source.author} committed #{locals.moment(parseInt(build.source.committertime)*1000).calendar()}
       else
         span.label.label-warning unknown
     p.muted builder&nbsp;
@@ -48,17 +51,20 @@ block content
       |  started #{locals.moment(build.started).calendar()}
       |  took #{moment.duration(build.finished - build.started).humanize()}
     
-    table.table.table-condensed.testresults
-      tbody
-        each suite in grade.testsuites
-          tr.testsuite
-            td(colspan=2)
-              div: h3 #{suite.package}#{suite.package ? '.' : ''}#{suite.name}
-              if suite.properties
-                div= suite.properties.desc
-              if suite.missing
-                div Test suite did not run
-          mixin suiteresults(suite)
+    if grade
+      table.table.table-condensed.testresults
+        tbody
+          each suite in grade.testsuites
+            tr.testsuite
+              td(colspan=2)
+                div: h3 #{suite.package}#{suite.package ? '.' : ''}#{suite.name}
+                if suite.properties
+                  div= suite.properties.desc
+                if suite.missing
+                  div Test suite did not run
+            mixin suiteresults(suite)
+    else
+      h3.pull-left Grader did not run
 
 mixin suiteresults(suite)
   each test in suite.testcases
