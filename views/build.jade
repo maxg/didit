@@ -66,7 +66,7 @@ mixin testresults(title, build, category, collapse)
     div.progress.progress-striped
       div.bar.bar-danger(style='width: 100%')
     if collapse
-      mixin testcollapse(category, 'danger')
+      mixin testcollapse(category, 'error')
     div.alert.alert-error(id="testresults-#{category}", class="#{collapse ? 'collapse' : ''}")
       h2 #{title} FAILED TO RUN
       if output
@@ -78,7 +78,7 @@ mixin testresults(title, build, category, collapse)
       div.bar.bar-success(style="width: #{frac}%")
       div.bar.bar-danger(style="width: #{100 - frac}%")
     if collapse
-      mixin testcollapse(category, 'warning')
+      mixin testcollapse(category, 'yellow')
     div.alert(id="testresults-#{category}", class="alert-#{success ? 'success' : 'yellow'} #{collapse ? 'collapse' : ''}")
       h2 #{title} #{success ? 'passed' : 'FAILED'}&nbsp;
         mixin testcounts(results)
@@ -121,5 +121,5 @@ mixin testcounts(counted)
     | #{counted.errors} error#{counted.errors == 1 ? '' : 's'}
 
 mixin testcollapse(category, style)
-  a.alert.alert-yellow.collapse-oneshot.collapsed(href="#testresults-#{category}", data-toggle='collapse')
+  a.alert.collapse-oneshot.collapsed(class="alert-#{style}", href="#testresults-#{category}", data-toggle='collapse')
     | show #{category} test results from failed compilation
