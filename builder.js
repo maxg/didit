@@ -4,6 +4,7 @@ var fs = require('fs');
 var glob = require('glob');
 var mkdirp = require('mkdirp');
 var path = require('path');
+var rimraf = require('rimraf');
 var temp = require('temp');
 
 var config = require('./config');
@@ -227,6 +228,14 @@ exports.build = function(spec, progressCallback, resultCallback) {
     fs.writeFile(buildResultFile(spec), JSON.stringify(results), function(fserr) {
       if (fserr) { log.error({ err: fserr, results: results }, 'error writing results'); }
       resultCallback(err || fserr, results);
+      
+      if (results.builddir && ! (err || fserr)) {
+        setTimeout(function() {
+          rimraf(results.builddir, function(err) {
+            if (err) { log.error(err, 'error removing build directory'); }
+          });
+        }, 1000 * 60 * 60);
+      }
     });
   });
 }
