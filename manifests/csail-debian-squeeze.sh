@@ -14,7 +14,14 @@ deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main
 " | sudo tee -a /etc/apt/sources.list.d/webupd8team-java.list
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886
 sudo apt-get update
-sudo apt-get install vim git oracle-java7-installer ant eclipse-jdt authbind
+sudo apt-get install vim git oracle-java7-installer ant authbind
+
+# Install Eclipse
+eclipse_ver='kepler-SR1'
+eclipse_dist='linux-gtk-x86_64'
+eclipse="http://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/${eclipse_ver/-//}/eclipse-standard-$eclipse_ver-$eclipse_dist.tar.gz&r=1"
+sudo mkdir "/usr/local/eclipse-$eclipse_ver"
+curl --location "$eclipse" | sudo tar zx --strip-components=1 --directory "/usr/local/eclipse-$eclipse_ver"
 
 # Install Node.js
 curl "http://nodejs.org/dist/$node_ver/node-$node_ver-$node_dist.tar.gz" | sudo tar zx --directory /usr/local
