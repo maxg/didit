@@ -162,7 +162,13 @@ exports.findMilestone = function(spec, name, callback) {
         fs.exists(json, function(graded) {
           if (graded) {
             fs.readFile(json, function(err, data) {
-              reporevs.push(JSON.parse(data));
+              try {
+                reporevs.push(JSON.parse(data));
+              } catch (err) {
+                log.error(err, { spec: spec, name: name, user: user, file: json });
+                next(err);
+                return;
+              }
               next();
             });
           } else {
@@ -174,8 +180,8 @@ exports.findMilestone = function(spec, name, callback) {
     }, function(err) {
       async.sortBy(reporevs, function(reporev, use) {
         use(null, config.staff.users.indexOf(reporev.users[0]) + reporev.users[0]);
-      }, function(err, reporevs) {
-        callback(err, {
+      }, function(sorterr, reporevs) {
+        callback(err || sorterr, {
           kind: spec.kind,
           proj: spec.proj,
           name: name,
