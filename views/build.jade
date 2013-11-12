@@ -110,7 +110,7 @@ mixin suiteresults(suite, category)
         if test.error || test.failure
           pre.pre-scrollable= test.error || test.failure
   div.clearfix
-    if suite.sysout && (suite.sysout.length > 1 || suite.syserr[0])
+    if suite.sysout && (suite.sysout.length > 1 || suite.sysout[0])
       pre.pull-left.pre-scrollable(style='width:45%')= suite.sysout.join('\n')
     if suite.syserr && (suite.syserr.length > 1 || suite.syserr[0])
       pre.pull-right.pre-scrollable.text-error(style='width:45%')= suite.syserr.join('\n')
