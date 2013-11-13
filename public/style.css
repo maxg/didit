@@ -124,3 +124,8 @@ table.grades td.splitter + td.splitter {
 .btn-toolbar.pull-right {
   margin-top: 0;
 }
+
+.modal-bottom {
+  top: auto;
+  bottom: 10%;
+}
