@@ -224,6 +224,42 @@ function buildSweep(spec, when, staffrev, callback) {
   });
 }
 
+// schedule catch-up builds over the given interval
+exports.scheduleCatchups = function(spec, hours, callback) {
+  log.info({ spec: spec, hours: hours }, 'scheduleCatchups');
+  async.auto({
+    repos: async.apply(git.findStudentRepos, spec),
+    schedule: [ 'repos', function(next, results) {
+      var delay = hours * 60 * 60 * 1000 / (results.repos.length - 1);
+      shuffle(results.repos).forEach(function(spec, idx) {
+        log.info({ spec: spec, delay: delay * idx }, 'scheduling catch-up')
+        setTimeout(function() {
+          promiseCurrentBuild(spec, function() {});
+        }, delay * idx);
+      });
+      next();
+    } ]
+  }, function(err) {
+    if (err) { log.error(err, 'catch-up error'); }
+    callback(err);
+  });
+};
+
+function promiseCurrentBuild(spec, callback) {
+  log.info({ spec: spec }, 'promiseCurrentBuild');
+  async.auto({
+    revision: async.apply(git.studentSourceRev, spec),
+    builder: async.apply(git.builderRev, spec),
+    promise: [ 'revision', 'builder', function(next, results) {
+      spec.rev = results.revision || null;
+      promiseBuild(spec, results.builder, next);
+    } ]
+  }, function(err, results) {
+    if (err) { log.error({ err: err, spec: spec }, 'error promising current build'); }
+    callback(err, results.promise);
+  });
+}
+
 function promiseBuild(spec, staffrev, callback) {
   log.info({ spec: spec }, 'promiseBuild');
   if ( ! spec.rev) {

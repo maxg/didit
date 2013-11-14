@@ -18,6 +18,7 @@ block content
           a.close(data-dismiss='modal') &times;
           h3 Confirm sweep
         div.modal-body
+          p Record repository revisions and ensure that they have up-to-date builds.
           div.control-group
             label.control-label(for='sweep-date') Record revisions as of:
             div.controls
@@ -28,11 +29,28 @@ block content
           a.btn(href='#', data-dismiss='modal') Cancel
           button.btn.btn-info Sweep #{kind}/#{proj}
       
+      form#confirm-catchup.modal.hide.form-horizontal(action="/catchup/#{kind}/#{proj}", method='post', tabindex='-1')
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3 Confirm catch-up
+        div.modal-body
+          p Schedule builds for all project repositories, but do not record a sweep.
+          div.control-group
+            label.control-label(for='catchup-hours') Build over the next:
+            div.controls
+              div.input-append
+                input#catchup-hours.input-mini(type='number', name='hours', value='24', min='1', max='240')
+                span.add-on hours
+        div.modal-footer
+          a.btn(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Catch-up #{kind}/#{proj}
+      
       form#create-milestone.modal.hide.form-horizontal(action="/milestone/#{kind}/#{proj}", method='post', tabindex='-1')
         div.modal-header
           a.close(data-dismiss='modal') &times;
           h3 Create milestone
         div.modal-body
+          p Create a grading milestone.
           div.control-group
             label.control-label(for='milestone-name') Name:
             div.controls
@@ -52,6 +70,7 @@ block content
             h4.muted #{sweep.when.format('llll')}&nbsp;
               span.badge #{sweep.when.fromNow()}
           a.btn.btn-small.btn-info(href='#confirm-sweep', data-toggle='modal') New sweep
+          a.btn.btn-small.pull-right(href='#confirm-catchup', data-toggle='modal') Catch-up
         div.well
           h3= milestones.length > 0 ? 'Milestones' : 'No milestones'
           each milestone in milestones
