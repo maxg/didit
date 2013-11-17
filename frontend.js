@@ -20,6 +20,7 @@ app.set('view engine', 'jade');
 
 app.use('/static', express.static(path.join(__dirname, 'public')));
 app.use(logger.express());
+app.use(express.responseTime());
 app.use(express.cookieParser());
 app.use(express.bodyParser());
 
