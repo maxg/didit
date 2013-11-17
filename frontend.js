@@ -184,10 +184,14 @@ app.get('/sweep/:kind/:proj/:datetime:extension(.csv)?', staffonly, function(req
 });
 
 app.get('/u/:users', authorize, function(req, res) {
-  builder.findRepos(req.params, function(err, repos) {
+  async.auto({
+    repos: async.apply(builder.findRepos, req.params),
+    fullnames: async.apply(async.map, req.params.users, rolodex.lookup)
+  }, function(err, results) {
     res.render('users', {
       users: req.params.users,
-      repos: repos
+      repos: results.repos,
+      fullnames: results.fullnames
     });
   });
 });
