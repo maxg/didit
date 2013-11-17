@@ -10,6 +10,7 @@ var decider = require('./decider');
 var git = require('./git');
 var grader = require('./grader');
 var outofband = require('./outofband');
+var rolodex = require('./rolodex');
 var sweeper = require('./sweeper');
 var logger = require('./logger');
 var log = logger.cat('frontend');
@@ -196,7 +197,15 @@ app.get('/:kind/:proj', authorize, function(req, res) {
     req.params.users = [ res.locals.authuser ];
   }
   var findAll = {
-    repos: async.apply(builder.findRepos, req.params)
+    repos: async.apply(builder.findRepos, req.params),
+    fullnames: [ 'repos', function(next, results) {
+      async.each(results.repos, function(repo, next) {
+        async.map(repo.users, rolodex.lookup, function(err, fullnames) {
+          repo.fullnames = fullnames;
+          next();
+        });
+      }, function(err) { next(); });
+    } ]
   };
   if (res.locals.authstaff) {
     findAll.sweeps = async.apply(sweeper.findSweeps, req.params);

@@ -16,6 +16,7 @@ var override = {
   web: {
     certDomain: 'example.com'
   },
+  ldap: undefined,
   mail: {
     transport: undefined
   },
