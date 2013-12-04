@@ -5,6 +5,7 @@ var moment = require('moment');
 var path = require('path');
 
 var config = require('./config');
+var cached = require('./cached');
 var builder = require('./builder');
 var decider = require('./decider');
 var git = require('./git');
@@ -19,7 +20,9 @@ var app = express();
 
 app.set('view engine', 'jade');
 
-app.use('/static', express.static(path.join(__dirname, 'public')));
+var static = cached.static(path.join(__dirname, 'public'));
+
+app.use('/static', static);
 app.use(logger.express());
 app.use(express.responseTime());
 app.use(express.cookieParser());
@@ -27,7 +30,8 @@ app.use(express.urlencoded());
 
 app.locals({
   config: require('./config'),
-  moment: moment
+  moment: moment,
+  static: function(url) { return '/static' + static.url(url); }
 });
 
 // use string callbacks to check input against anchored regex

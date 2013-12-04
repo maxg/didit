@@ -2,8 +2,8 @@ doctype
 html
   head
     block head
-      link(rel='stylesheet', href='/static/bootstrap/css/bootstrap.min.css')
-      link(rel='stylesheet', href='/static/style.css')
+      link(rel='stylesheet', href=static('/bootstrap/css/bootstrap.min.css'))
+      link(rel='stylesheet', href=static('/style.css'))
   body
     div.navbar.navbar-fixed-top
       div.navbar-inner
@@ -25,5 +25,5 @@ html
           small #{a(config.footer.who)} in the #{a(config.footer.where)} with the #{a(config.footer.what)}?
     block scripts
       script(src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js')
-      script(src='/static/bootstrap/js/bootstrap.min.js')
-      script(src='/static/main.js')
+      script(src=static('/bootstrap/js/bootstrap.min.js'))
+      script(src=static('/main.js'))
