@@ -142,6 +142,11 @@ exports.findMilestones = function(spec, callback) {
   glob(path.join('milestones', config.student.semester, kind, proj, '*'), {
     cwd: config.build.results
   }, function(err, files) {
+    if (err) {
+      err.dmesg = err.dmesg || 'error finding milestones';
+      callback(err);
+      return;
+    }
     async.map(files, function(file, set) {
       var parts = file.split(path.sep);
       var spec = { kind: parts[2], proj: parts[3], name: parts[4] };

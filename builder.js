@@ -57,6 +57,11 @@ exports.findRepos = function(spec, callback) {
   glob(path.join(config.student.semester, kind, proj, users), {
     cwd: config.build.results
   }, function(err, files) {
+    if (err) {
+      err.dmesg = err.dmesg || 'error finding known repos';
+      callback(err);
+      return;
+    }
     callback(err, files.map(function(file) {
       var parts = file.split(path.sep);
       return { kind: parts[1], proj: parts[2], users: parts[3].split('-') }
@@ -71,7 +76,11 @@ exports.findBuilds = function(spec, callback) {
   glob('*/result.json', {
     cwd: dir
   }, function(err, files) {
-    log.info('findBuilds', 'found', files);
+    if (err) {
+      err.dmesg = err.dmesg || 'error finding builds';
+      callback(err);
+      return;
+    }
     var revs = files.map(function(file) {
       return { rev: file.split(path.sep)[0], ctime: fs.statSync(path.join(dir, file)).ctime.getTime() };
     }).sort(function(a, b) {
@@ -106,6 +115,11 @@ exports.findBuild = function(spec, callback) {
     glob('*.*', {
       cwd: dir
     }, function(err, files) {
+      if (err) {
+        err.dmesg = err.dmesg || 'error finding build';
+        callback(err);
+        return;
+      }
       async.each(files, function(file, next) {
         fs.readFile(path.join(dir, file), { encoding: 'utf8' }, function(err, data) {
           var targtype = file.split('.');

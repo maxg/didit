@@ -111,6 +111,7 @@ app.get('*', function(req, res, next) {
 
 app.get('/', function(req, res, next) {
   builder.findRepos({ users: [ res.locals.authuser ] }, function(err, repos) {
+    if (err) { return next(err); }
     res.render('index', {
       repos: repos,
       projects: res.locals.authstaff ? builder.findProjectsSync() : []
@@ -148,6 +149,7 @@ app.get('/milestone/:kind/:proj/:name:extension(.csv)?', staffonly, function(req
     milestone: async.apply(grader.findMilestone, req.params, req.params.name),
     sweeps: async.apply(sweeper.findSweeps, req.params)
   }, function(err, results) {
+    if (err) { return next(err); }
     if (req.params.extension == '.csv') {
       res.set({ 'Content-Type': 'text/csv' });
       res.render('csv/grades', {
@@ -195,6 +197,7 @@ app.get('/u/:users', authorize, function(req, res, next) {
       });
     }
   }, function(err, results) {
+    if (err) { return next(err); }
     res.render('users', {
       users: req.params.users,
       repos: results.repos,

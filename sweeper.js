@@ -40,6 +40,11 @@ exports.findSweeps = function(spec, callback) {
   glob(path.join('sweeps', config.student.semester, kind, proj, '*', 'sweep.json'), {
     cwd: config.build.results
   }, function(err, files) {
+    if (err) {
+      err.dmesg = err.dmesg || 'error finding sweeps';
+      callback(err);
+      return;
+    }
     callback(err, files.map(function(file) {
       var parts = file.split(path.sep);
       return { kind: parts[2], proj: parts[3], when: moment(parts[4], moment.compactFormat) };

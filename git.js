@@ -59,6 +59,11 @@ exports.findStudentRepos = function(spec, callback) {
   glob(path.join(config.student.semester, kind, proj, users + '.git'), {
     cwd: config.student.repos
   }, function(err, dirs) {
+    if (err) {
+      err.dmesg = err.dmesg || 'error finding student repos'
+      callback(err);
+      return;
+    }
     callback(err, dirs.map(function(dir) {
       var parts = dir.split(path.sep);
       return { kind: parts[1], proj: parts[2], users: parts[3].split('.')[0].split('-') };
