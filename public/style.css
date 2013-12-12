@@ -25,6 +25,21 @@ pre {
   -moz-tab-size: 4;
 }
 
+.inline-header {
+  margin: 10px 0;
+}
+.inline-header h2,
+.inline-header h3,
+.inline-header h4 {
+  display: inline-block;
+  margin: 0;
+}
+.inline-header .muted,
+.inline-header .muted,
+.inline-header .muted {
+  white-space: nowrap;
+}
+
 .well .nav-list {
   padding: 0 5px 5px 5px;
 }

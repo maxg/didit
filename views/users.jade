@@ -9,6 +9,7 @@ block content
   div.span9
     div.page-header
       h1: tt= users.join('-')
+      p.muted= fullnames.filter(function(n) { return n; }).join(', ')
     h2= repos.length > 0 ? 'Repositories' : 'No repositories'
     each repo in repos
       h3: a(href="/#{repo.kind}/#{repo.proj}/#{repo.users.join('-')}").

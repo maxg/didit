@@ -19,6 +19,10 @@ module.exports = {
     owner: '...-staff@mit.edu',
     domain: 'mit.edu'
   },
+  ldap: {
+    url: 'ldap://...',
+    base: 'dc=mit,dc=edu'
+  },
   build: {
     eclipse: '/usr/lib/eclipse',
     results: '/afs/athena.mit.edu/course/.../didit',

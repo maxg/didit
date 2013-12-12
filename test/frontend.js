@@ -11,6 +11,7 @@ describe('frontend', function() {
   var config = require('../config');
   var builder = require('../builder');
   var frontend = require('../frontend');
+  var rolodex = require('../rolodex');
   
   var fix = fixtures();
   var mock = mocks.HTTPS();
@@ -59,6 +60,22 @@ describe('frontend', function() {
         done(err);
       });
     });
+    it('should include full names', function(done) {
+      mock.user('alice');
+      sandbox.stub(rolodex, 'lookup').withArgs('alice').yields(null, 'Alissa P. Hacker');
+      request(root + 'u/alice', function(err, res, body) {
+        body.should.match(/Alissa P. Hacker/);
+        done(err);
+      });
+    });
+    it('should skip full names with errors', function(done) {
+      mock.user('alice');
+      sandbox.stub(rolodex, 'lookup').yields(new Error());
+      request(root + 'u/alice', function(err, res, body) {
+        body.should.match(/alice/).and.not.match(/Alissa/);
+        done(err);
+      });
+    });
     it('should reject unauthorized students', function(done) {
       mock.user('bob');
       request(root + 'u/alice', function(err, res, body) {
@@ -96,6 +113,24 @@ describe('frontend', function() {
       mock.user('eve');
       request(root + 'labs/lab1', function(err, res, body) {
         body.should.match(/labs\/lab1\/alice/).and.match(/labs\/lab1\/bob/).and.not.match(/lab2/);
+        done(err);
+      });
+    });
+    it('should include full names', function(done) {
+      mock.user('alice');
+      sandbox.stub(rolodex, 'lookup').withArgs('alice').yields(null, 'Alissa P. Hacker');
+      request(root + 'labs/lab1', function(err, res, body) {
+        body.should.match(/Alissa P. Hacker/);
+        done(err);
+      });
+    });
+    it('should skip full names with errors', function(done) {
+      mock.user('bob');
+      var lookup = sandbox.stub(rolodex, 'lookup');
+      lookup.withArgs('alice').yields(null, 'Alissa P. Hacker');
+      lookup.withArgs('bob').yields(new Error());
+      request(root + 'projects/helloworld', function(err, res, body) {
+        body.should.match(/alice-bob/).and.match(/Alissa P. Hacker/);
         done(err);
       });
     });
