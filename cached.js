@@ -5,6 +5,9 @@ var path = require('path');
 
 var log = require('./logger').cat('cached');
 
+const length = 16;
+const sluggish = new RegExp('^/[0-9a-f]{' + length + '}');
+
 // static file server that allows client-side caching
 exports.static = function(root, options) {
   
@@ -21,8 +24,11 @@ exports.static = function(root, options) {
   
   // handle a static content request and allow clients to cache successful responses
   var cached = function(req, res, next) {
-    req.url = req.url.substring(req.url.indexOf('/', 1));
-    res.on('header', allowCaching);
+    req.url = req.url.replace(sluggish, function() {
+      // remove slug, allow caching
+      res.on('header', allowCaching);
+      return '';
+    });
     return static(req, res, function() {
       // did not handle this request, cannot allow caching
       res.removeListener('header', allowCaching);
@@ -38,7 +44,7 @@ exports.static = function(root, options) {
     
     var md5 = crypto.createHash('md5');
     md5.update(fs.readFileSync(path.join(root, url)));
-    var slug = md5.digest('hex').slice(-8);
+    var slug = md5.digest('hex').slice(-length);
     log.info({ url: url, slug: slug }, 'init cached resource');
     
     return (hashed[url] = '/' + slug) + url;
