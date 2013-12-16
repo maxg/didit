@@ -69,6 +69,12 @@ describe('builder', function() {
     it('user restriction should limit repos', function(done) {
       async.parallel([
         function(next) {
+          builder.findRepos({ users: [ 'max' ] }, function(err, repos) {
+            repos.should.eql([]);
+            next(err);
+          });
+        },
+        function(next) {
           builder.findRepos({ users: [ 'maxg' ] }, function(err, repos) {
             repos.should.eql([ fixed.repo.lab[1], fixed.repo.lab[3], fixed.repo.proj[1] ]);
             next(err);

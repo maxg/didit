@@ -1,6 +1,8 @@
-var fixtures = require('./fixtures');
+var async = require('async');
 var moment = require('moment');
 var should = require('should');
+
+var fixtures = require('./fixtures');
 
 describe('git', function() {
   
@@ -51,10 +53,20 @@ describe('git', function() {
       });
     });
     it('user restriction should limit repos', function(done) {
-      git.findStudentRepos({ kind: 'labs', users: [ 'bob' ]}, function(err, found) {
-        found.should.eql([ repos[1] ]);
-        done(err);
-      });
+      async.parallel([
+        function(next) {
+          git.findStudentRepos({ users: [ 'a' ] }, function(err, repos) {
+            repos.should.eql([]);
+            next(err);
+          });
+        },
+        function(next) {
+          git.findStudentRepos({ kind: 'labs', users: [ 'bob' ]}, function(err, found) {
+            found.should.eql([ repos[1] ]);
+            next(err);
+          });
+        }
+      ], done);
     });
   });
   
