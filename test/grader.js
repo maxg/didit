@@ -125,4 +125,37 @@ describe('grader', function() {
       grader.isMilestoneReleasedSync({ kind: 'labs', proj: 'lab3' }, 'alpha').should.be.false;
     });
   });
+  
+  describe('findMilestones', function() {
+    it('should return milestone specifications', function(done) {
+      grader.findMilestones({ kind: '*', proj: '*' }, function(err, milestones) {
+        milestones.should.eql([
+          { kind: 'labs', proj: 'lab3', name: 'beta', released: true },
+          { kind: 'labs', proj: 'lab3', name: 'final', released: false },
+          { kind: 'labs', proj: 'lab4', name: 'beta', released: false },
+          { kind: 'projects', proj: 'helloworld', name: 'test', released: true }
+        ]);
+        done(err);
+      });
+    }); 
+    it('kind restriction should limit milestones', function(done) {
+      grader.findMilestones({ kind: 'labs', proj: '*' }, function(err, milestones) {
+        milestones.should.eql([
+          { kind: 'labs', proj: 'lab3', name: 'beta', released: true },
+          { kind: 'labs', proj: 'lab3', name: 'final', released: false },
+          { kind: 'labs', proj: 'lab4', name: 'beta', released: false }
+        ]);
+        done(err);
+      });
+    });
+    it('proj restriction should limit milestones', function(done) {
+      grader.findMilestones({ kind: '*', proj: 'lab3' }, function(err, milestones) {
+        milestones.should.eql([
+          { kind: 'labs', proj: 'lab3', name: 'beta', released: true },
+          { kind: 'labs', proj: 'lab3', name: 'final', released: false }
+        ]);
+        done(err);
+      });
+    });
+  });
 });

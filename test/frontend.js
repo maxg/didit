@@ -52,6 +52,54 @@ describe('frontend', function() {
     });
   });
   
+  describe('GET /milestone/:kind/:proj/:users/:name', function() {
+    it('should render a grade report', function(done) {
+      mock.user('alice');
+      request(root + 'milestone/labs/lab3/alice/beta', function(err, res, body) {
+        body.should.match(/Auto-graded rev.*abcd789/);
+        done(err);
+      });
+    });
+    it('should fail when student has no report', function(done) {
+      mock.user('bob');
+      request(root + 'milestone/labs/lab3/bob/beta', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        body.should.match(/Not found/);
+        done(err);
+      });
+    });
+    it('should fail when not released', function(done) {
+      mock.user('alice');
+      request(root + 'milestone/labs/lab3/alice/final', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        body.should.not.match(/Auto-graded rev/);
+        done(err);
+      });
+    });
+    it('should reject unauthorized students', function(done) {
+      mock.user('bob');
+      request(root + 'milestone/labs/lab3/alice/beta', function(err, res, body) {
+        body.should.match(/You are not alice/);
+        body.should.not.match(/Auto-graded rev/);
+        done(err);
+      });
+    });
+    it('should allow staff', function(done) {
+      mock.user('eve');
+      request(root + 'milestone/labs/lab3/alice/beta', function(err, res, body) {
+        body.should.match(/Auto-graded rev.*abcd789/);
+        done(err);
+      });
+    });
+    it('should allow staff when not released', function(done) {
+      mock.user('eve');
+      request(root + 'milestone/labs/lab3/alice/final', function(err, res, body) {
+        body.should.match(/not released to student/).and.match(/Auto-graded rev.*abcd789/);
+        done(err);
+      });
+    });
+  });
+  
   describe('GET /u/:users', function() {
     it('should render repos for a user', function(done) {
       mock.user('alice');
