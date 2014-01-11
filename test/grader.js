@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var should = require('should');
 var sinon = require('sinon');
 
 var fixtures = require('./fixtures');
@@ -137,7 +138,7 @@ describe('grader', function() {
         ]);
         done(err);
       });
-    }); 
+    });
     it('kind restriction should limit milestones', function(done) {
       grader.findMilestones({ kind: 'labs', proj: '*' }, function(err, milestones) {
         milestones.should.eql([
@@ -155,6 +156,31 @@ describe('grader', function() {
           { kind: 'labs', proj: 'lab3', name: 'final', released: false }
         ]);
         done(err);
+      });
+    });
+  });
+  
+  describe('findMilestoneGrade', function() {
+    it('should return milestone grade report', function(done) {
+      grader.findMilestoneGrade({ kind: 'labs', proj: 'lab3', users: [ 'alice' ] }, 'beta', function(err, report) {
+        fix.readFile('alice.json', function(fserr, data) {
+          report.should.eql(JSON.parse(data));
+          done(err || fserr);
+        });
+      });
+    });
+    it('should fail with missing report', function(done) {
+      grader.findMilestoneGrade({ kind: 'labs', proj: 'lab3', users: [ 'bob' ] }, 'beta', function(err, report) {
+        err.should.be.an.instanceof(Error);
+        should.not.exist(report);
+        done();
+      });
+    });
+    it('should fail with invalid report', function(done) {
+      grader.findMilestoneGrade({ kind: 'labs', proj: 'lab3', users: [ 'charlie' ] }, 'beta', function(err, report) {
+        err.should.be.an.instanceof(Error);
+        should.not.exist(report);
+        done();
       });
     });
   });
