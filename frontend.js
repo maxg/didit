@@ -138,7 +138,7 @@ app.get('/milestone/:kind/:proj/:users/:name', authorize, function(req, res) {
       grade: results.grade,
       build: results.build
     });
-  })
+  });
 });
 
 app.get('/milestone/:kind/:proj/:name:extension(.csv)?', staffonly, function(req, res) {

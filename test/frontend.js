@@ -41,14 +41,14 @@ describe('frontend', function() {
       request(root, function(err, res, body) {
         body.should.match(/alice/).and.match(/My repositories.*labs\/lab1\/alice.*labs\/lab2\/alice/);
         done(err);
-      })
+      });
     });
     it('should render index for staff', function(done) {
       mock.user('eve');
       request(root, function(err, res, body) {
         body.should.match(/eve/).and.match(/All projects/);
         done(err);
-      })
+      });
     });
   });
   
