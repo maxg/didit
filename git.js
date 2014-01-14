@@ -236,7 +236,7 @@ exports.fetchBuilder = function(spec, dest, callback) {
       });
     } ]
   }, function(err, results) {
-    callback(err, results ? results.staffrev.substring(0, 7) : null);
+    callback(err, results && results.staffrev && results.staffrev.substring(0, 7));
   });
 };
 
