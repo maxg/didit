@@ -185,7 +185,11 @@ app.get('/sweep/:kind/:proj/:datetime:extension(.csv)?', staffonly, function(req
 app.get('/u/:users', authorize, function(req, res, next) {
   async.auto({
     repos: async.apply(builder.findRepos, req.params),
-    fullnames: async.apply(async.map, req.params.users, rolodex.lookup)
+    fullnames: function(callback) {
+      async.map(req.params.users, rolodex.lookup, function(err, fullnames) {
+        callback(null, fullnames);
+      });
+    }
   }, function(err, results) {
     res.render('users', {
       users: req.params.users,

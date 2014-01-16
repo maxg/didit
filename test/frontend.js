@@ -127,7 +127,7 @@ describe('frontend', function() {
       mock.user('alice');
       sandbox.stub(rolodex, 'lookup').yields(new Error());
       request(root + 'u/alice', function(err, res, body) {
-        body.should.match(/alice/).and.not.match(/Alissa/);
+        body.should.match(/alice/).and.match(/Repositories/).and.not.match(/Alissa/);
         done(err);
       });
     });
