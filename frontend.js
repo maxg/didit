@@ -105,7 +105,7 @@ app.get('*', function(req, res, next) {
   next();
 });
 
-app.get('/', function(req, res) {
+app.get('/', function(req, res, next) {
   builder.findRepos({ users: [ res.locals.authuser ] }, function(err, repos) {
     res.render('index', {
       repos: repos,
@@ -114,17 +114,15 @@ app.get('/', function(req, res) {
   });
 });
 
-app.get('/milestone/:kind/:proj/:users/:name', authorize, function(req, res) {
+app.get('/milestone/:kind/:proj/:users/:name', authorize, function(req, res, next) {
   var released = grader.isMilestoneReleasedSync(req.params, req.params.name);
   if ( ! (res.locals.authstaff || released)) {
-    res.status(404);
-    res.render(404);
-    return;
+    return res.status(404).render(404);
   }
   async.auto({
     grade: async.apply(grader.findMilestoneGrade, req.params, req.params.name),
-    build: [ 'grade', function(next, results) {
-      builder.findBuild(results.grade.spec, next);
+    build: [ 'grade', function(callback, results) {
+      builder.findBuild(results.grade.spec, callback);
     } ]
   }, function(err, results) {
     res.status(err ? 404 : 200);
@@ -141,7 +139,7 @@ app.get('/milestone/:kind/:proj/:users/:name', authorize, function(req, res) {
   });
 });
 
-app.get('/milestone/:kind/:proj/:name:extension(.csv)?', staffonly, function(req, res) {
+app.get('/milestone/:kind/:proj/:name:extension(.csv)?', staffonly, function(req, res, next) {
   async.auto({
     milestone: async.apply(grader.findMilestone, req.params, req.params.name),
     sweeps: async.apply(sweeper.findSweeps, req.params)
@@ -164,7 +162,7 @@ app.get('/milestone/:kind/:proj/:name:extension(.csv)?', staffonly, function(req
   });
 });
 
-app.get('/sweep/:kind/:proj/:datetime:extension(.csv)?', staffonly, function(req, res) {
+app.get('/sweep/:kind/:proj/:datetime:extension(.csv)?', staffonly, function(req, res, next) {
   sweeper.findSweep(req.params, function(err, sweep) {
     if (req.params.extension == '.csv') {
       res.set({ 'Content-Type': 'text/csv' });
@@ -184,7 +182,7 @@ app.get('/sweep/:kind/:proj/:datetime:extension(.csv)?', staffonly, function(req
   });
 });
 
-app.get('/u/:users', authorize, function(req, res) {
+app.get('/u/:users', authorize, function(req, res, next) {
   async.auto({
     repos: async.apply(builder.findRepos, req.params),
     fullnames: async.apply(async.map, req.params.users, rolodex.lookup)
@@ -197,19 +195,19 @@ app.get('/u/:users', authorize, function(req, res) {
   });
 });
 
-app.get('/:kind/:proj', authorize, function(req, res) {
+app.get('/:kind/:proj', authorize, function(req, res, next) {
   if ( ! res.locals.authstaff) {
     req.params.users = [ res.locals.authuser ];
   }
   var findAll = {
     repos: async.apply(builder.findRepos, req.params),
-    fullnames: [ 'repos', function(next, results) {
-      async.each(results.repos, function(repo, next) {
+    fullnames: [ 'repos', function(callback, results) {
+      async.each(results.repos, function(repo, callback) {
         async.map(repo.users, rolodex.lookup, function(err, fullnames) {
           repo.fullnames = fullnames;
-          next();
+          callback();
         });
-      }, function(err) { next(); });
+      }, function(err) { callback(); });
     } ]
   };
   if (res.locals.authstaff) {
@@ -229,7 +227,7 @@ app.get('/:kind/:proj', authorize, function(req, res) {
   });
 });
 
-app.get('/:kind/:proj/:users', authorize, function(req, res) {
+app.get('/:kind/:proj/:users', authorize, function(req, res, next) {
   async.auto({
     builds: async.apply(builder.findBuilds, req.params),
     milestones: async.apply(grader.findMilestones, req.params),
@@ -258,7 +256,7 @@ app.get('/:kind/:proj/:users', authorize, function(req, res) {
   });
 });
 
-app.get('/:kind/:proj/:users/:rev', authorize, function(req, res) {
+app.get('/:kind/:proj/:users/:rev', authorize, function(req, res, next) {
   builder.findBuild(req.params, function(err, build) {
     res.status(err ? 404 : 200);
     res.render(err ? 'missing' : 'build', {
@@ -271,7 +269,7 @@ app.get('/:kind/:proj/:users/:rev', authorize, function(req, res) {
   });
 });
 
-app.get('/:kind/:proj/:users/:rev/payload/:category/:suite/:filename', authorize, function(req, res) {
+app.get('/:kind/:proj/:users/:rev/payload/:category/:suite/:filename', authorize, function(req, res, next) {
   if (req.params.category != 'public' && ! res.locals.authstaff) {
     return res.status(404).render('404');
   }
@@ -290,7 +288,7 @@ app.get('/:kind/:proj/:users/:rev/payload/:category/:suite/:filename', authorize
   });
 });
 
-app.get('/:kind/:proj/:users/:rev/grade', staffonly, function(req, res) {
+app.get('/:kind/:proj/:users/:rev/grade', staffonly, function(req, res, next) {
   builder.findBuild(req.params, function(err, build) {
     res.status(err ? 404 : 200);
     res.render(err ? 'missing' : 'grade', {
@@ -305,12 +303,11 @@ app.get('/:kind/:proj/:users/:rev/grade', staffonly, function(req, res) {
 });
 
 app.get('*', function(req, res) {
-  res.status(404);
-  res.render('404');
+  res.status(404).render('404');
 });
 
 // build requests are not authenticated (the requester would have to guess a SHA)
-app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
+app.post('/build/:kind/:proj/:users/:rev', function(req, res, next) {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   var url = 'https://'+req.host+'/'+req.params.kind+'/'+req.params.proj+'/'+req.params.users.join('-');
   builder.findBuild(req.params, function(err, build) {
@@ -366,19 +363,19 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res) {
 // all other POST requests must be authenticated
 app.post('*', authenticate);
 
-app.post('/grade/:kind/:proj/:name/revs', staffonly, function(req, res) {
+app.post('/grade/:kind/:proj/:name/revs', staffonly, function(req, res, next) {
   var userBuilds = {};
   var accepts = [];
   var rejects = [];
-  async.each(Object.keys(req.body.revision), function(users, next) {
-    if ( ! req.body.revision[users]) { return next(); }
+  async.each(Object.keys(req.body.revision), function(users, callback) {
+    if ( ! req.body.revision[users]) { return callback(); }
     var revtext = req.body.revision[users].toString();
     var rev = (/^[a-f0-9]{7}/.exec(revtext) || [])[0];
     users = users.split('-');
     if ( ! rev) {
       log.warn({ params: req.params, users: users, rev: revtext }, 'invalid rev for grade');
       rejects.push({ users: users, rev: revtext });
-      return next();
+      return callback();
     }
     builder.findRepos({
       kind: req.params.kind, proj: req.params.proj, users: users
@@ -386,7 +383,7 @@ app.post('/grade/:kind/:proj/:name/revs', staffonly, function(req, res) {
       if (err || repos.length != 1) {
         log.warn({ params: req.params, users: users, rev: rev }, 'no repo for grade');
         rejects.push({ users: users, rev: rev });
-        return next();
+        return callback();
       }
       builder.findBuild({
         kind: repos[0].kind, proj: repos[0].proj, users: repos[0].users, rev: rev
@@ -398,28 +395,27 @@ app.post('/grade/:kind/:proj/:name/revs', staffonly, function(req, res) {
           accepts.push({ users: users, rev: build.spec.rev });
           users.forEach(function(user) { userBuilds[user] = build; });
         }
-        next();
+        callback();
       });
     });
   }, function(err) {
     grader.gradeFromBuilds(req.params, req.params.name, userBuilds, function(err) {
       if (err) {
-        res.status(500);
-        res.render('500', { error: err.dmesg || 'Error assigning grades' });
-      } else {
-        res.render('graded', {
-          kind: req.params.kind,
-          proj: req.params.proj,
-          name: req.params.name,
-          accepts: accepts,
-          rejects: rejects
-        });
+        err.dmesg = err.dmesg || 'Error assigning grades';
+        return next(err);
       }
+      res.render('graded', {
+        kind: req.params.kind,
+        proj: req.params.proj,
+        name: req.params.name,
+        accepts: accepts,
+        rejects: rejects
+      });
     });
   });
 });
 
-app.post('/grade/:kind/:proj/:name/sweep', staffonly, function(req, res) {
+app.post('/grade/:kind/:proj/:name/sweep', staffonly, function(req, res, next) {
   req.params.datetime = moment(req.body.datetime, moment.compactFormat);
   var usernames = req.body.usernames.split('\n').map(function(user) {
     return user.trim();
@@ -428,71 +424,63 @@ app.post('/grade/:kind/:proj/:name/sweep', staffonly, function(req, res) {
   });
   sweeper.findSweep(req.params, function(err, sweep) {
     if (err) {
-      res.status(500);
-      res.render('500', {error: err.dmesg || 'Error finding sweep' });
-      return;
+      err.dmesg = err.dmesg || 'Error finding sweep';
+      return next(err);
     }
     grader.gradeFromSweep(req.params, req.params.name, usernames, sweep, function(err) {
       if (err) {
-        res.status(500);
-        res.render('500', { error: err.dmesg || 'Error assigning grades' });
-      } else {
-        res.redirect('/milestone/' + req.params.kind + '/' + req.params.proj + '/' + req.params.name);
+        err.dmesg = err.dmesg || 'Error assigning grades';
+        return next(err);
       }
+      res.redirect('/milestone/' + req.params.kind + '/' + req.params.proj + '/' + req.params.name);
     });
   });
 });
 
-app.post('/milestone/:kind/:proj', staffonly, function(req, res) {
+app.post('/milestone/:kind/:proj', staffonly, function(req, res, next) {
   grader.createMilestone(req.params, req.body.name.toLowerCase().trim(), function(err) {
     if (err) {
-      res.status(500);
-      res.render('500', { error: err.dmesg || 'Error creating milestone' });
-    } else {
-      res.redirect('/' + req.params.kind + '/' + req.params.proj);
+      err.dmesg = err.dmesg || 'Error creating milestone';
+      return next(err);
     }
+    res.redirect('/' + req.params.kind + '/' + req.params.proj);
   });
 });
 
-app.post('/milestone/:kind/:proj/:name/release', staffonly, function(req, res) {
+app.post('/milestone/:kind/:proj/:name/release', staffonly, function(req, res, next) {
   grader.releaseMilestone(req.params, req.params.name, function(err) {
     if (err) {
-      res.status(500);
-      res.render('500', { error: err.dmesg || 'Error releasing milestone grades' });
-    } else {
-      res.redirect('/milestone/' + req.params.kind + '/' + req.params.proj + '/' + req.params.name);
+      err.dmesg = err.dmesg || 'Error releasing milestone grades';
+      return next(err);
     }
+    res.redirect('/milestone/' + req.params.kind + '/' + req.params.proj + '/' + req.params.name);
   })
 });
 
-app.post('/sweep/:kind/:proj/:datetime/rebuild', staffonly, function(req, res) {
+app.post('/sweep/:kind/:proj/:datetime/rebuild', staffonly, function(req, res, next) {
   sweeper.rebuildSweep(req.params, function(err) {
     if (err) {
-      res.status(500);
-      res.render('500', { error: err.dmesg || 'Error rebuilding sweep' });
-    } else {
-      res.redirect('/sweep/' + req.params.kind + '/' + req.params.proj
-                   + '/' + req.params.datetime.format(moment.compactFormat));
+      err.dmesg = err.dmesg || 'Error rebuilding sweep';
+      return next(err);
     }
+    res.redirect('/sweep/' + req.params.kind + '/' + req.params.proj
+                 + '/' + req.params.datetime.format(moment.compactFormat));
   }, function(err) {
     log.info({ spec: req.params, when: req.params.datetime }, 'finished rebuild');
   });
 });
 
-app.post('/sweep/:kind/:proj', staffonly, function(req, res) {
+app.post('/sweep/:kind/:proj', staffonly, function(req, res, next) {
   var datetime = moment(req.body.date + ' ' + req.body.time, moment.gitFormat);
   if ( ! datetime.isValid()) {
-    res.status(500);
-    res.render('500', { error: 'Invalid date and time' });
-    return;
+    return next({ dmesg: 'Invalid date and time' });
   }
   sweeper.scheduleSweep(req.params, datetime, function(err) {
     if (err) {
-      res.status(500);
-      res.render('500', { error: err.dmesg || 'Error starting sweep' });
-    } else {
-      res.redirect('/' + req.params.kind + '/' + req.params.proj);
+      err.dmesg = err.dmesg || 'Error starting sweep';
+      return next(err);
     }
+    res.redirect('/' + req.params.kind + '/' + req.params.proj);
   }, function(err) {
     log.info({ spec: req.params, when: datetime }, 'started sweep');
   }, function(err) {
@@ -500,32 +488,28 @@ app.post('/sweep/:kind/:proj', staffonly, function(req, res) {
   });
 });
 
-app.post('/catchup/:kind/:proj', staffonly, function(req, res) {
+app.post('/catchup/:kind/:proj', staffonly, function(req, res, next) {
   var hours = parseInt(req.body.hours);
   if ( ! hours) {
-    res.status(500);
-    res.render('500', { error: 'Invalid interval' });
-    return;
+    return next({ dmesg: 'Invalid interval' });
   }
   sweeper.scheduleCatchups(req.params, hours, function(err) {
     if (err) {
-      res.status(500);
-      res.render('500', { error: err.dmesg || 'Error starting catch-up' });
-    } else {
-      res.redirect('/' + req.params.kind + '/' + req.params.proj);
+      err.dmesg = err.dmesg || 'Error starting catch-up';
+      return next(err);
     }
+    res.redirect('/' + req.params.kind + '/' + req.params.proj);
   });
 });
 
-app.post('/:kind/:proj/:users/:rev/rebuild', staffonly, function(req, res) {
+app.post('/:kind/:proj/:users/:rev/rebuild', staffonly, function(req, res, next) {
   builder.startBuild(req.params, function(err, buildId) {
     if (err) {
-      res.status(500);
-      res.render('500', { error: err.dmesg || 'Error starting rebuild' });
-    } else {
-      res.redirect('/' + req.params.kind + '/' + req.params.proj
-                   + '/' + req.params.users.join('-') + '/' + req.params.rev);
+      err.dmesg = err.dmesg || 'Error starting rebuild';
+      return next(err);
     }
+    res.redirect('/' + req.params.kind + '/' + req.params.proj
+                 + '/' + req.params.users.join('-') + '/' + req.params.rev);
   });
 });
 
@@ -533,6 +517,7 @@ app.use(function(err, req, res, next) {
   log.error(err, 'application error');
   res.status(500);
   res.render('500', {
+    error: err.dmesg || '',
     stack: app.get('env') == 'development' ? err.stack : ''
   });
 });
