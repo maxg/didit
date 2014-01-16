@@ -120,9 +120,9 @@ app.get('/milestone/:kind/:proj/:users/:name', authorize, function(req, res, nex
     return res.status(404).render(404);
   }
   async.auto({
-    grade: async.apply(grader.findMilestoneGrade, req.params, req.params.name),
-    build: [ 'grade', function(callback, results) {
-      builder.findBuild(results.grade.spec, callback);
+    graded: async.apply(grader.findMilestoneGrade, req.params, req.params.name),
+    build: [ 'graded', function(callback, results) {
+      builder.findBuild(results.graded, callback);
     } ]
   }, function(err, results) {
     res.status(err ? 404 : 200);
@@ -133,7 +133,7 @@ app.get('/milestone/:kind/:proj/:users/:name', authorize, function(req, res, nex
       rev: results.build && results.build.spec.rev,
       name: req.params.name,
       released: released,
-      grade: results.grade,
+      grade: results.graded && results.graded.grade,
       build: results.build
     });
   });

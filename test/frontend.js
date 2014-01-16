@@ -67,6 +67,13 @@ describe('frontend', function() {
         body.should.match(/Not found/);
         done(err);
       });
+    }); 
+    it('should fail when student has no grade', function(done) {
+      mock.user('bob');
+      request(root + 'milestone/labs/lab2/bob/beta', function(err, res, body) {
+        body.should.match(/Auto-graded rev/).and.match(/NO GRADE/);
+        done(err);
+      });
     });
     it('should fail when not released', function(done) {
       mock.user('alice');

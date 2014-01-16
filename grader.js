@@ -203,7 +203,7 @@ exports.findMilestoneGrade = function(spec, name, callback) {
       return;
     }
     try {
-      callback(null, JSON.parse(data).grade);
+      callback(null, JSON.parse(data));
     } catch (err) {
       log.error(err, { spec: spec, name: name, file: json });
       callback(err);
