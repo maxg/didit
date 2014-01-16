@@ -60,7 +60,7 @@ describe('frontend', function() {
         done(err);
       });
     });
-    it('should fail when student has no report', function(done) {
+    it('should fail with missing report', function(done) {
       mock.user('bob');
       request(root + 'milestone/labs/lab3/bob/beta', function(err, res, body) {
         res.statusCode.should.equal(404);
@@ -68,7 +68,7 @@ describe('frontend', function() {
         done(err);
       });
     }); 
-    it('should fail when student has no grade', function(done) {
+    it('should fail with missing grade', function(done) {
       mock.user('bob');
       request(root + 'milestone/labs/lab2/bob/beta', function(err, res, body) {
         body.should.match(/Auto-graded rev/).and.match(/NO GRADE/);
@@ -321,6 +321,13 @@ describe('frontend', function() {
       request(root + 'labs/lab1/alice/abcd789/grade', function(err, res, body) {
         res.statusCode.should.equal(404);
         body.should.match(/Not found/);
+        done(err);
+      });
+    });
+    it('should fail with missing grade', function(done) {
+      mock.user('eve');
+      request(root + 'labs/lab2/bob/1234def/grade', function(err, res, body) {
+        body.should.match(/auto-grading result/i).and.match(/NO GRADE/);
         done(err);
       });
     });
