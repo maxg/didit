@@ -1,3 +1,4 @@
+var async = require('async');
 var fs = require('fs');
 var path = require('path');
 var should = require('should');
@@ -110,6 +111,55 @@ describe('grader', function() {
           report.outof.should.equal(20);
           JSON.parse(data).should.eql(report);
           done(err || fserr);
+        });
+      });
+    });
+  });
+  
+  describe('findTest', function() {
+    it('should return a test result', function(done) {
+      fix.readFile('build.json', function(err, data) {
+        var build = JSON.parse(data);
+        async.map([
+          [ 'public', 'SuiteGood', 'testTwo' ],
+          [ 'public', 'SuiteEvil', 'testTwo' ],
+          [ 'hidden', 'SuiteMean', 'testOne' ]
+        ], function(args, next) {
+          grader.findTest.apply(grader, [ build ].concat(args, next));
+        }, function(err, results) {
+          results.should.eql([
+            build.json.public.testsuites[0].testcases[1],
+            build.json.public.testsuites[1].testcases[1],
+            build.json.hidden.testsuites[1].testcases[0]
+          ]);
+          done(err);
+        });
+      });
+    });
+    it('should fail with missing test', function(done) {
+      fix.readFile('build.json', function(err, data) {
+        grader.findTest(JSON.parse(data), 'public', 'SuiteEvil', 'testOne', function(err, test) {
+          should.exist(err);
+          should.not.exist(test);
+          done();
+        });
+      });
+    });
+    it('should fail with missing suite', function(done) {
+      fix.readFile('build.json', function(err, data) {
+        grader.findTest(JSON.parse(data), 'public', 'SuiteEvil', 'testOne', function(err, test) {
+          should.exist(err);
+          should.not.exist(test);
+          done();
+        });
+      });
+    });
+    it('should fail with missing category', function(done) {
+      fix.readFile('build.json', function(err, data) {
+        grader.findTest(JSON.parse(data), 'public', 'SuiteKind', 'testOne', function(err, test) {
+          should.exist(err);
+          should.not.exist(test);
+          done();
         });
       });
     });

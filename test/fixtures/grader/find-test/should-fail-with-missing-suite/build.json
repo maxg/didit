@@ -1,0 +1,34 @@
+{
+  "json": {
+    "public": {
+      "testsuites": [
+        {
+          "name": "SuiteGood",
+          "testcases": [
+            { "classname": "pkg.SuiteGood", "name": "testOne" },
+            { "classname": "pkg.SuiteGood", "name": "testTwo" }
+          ]
+        }
+      ]
+    },
+    
+    "hidden": {
+      "testsuites": [
+        {
+          "name": "SuiteKind",
+          "testcases": [
+            { "classname": "pkg.SuiteKind", "name": "testOne" },
+            { "classname": "pkg.SuiteKind", "name": "testTwo" }
+          ]
+        },
+        {
+          "name": "SuiteMean",
+          "testcases": [
+            { "classname": "pkg.SuiteMean", "name": "testOne", "error": "java.lang.RuntimeException" },
+            { "classname": "pkg.SuiteMean", "name": "testTwo", "error": "java.lang.RuntimeException" }
+          ]
+        }
+      ]
+    }
+  }
+}
