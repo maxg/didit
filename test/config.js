@@ -1,3 +1,4 @@
+var os = require('os');
 var should = require('should');
 var temp = require('temp');
 
@@ -18,7 +19,11 @@ var override = {
   },
   ldap: undefined,
   mail: {
-    transport: undefined
+    transport: 'PICKUP',
+    directory: temp.mkdirSync('test-mail-'),
+    sender: process.env.USER + '@' + os.hostname(),
+    owner: 'nobody@example.com',
+    domain: 'example.com'
   },
   build: {
     results: temp.mkdirSync('test-build-results-')

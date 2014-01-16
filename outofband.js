@@ -55,8 +55,6 @@ exports.notify = function(spec, buildId, listeners, options) {
     }, function(err, result) {
       if (err) {
         log.error(err, 'error sending mail');
-      } else {
-        log.info({ result: result }, 'sent mail');
       }
     });
   });

@@ -23,6 +23,8 @@ module.transport = false;
 if (config.mail.transport && config.mail.sender && config.mail.domain) {
   if ( ! config.mail.owner) {
     log.error('missing mail owner');
+  } else if (config.mail.transport == 'PICKUP') {
+    module.transport = nodemailer.createTransport('PICKUP', config.mail.directory);
   } else if (config.mail.transport == 'SMTP') {
     module.transport = queuingTransport();
     dns.resolveMx(config.mail.domain, setSMTPTransport);
@@ -106,7 +108,7 @@ exports.sendMail = function(recipients, subject, template, locals, callback) {
     if (err) {
       log.error(err, 'error sending mail');
     }
-    callback(err, result && result.message);
+    callback(err, result);
   });
 };
 
