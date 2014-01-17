@@ -52,5 +52,17 @@ describe('outofband', function() {
       });
       builder.monitor.firstCall.returnValue.emit('done');
     });
+    
+    it('should email about a slow build', function(done) {
+      sandbox.useFakeTimers('setTimeout');
+      outofband.notify(spec, 'fake', [], {});
+      sandbox.stub(mailer, 'sendMail', function() {
+        builder.findBuild.calledOnce.should.be.true;
+        done();
+      });
+      sandbox.clock.tick(1000 * 60);
+      builder.findBuild.called.should.be.false;
+      sandbox.clock.tick(1000 * 60 * 60);
+    });
   });
 });

@@ -170,19 +170,20 @@ describe('builder', function() {
       spec.kind, spec.proj, spec.users[0], spec.rev
     );
     
+    var sandbox = sinon.sandbox.create();
+    
     beforeEach(function() {
       var test = this.currentTest;
-      sinon.stub(git, 'cloneStudentSource', function(spec, dest, callback) {
+      sandbox.stub(git, 'cloneStudentSource', function(spec, dest, callback) {
         fix.filesTo(test, 'build', dest, function() {
           callback(null, { rev: spec.rev });
         });
       });
-      sinon.stub(git, 'fetchBuilder').yields(null, 'f0f0f0f');
+      sandbox.stub(git, 'fetchBuilder').yields(null, 'f0f0f0f');
     });
     
     afterEach(function() {
-      git.cloneStudentSource.restore();
-      git.fetchBuilder.restore();
+      sandbox.restore();
     });
     
     it('should report when source is cloned', function(done) {
@@ -257,6 +258,19 @@ describe('builder', function() {
             return test.name;
           }).should.eql([ 'hiddenPass', 'hiddenError' ]);
           done(err || fserr);
+        });
+      });
+    });
+    it('should schedule build directory for deletion', function(done) {
+      sandbox.useFakeTimers('setTimeout');
+      builder.build(spec, function() { }, function(err, results) {
+        fs.readdirSync(results.builddir).should.eql([ 'hello.txt' ]);
+        process.nextTick(function() {
+          fs.watch(results.builddir).once('change', function() {
+            fs.existsSync(results.builddir).should.be.false;
+            done();
+          });
+          sandbox.clock.tick(1000 * 60 * 60);
         });
       });
     });
