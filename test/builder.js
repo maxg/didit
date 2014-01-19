@@ -206,9 +206,9 @@ describe('builder', function() {
         var finish = +new Date();
         results.source.rev.should.equal('aaaa123');
         results.builder.should.equal('f0f0f0f');
-        results.compile.should.be.a('boolean');
-        results.public.should.be.a('boolean');
-        results.hidden.should.be.a('boolean');
+        results.compile.should.be.type('boolean');
+        results.public.should.be.type('boolean');
+        results.hidden.should.be.type('boolean');
         results.grade.should.be.an.instanceof(Array);
         results.started.should.be.within(start, finish);
         results.finished.should.be.within(start, finish);
