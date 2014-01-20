@@ -8,6 +8,7 @@ var fixtures = require('./fixtures');
 
 describe('grader', function() {
   
+  var git = require('../git');
   var grader = require('../grader');
   
   var fix = fixtures();
@@ -212,6 +213,44 @@ describe('grader', function() {
     });
   });
   
+  describe('findMilestone', function() {
+    it('return should include graded projects', function(done) {
+      var spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
+      sandbox.stub(git, 'findStudentRepos').yields(null, [ spec ]);
+      grader.findMilestone({ kind: 'labs', proj: 'lab3' }, 'beta', function(err, milestone) {
+        milestone.should.include({ kind: 'labs', proj: 'lab3', name: 'beta' });
+        milestone.released.should.be.true;
+        milestone.reporevs.should.have.length(1);
+        milestone.reporevs[0].should.include(spec);
+        var grade = milestone.reporevs[0].grade;
+        grade.spec.should.eql({ kind: 'labs', proj: 'lab3', users: [ 'alice' ], rev: 'abcd789' });
+        grade.score.should.equal(5);
+        grade.outof.should.equal(15);
+        grade.testsuites.should.have.length(2);
+        done(err);
+      });
+    });
+    it('return should include ungraded projects', function(done) {
+      var spec = { kind: 'labs', proj: 'lab3', users: [ 'mystery' ] };
+      sandbox.stub(git, 'findStudentRepos').yields(null, [ spec ]);
+      grader.findMilestone({ kind: 'labs', proj: 'lab3' }, 'final', function(err, milestone) {
+        milestone.should.include({ kind: 'labs', proj: 'lab3', name: 'final' });
+        milestone.released.should.be.false;
+        milestone.reporevs.should.have.length(1);
+        milestone.reporevs[0].should.eql(spec);
+        done(err);
+      });
+    });
+    it('should fail with invalid grade file', function(done) {
+      var spec = { kind: 'labs', proj: 'lab3', users: [ 'charlie' ] };
+      sandbox.stub(git, 'findStudentRepos').yields(null, [ spec ]);
+      grader.findMilestone({ kind: 'labs', proj: 'lab3' }, 'beta', function(err, milestone) {
+        err.should.be.an.instanceof(Error);
+        done();
+      });
+    });
+  });
+  
   describe('findMilestoneGrade', function() {
     it('should return milestone grade report', function(done) {
       grader.findMilestoneGrade({ kind: 'labs', proj: 'lab3', users: [ 'alice' ] }, 'beta', function(err, report) {
@@ -233,6 +272,34 @@ describe('grader', function() {
         err.should.be.an.instanceof(Error);
         should.not.exist(report);
         done();
+      });
+    });
+  });
+  
+  describe('createMilestone', function() {
+    it('should create a new milestone', function(done) {
+      grader.createMilestone({ kind: 'tests', proj: 'valid' }, 'test', function(err) {
+        grader.findMilestones({}, function(finderr, milestones) {
+          milestones.should.includeEql({
+            kind: 'tests', proj: 'valid', name: 'test', released: false
+          });
+          done(err || finderr);
+        });
+      });
+    });
+    it('should fail with invalid name', function(done) {
+      async.each([ ' ', '.', 'te/st', '$test' ], function(name, next) {
+        grader.createMilestone({ kind: 'tests', proj: 'invalid' }, name, function(err) {
+          should.exist(err);
+          next();
+        });
+      }, function() {
+        grader.findMilestones({}, function(err, milestones) {
+          milestones.forEach(function(milestone) {
+            milestone.should.not.include({ proj: 'invalid' });
+          });
+          done(err);
+        });
       });
     });
   });
