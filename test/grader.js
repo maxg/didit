@@ -65,6 +65,7 @@ describe('grader', function() {
     it('should ignore missing grade sheet', function(done) {
       sandbox.stub(grader, 'parseGradeSheet').throws();
       grader.grade(nospec, fix.fixdir, {}, path.join(fix.fixdir, 'grade'), function(err, report) {
+        grader.parseGradeSheet.called.should.be.false;
         report.should.eql({ spec: nospec, score: 0, outof: 0, testsuites: [] });
         done(err);
       });
@@ -72,6 +73,7 @@ describe('grader', function() {
     it('should ignore invalid grade sheet', function(done) {
       sandbox.stub(grader, 'parseGradeSheet').yields(new Error(), null);
       grader.grade(nospec, fix.fixdir, {}, path.join(fix.fixdir, 'grade'), function(err, report) {
+        grader.parseGradeSheet.called.should.be.true;
         report.should.eql({ spec: nospec, score: 0, outof: 0, testsuites: [] });
         done(err);
       });
