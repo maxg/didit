@@ -1,0 +1,9 @@
+#!/bin/bash
+
+#
+# Run tests with coverage.
+#
+
+export NODE_ENV=test
+
+node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- --require test/config

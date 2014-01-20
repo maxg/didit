@@ -4,6 +4,7 @@ config/aws.json
 config/development.js
 config/production.js
 config/test.js
+coverage
 devel
 log/*.log
 node_modules
