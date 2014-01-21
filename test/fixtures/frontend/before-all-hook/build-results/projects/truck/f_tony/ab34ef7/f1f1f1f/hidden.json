@@ -1,0 +1,14 @@
+{
+  "testsuites": [
+    {
+      "package": "",
+      "name": "Secret",
+      "testcases": [
+        {
+          "name": "quotation",
+          "payload": { "type": "txt", "data": "RG9uJ3QgcGxheSBkdW1iIHdpdGggbWUhCg==" }
+        }
+      ]
+    }
+  ]
+}

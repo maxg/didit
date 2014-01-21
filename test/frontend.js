@@ -2,6 +2,7 @@ var async = require('async');
 var http = require('http');
 var request = require('request');
 var sinon = require('sinon');
+var zlib = require('zlib');
 
 var fixtures = require('./fixtures');
 var mocks = require('./mocks');
@@ -102,6 +103,59 @@ describe('frontend', function() {
       mock.user('eve');
       request(root + 'milestone/labs/lab3/alice/final', function(err, res, body) {
         body.should.match(/not released to student/).and.match(/Auto-graded rev.*abcd789/);
+        done(err);
+      });
+    });
+  });
+  
+  describe('GET /milestone/:kind/:proj/:name', function() {
+    it('should render HTML', function(done) {
+      mock.user('eve');
+      request(root + 'milestone/projects/helloworld/hello', function(err, res, body) {
+        body.should.match(/projects\/helloworld\/alice-bob\/123abc7/);
+        done(err);
+      });
+    });
+    it('should render CSV', function(done) {
+      mock.user('eve');
+      request(root + 'milestone/projects/helloworld/hello.csv', function(err, res, body) {
+        var unquoted = body.replace(/"/g, '');
+        unquoted.should.match(/Username,Revision,Grade,out of,greeting,salutation/);
+        unquoted.should.match(/alice,.*123abc7.*15,20,10,5/);
+        unquoted.should.match(/bob,[^0-9]*$/m);
+        done(err);
+      });
+    });
+    it('should only allow staff', function(done) {
+      mock.user('alice');
+      request(root + 'milestone/projects/helloworld/hello', function(err, res, body) {
+        body.should.match(/alice/).and.match(/You are not staff/);
+        body.should.not.match(/grade|grading|15/i);
+        done(err);
+      });
+    });
+  });
+  
+  describe('GET /sweep/:kind/:proj/:datetime', function() {
+    it('should render HTML', function(done) {
+      mock.user('eve');
+      request(root + 'sweep/projects/helloworld/20130929T110000', function(err, res, body) {
+        body.should.match(/projects\/helloworld\/alice-bob\/123abc7/);
+        done(err);
+      });
+    });
+    it('should render CSV', function(done) {
+      mock.user('eve');
+      request(root + 'sweep/projects/helloworld/20130929T110000.csv', function(err, res, body) {
+        body.should.match(/alice,bob,.*123abc7/);
+        done(err);
+      });
+    });
+    it('should only allow staff', function(done) {
+      mock.user('alice');
+      request(root + 'sweep/projects/helloworld/20130929T110000', function(err, res, body) {
+        body.should.match(/alice/).and.match(/You are not staff/);
+        body.should.not.match(/revision|123abc7/i);
         done(err);
       });
     });
@@ -300,6 +354,94 @@ describe('frontend', function() {
       mock.user('alice');
       sandbox.stub(builder, 'findBuild').throws();
       request(root + 'labs/lab3/alice/abcd789!', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        done(err);
+      });
+    });
+  });
+  
+  describe('GET /:kind/:proj/:users/:rev/payload/...', function() {
+    it('should deliver text data', function(done) {
+      mock.user('f_tony');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/quotation.txt', function(err, res, body) {
+        res.headers['content-type'].should.eql('text/plain');
+        body.should.eql("What's a truck?\n");
+        done(err);
+      });
+    });
+    it('should deliver binary data', function(done) {
+      mock.user('f_tony');
+      request({
+        url: root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/ziptation.txt.gz',
+        encoding: null
+      }, function(err, res, body) {
+        res.headers['content-type'].should.eql('text/plain');
+        res.headers['content-encoding'].should.eql('gzip');
+        zlib.gunzip(body, function(zerr, result) {
+          result.toString().should.eql("What's a truck?\n");
+          done(err || zerr);
+        });
+      });
+    });
+    it('should fail for test with no payload', function(done) {
+      mock.user('f_tony');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/silence', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        body.should.match(/Not found/i);
+        done(err);
+      });
+    });
+    it('should fail for missing test case', function(done) {
+      mock.user('f_tony');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/missing', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        body.should.match(/Not found/i);
+        done(err);
+      });
+    });
+    it('should fail for missing test suite', function(done) {
+      mock.user('f_tony');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Public/quotation.txt', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        body.should.match(/Not found/i);
+        done(err);
+      });
+    });
+    it('should reject unauthorized students', function(done) {
+      mock.user('alice');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/quotation.txt', function(err, res, body) {
+        body.should.match(/You are not f_tony/);
+        body.should.not.match(/truck/);
+        done(err);
+      });
+    });
+    it('should reject hidden payloads', function(done) {
+      mock.user('f_tony');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/hidden/Secret/quotation.txt', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        body.should.match(/Not found/i);
+        body.should.not.match(/dumb/);
+        done(err);
+      });
+    });
+    it('should allow staff', function(done) {
+      mock.user('eve');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/quotation.txt', function(err, res, body) {
+        body.should.eql("What's a truck?\n");
+        done(err);
+      });
+    });
+    it('should allow staff on hidden payload', function(done) {
+      mock.user('eve');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/hidden/Secret/quotation.txt', function(err, res, body) {
+        body.should.eql("Don't play dumb with me!\n");
+        done(err);
+      });
+    });
+    it('should reject illegal category', function(done) {
+      mock.user('f_tony');
+      sandbox.stub(builder, 'findBuild').throws();
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/evil/Visible/quotation.txt', function(err, res, body) {
         res.statusCode.should.equal(404);
         done(err);
       });
