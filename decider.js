@@ -101,7 +101,7 @@ var deciders = {
   WorkflowExecutionFailed: function(task, event) {
     log.warn('WorkflowExecutionFailed decider', event);
     var attr = event.workflowExecutionFailedEventAttributes;
-    emitter.emit(task.workflowExecution.workflowId, 'failed', JSON.parse(attr));
+    emitter.emit(task.workflowExecution.workflowId, 'failed', { details: 'Workflow failed' });
   },
   WorkflowExecutionTimedOut: function(task, event) {
     log.warn('WorkflowExecutionTimedOut decider', event);
@@ -114,7 +114,7 @@ var deciders = {
   }
 };
 
-function decide(decisionTask, next) {
+exports.decide = function(decisionTask, next) {
   if ( ! decisionTask.taskToken) {
     next();
     return;
@@ -168,7 +168,7 @@ exports.createServer = function(callback) {
         log.error(err, 'error polling for decision');
         setTimeout(pollForDecisionTasks, 1000 * 60 * 4);
       } else {
-        decide(data, pollForDecisionTasks);
+        exports.decide(data, pollForDecisionTasks);
       }
     });
   }
@@ -247,6 +247,10 @@ exports.startWorkflow = function(id, spec, callback) {
 // add a listener for events by build id
 exports.on = function(id, callback) {
   emitter.on(id, callback);
+};
+
+exports.once = function(id, callback) {
+  emitter.once(id, callback);
 };
 
 exports.removeListener = function(id, callback) {
