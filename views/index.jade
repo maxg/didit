@@ -20,3 +20,9 @@ block content
     each repo in repos
       h3: a(href="/#{repo.kind}/#{repo.proj}/#{repo.users.join('-')}").
         #{repo.kind}/#{repo.proj} #{repo.users.join('-')}
+
+    if available.length > 0
+      h2 New assignments
+      each project in available
+        h3: a(href="/#{project.kind}/#{project.proj}").
+          #{project.kind}/#{project.proj}

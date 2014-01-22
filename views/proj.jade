@@ -10,6 +10,16 @@ block content
     div.page-header
       h1
         tt #{kind}/#{proj}
+
+    form#copy-repo.modal.hide.form-horizontal(action = "/starting/#{kind}/#{proj}/#{authuser}", method='post', tabindex='-1')
+      div.modal-header
+        a.close(data-dismiss='modal') &times;
+        h3 Copy starting repo
+      div.modal-body
+        p A new git repository will be created based on the starting code.
+      div.modal-footer
+        a.btn(href='#', data-dismis='modal') Cancel
+        button.btn.btn-info Create repo #{kind}/#{proj} for user #{authuser}
     
     if authstaff
       
@@ -58,8 +68,24 @@ block content
         div.modal-footer
           a.btn(href='#', data-dismiss='modal') Cancel
           button.btn.btn-info Create #{kind}/#{proj} milestone
+
+      form#create-starting.modal.hide.form-horizontal(action="/starting/#{kind}/#{proj}", method='post', tabindex='-1')
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3 Create starting repo
+        div.modal-body
+          p Create a starting repo based on the current staff repo.
+        div.modal-footer
+          a.btn(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Create #{kind}/#{proj} starting repo
       
       div.span6.pull-right
+        div.well
+          h3 Assignment
+          if startingExists
+            h4.muted Starting repo exists
+          else
+            a.btn.btn-small.btn-info(href='#create-starting', data-toggle='modal') Create starting repo
         div.well
           h3= sweeps.length + schedSweeps.length > 0 ? 'Sweeps' : 'No sweeps'
           each sweep in sweeps
@@ -78,6 +104,12 @@ block content
               a(href="/milestone/#{kind}/#{proj}/#{milestone.name}") #{milestone.name}
           a.btn.btn-small.btn-info(href='#create-milestone', data-toggle='modal') New milestone
     
+    if startingExists && repos.length == 0
+      div.span6.pull-right
+        div.well
+          h3 Copy starting repo
+          a.btn.btn-info(href='#copy-repo', data-toggle='modal') Copy starting repo
+
     h2= repos.length > 0 ? 'Repositories' : 'No repositories'
     each repo in repos
       div.inline-header

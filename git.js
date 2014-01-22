@@ -4,7 +4,9 @@ var fs = require('fs');
 var glob = require('glob');
 var moment = require('moment');
 var path = require('path');
+var mkdirp = require('mkdirp');
 var spawn = require('child_process').spawn;
+var ncp = require('ncp');
 
 var config = require('./config');
 var log = require('./logger').cat('git');
@@ -15,6 +17,10 @@ function studentSourcePath(spec) {
 
 function builderDir(spec) {
   return [ config.staff.semester, spec.kind, spec.proj, 'grading' ].join('/');
+}
+
+function startingDir(spec) {
+  return [ config.staff.semester, spec.kind, spec.proj, 'starting' ].join('/');
 }
 
 // spawn a process and log stderr
@@ -163,17 +169,37 @@ exports.builderRev = function(spec, callback) {
           callback);
 };
 
-exports.builderRevBefore = function(spec, upto, callback) {
+exports.staffDirRevBefore = function(dir, upto, callback) {
   findRev(config.staff.repo,
-          [ 'rev-list', '--max-count=1', upto, '--', builderDir(spec) ],
+          [ 'rev-list', '--max-count=1', upto, '--', dir ],
           callback);
 };
 
-// fetch staff build materials
+
+// fetch all projects in the staff repo
+// find some way to do this without having to grep the massive list of directories
+// ths is on hold. Do not call this function!
+// **** 
+/*exports.fetchStaffProjects = function(callback) {
+  var out = byline(spawnAndLog('git', [ 'ls-tree', '-r', '-d', '--name-only', 'master' ], { 
+    cwd: config.staff.repo
+  }).stdout, { encoding: 'utf8' });
+  var allFiles = [];
+
+  out.on('data', function(data) {
+    allFiles.push(data);
+  });
+  out.on('end', function() {
+    console.log('results according to fetchStaffProjects: ', allFiles);
+    callback(null, allFiles);
+  });
+};*/
+
+// fetch directory from staff repo
 // callback returns staff commit hash
-exports.fetchBuilder = function(spec, dest, callback) {
-  log.info({ spec: spec, dest: dest }, 'fetchBuilder');
-  var dir = builderDir(spec);
+exports.exportStaffDir = function(dir, dest, callback) {
+  log.info({ dir: dir, dest: dest }, 'exportStaffDir');
+  //var dir = builderDir(spec);
   var procs = [ 'id', 'tar' ];
   async.auto({
     
@@ -186,7 +212,7 @@ exports.fetchBuilder = function(spec, dest, callback) {
       next(null, child);
     },
     
-    // untar the staff builder
+    // untar the staff directory
     tar: function(next) {
       next(null, spawn('tar', [ 'x',
         '--strip-components', dir.split('/').length
@@ -196,9 +222,9 @@ exports.fetchBuilder = function(spec, dest, callback) {
       }));
     },
     
-    // fetch the staff builder and send data to "id" and "tar"
+    // fetch the staff directory and send data to "id" and "tar"
     archive: procs.concat(function(next, results) {
-      log.info('fetchBuilder', 'archive');
+      log.info('exportStaffDir', 'archive');
       var git = spawn('git', [ 'archive',
         '--remote', [ 'file:/', config.staff.repo ].join('/'), 'master', '--',
         dir
@@ -220,18 +246,18 @@ exports.fetchBuilder = function(spec, dest, callback) {
       var running = procs.length * 2;
       function done(code) {
         if (code != 0) {
-          next({ dmesg: 'error fetching builder' });
+          next({ dmesg: 'error fetching directory' });
         } else if (--running == 0) {
-          next(staffrev.length > 0 ? null : { dmesg: 'error reading builder revision' }, staffrev);
+          next(staffrev.length > 0 ? null : { dmesg: 'error reading directory revision' }, staffrev);
         }
       }
       procs.forEach(function(proc) { results[proc].stdout.on('end', async.apply(done, 0)); });
       procs.forEach(function(proc) { results[proc].on('exit', done); });
     }),
     
-    // find the builder revision for this project
+    // find the directory revision for this project
     staffrev: [ 'archive', function(next, results) {
-      exports.builderRevBefore(spec, results.archive.trim(), function(err, staffrev) {
+      exports.staffDirRevBefore(dir, results.archive.trim(), function(err, staffrev) {
         next(err, staffrev);
       });
     } ]
@@ -239,6 +265,94 @@ exports.fetchBuilder = function(spec, dest, callback) {
     callback(err, results && results.staffrev && results.staffrev.substring(0, 7));
   });
 };
+
+// fetch staff build materials
+// callback returns staff commit hash
+exports.fetchBuilder = function(spec, dest, callback) {
+  exports.exportStaffDir(builderDir(spec), dest, callback);
+};
+
+// fetch starting repo
+// callback returns staff commit hash
+exports.fetchStarting = function(spec, dest, callback) {
+  exports.exportStaffDir(startingDir(spec), dest, callback);
+};
+
+// create a function that runs the specified git command 
+// callback returns true if successful
+function gitCommand(gitargs, options, errmesg){
+  return function(callback) {
+    var cmd = spawnAndLog('git', gitargs, options);
+    cmd.on('exit', function(code) {
+      if (code != 0) {
+        callback({ dmesg: errmesg }, null);
+      } else {
+        callback(null, true);
+      }
+    });
+  }
+}
+
+// initialize starting repo, add starting files, and convert to a bare repo
+function initStarting(dir, callback) {
+  log.info({ dir: dir }, 'initStarting');
+  var options = { cwd: dir, stdio: 'pipe' };
+  async.series([
+    gitCommand([ 'init', '-q' ], options, 'Error initializing repository'),
+    gitCommand([ 'add', '.' ], options, 'Error adding starting files'), // this might not always work
+    gitCommand([ 'commit', '-q', '-m', 'Commit starting code' ], options,
+      'Error committing starting files'),
+    gitCommand([ 'config', '--bool', 'core.bare', 'true' ], options,
+      'Error converting to bare repository')
+  ], callback);
+}
+
+// create starting repo
+// callback returns commit hash of starting directory
+exports.createStarting = function(spec, callback) {
+  log.info({ spec: spec }, 'createStarting');
+  var dir = path.join(config.student.repos, config.student.semester, spec.kind, spec.proj, 'starting');
+  mkdirp(dir, function(mkderr, made) {
+    if (mkderr) {
+      log.error(mkderr, 'error creating starting directory');
+      return callback(mkderr, null);
+    }
+    exports.fetchStarting(spec, dir, function(fsterr, commitID) {
+      if (fsterr) {
+        log.error(fsterr, 'error fetching starting directory from staff repo');
+        return callback(fsterr, null);
+      }
+      initStarting(dir, function(err, success) {
+        if (err) {
+          return callback(err, null);
+        }
+        callback(null, commitID);
+      });
+    });
+  });
+};
+
+// check if the starting repo has been created already
+// callback returns only true or false
+exports.startingExists = function(spec, callback) {
+  log.info({ spec: spec }, 'startingExists');
+  fs.exists(path.join(config.student.repos, config.student.semester, spec.kind, spec.proj,
+   'starting'), function(exists) {
+    callback(null, exists);
+  });
+};
+
+// copy starting repo for a student
+exports.copyStarting = function (spec, callback) {
+  log.info({ spec: spec }, 'copyStarting');
+  var source = path.join(config.student.repos, config.student.semester, spec.kind, spec.proj);
+  var dest = path.join(source, spec.users.join('-') + '.git');
+  var startingRepo = path.join(source, 'starting', '.git');
+  async.series([ 
+    async.apply(ncp, startingRepo, dest),
+    async.apply(ncp, path.join(__dirname, 'hooks'), path.join(dest, 'hooks'))
+    ], callback);
+}
 
 // command-line git
 if (require.main === module) {

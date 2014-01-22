@@ -38,7 +38,24 @@ function buildOutputBase(spec, staffrev, target) {
   return path.join(buildResultDir(spec, staffrev), target);
 }
 
-// find all projects
+// find all projects that have a starting repo
+exports.findStartingProjects = function(callback) {
+  log.info('findStartingProjects');
+  var dir = path.join(config.student.repos, config.student.semester);
+  glob(path.join('*', '*', 'starting'), {
+    cwd: path.join(config.student.repos, config.student.semester)
+  }, function(err, files) {
+    if (err) {
+      return callback(err, null);
+    }
+    callback(null, files.map(function(file){
+      var parts = file.split(path.sep);
+      return { kind: parts[0], proj: parts[1] };
+    }));
+  });
+};
+
+// find all projects that have a build result
 exports.findProjectsSync = function() {
   return glob.sync(path.join(config.student.semester, '*', '*'), {
     cwd: config.build.results
@@ -46,7 +63,7 @@ exports.findProjectsSync = function() {
     var parts = dir.split(path.sep);
     return { kind: parts[1], proj: parts[2] };
   });
-}
+};
 
 // find all the repos matching a kind, project, and/or users
 exports.findRepos = function(spec, callback) {

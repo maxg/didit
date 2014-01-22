@@ -106,9 +106,24 @@ app.get('*', function(req, res, next) {
 });
 
 app.get('/', function(req, res, next) {
-  builder.findRepos({ users: [ res.locals.authuser ] }, function(err, repos) {
+  async.auto({
+    findRepos: async.apply(git.findStudentRepos, { users: [ res.locals.authuser ] }),
+    findStartingProjects: builder.findStartingProjects,
+    findNew: [ 'findRepos', 'findStartingProjects', function(next, results) {
+      var allProjs = results.findStartingProjects;
+      var myProjs = results.findRepos;
+      // newProjs is all projects that don't have a corresponding repo for the student
+      var newProjs = allProjs.filter(function(started) {
+        return ( ! myProjs.some(function(mine) {
+          return mine.kind == started.kind && mine.proj == started.proj;
+        }));
+      });
+      next(null, newProjs);
+    } ]
+  }, function(err, results) {
     res.render('index', {
-      repos: repos,
+      repos: results.findRepos,
+      available: results.findNew,
       projects: res.locals.authstaff ? builder.findProjectsSync() : []
     });
   });
@@ -184,7 +199,7 @@ app.get('/sweep/:kind/:proj/:datetime:extension(.csv)?', staffonly, function(req
 
 app.get('/u/:users', authorize, function(req, res, next) {
   async.auto({
-    repos: async.apply(builder.findRepos, req.params),
+    repos: async.apply(git.findStudentRepos, req.params),
     fullnames: function(callback) {
       async.map(req.params.users, rolodex.lookup, function(err, fullnames) {
         callback(null, fullnames);
@@ -204,7 +219,8 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
     req.params.users = [ res.locals.authuser ];
   }
   var findAll = {
-    repos: async.apply(builder.findRepos, req.params),
+    startingExists: async.apply(git.startingExists, req.params),
+    repos: async.apply(git.findStudentRepos, req.params),
     fullnames: [ 'repos', function(callback, results) {
       async.each(results.repos, function(repo, callback) {
         async.map(repo.users, rolodex.lookup, function(err, fullnames) {
@@ -226,7 +242,8 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
       repos: results.repos,
       sweeps: results.sweeps,
       schedSweeps: results.schedSweeps,
-      milestones: results.milestones
+      milestones: results.milestones,
+      startingExists: results.startingExists
     });
   });
 });
@@ -244,7 +261,7 @@ app.get('/:kind/:proj/:users', authorize, function(req, res, next) {
       builds: results.builds,
       head: results.head,
       current: null,
-      milestones: results.milestones
+      milestones: results.milestones,
     };
     if (results.head || (results.builds.length > 0)) {
       var spec = results.head ? {
@@ -504,6 +521,34 @@ app.post('/catchup/:kind/:proj', staffonly, function(req, res, next) {
     }
     res.redirect('/' + req.params.kind + '/' + req.params.proj);
   });
+});
+
+// create starting repo for students to copy
+app.post('/starting/:kind/:proj', staffonly, function(req, res, next) {
+  git.createStarting({ kind: req.params.kind, proj: req.params.proj }, 
+    function(err, commit){
+      if (err){
+        err.dmesg = err.dmesg || 'Error creating starting repo';
+        return next(err);
+      }
+      res.redirect('/' + req.params.kind + '/' + req.params.proj);
+    });
+});
+
+// edit who can create a starting repo
+// app.post('/permissions/:kind/:proj/')
+
+// copy starting repo for student
+app.post('/starting/:kind/:proj/:users', authorize, function(req, res, next) {
+  console.log(req.params);
+  git.copyStarting({ kind: req.params.kind, proj: req.params.proj, users: req.params.users },
+    function(err, results) {
+      if (err) {
+        err.dmesg = err.dmesg || 'Error copying starting repository';
+        return next(err);
+      }
+      res.redirect('/' + req.params.kind + '/' + req.params.proj + '/' + req.params.users.join('-'));
+    });
 });
 
 app.post('/:kind/:proj/:users/:rev/rebuild', staffonly, function(req, res, next) {
