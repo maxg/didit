@@ -1,6 +1,10 @@
 var async = require('async');
+var byline = require('byline');
 var http = require('http');
+var path = require('path');
 var request = require('request');
+var rimraf = require('rimraf');
+var should = require('should');
 var sinon = require('sinon');
 var zlib = require('zlib');
 
@@ -12,6 +16,7 @@ describe('frontend', function() {
   var config = require('../config');
   var builder = require('../builder');
   var frontend = require('../frontend');
+  var grader = require('../grader');
   var rolodex = require('../rolodex');
   
   var fix = fixtures();
@@ -480,6 +485,135 @@ describe('frontend', function() {
         body.should.match(/alice/).and.match(/You are not staff/);
         body.should.not.match(/grade|grading/i);
         done(err);
+      });
+    });
+  });
+  
+  describe('POST /build/:kind/:proj/:users/:rev', function() {
+    it('should start a build and report results', function(done) {
+      sandbox.stub(builder, 'findBuild').yields();
+      sandbox.stub(builder, 'startBuild').yields(null, 'fake');
+      sandbox.stub(builder, 'monitor', function() {
+        var emitter = new events.EventEmitter();
+        process.nextTick(emitter.emit.bind(emitter, 'start'));
+        process.nextTick(emitter.emit.bind(emitter, 'progress', {
+          message: 'Forward, not backward!'
+        }));
+        process.nextTick(emitter.emit.bind(emitter, 'done', {
+          result: { compile: true, public: false, hidden: true }
+        }));
+        return emitter;
+      });
+      var expected = [
+        /started/i,
+        /Forward/,
+        /compilation succeeded/i,
+        /public tests failed/i,
+        /details.*labs\/lab2\/alice/i
+      ];
+      var req = request.post(root + 'build/labs/lab2/alice/abcd123');
+      byline(req, { encoding: 'utf8' }).on('data', function(line) {
+        line.should.match(expected.shift());
+        if (expected.length == 0) { done(); }
+      });
+    });
+    it('should skip an existing build', function(done) {
+      sandbox.stub(builder, 'findBuild').yields(null, 'fake');
+      sandbox.stub(builder, 'startBuild').throws();
+      request.post(root + 'build/labs/lab2/alice/abcd123', function(err, res, body) {
+        body.should.match(/revision already built.*labs\/lab2\/alice/i);
+        done(err);
+      });
+    });
+  });
+  
+  describe('POST /grade/:kind/:proj/:name/revs', function() {
+    
+    var spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
+    var rev = 'abcd789';
+    var resultdir = path.join(
+      config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', 'alpha'
+    );
+    
+    beforeEach(function(done){
+      fix.files(this.test, done);
+    });
+    
+    afterEach(function(done) {
+      rimraf(resultdir, done);
+    });
+    
+    it('should assign grades', function(done) {
+      mock.user('eve');
+      request.post(root + 'grade/labs/lab3/alpha/revs', { form: {
+        revision: { alice: rev, bob: '1234abc' }
+      } }, function(err, res, body) {
+        body.should.match(/error.*bob/i).and.not.match(/lab3\/bob/);
+        body.should.match(/assigned.*alice/i).and.match(/lab3\/alice\/abcd789/);
+        grader.findMilestoneGrade(spec, 'alpha', function(finderr, graded) {
+          graded.rev.should.eql(rev);
+          graded.grade.should.include({ score: 5, outof: 15 });
+          done(err || finderr);
+        });
+      });
+    });
+    it('should only allow staff', function(done) {
+      mock.user('alice');
+      sandbox.stub(builder, 'findRepos').throws();
+      sandbox.stub(grader, 'gradeFromBuilds').throws();
+      request.post(root + 'grade/labs/lab3/alpha/revs', { form: {
+        revision: { alice: rev }
+      } }, function(err, res, body) {
+        body.should.match(/alice/).and.match(/You are not staff/);
+        grader.findMilestoneGrade(spec, 'alpha', function(finderr, graded) {
+          should.exist(finderr);
+          done(err);
+        });
+      });
+    });
+  });
+  
+  describe('POST /grade/:kind/:proj/:name/sweep', function() {
+    
+    var spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
+    var when = '20130101T221500';
+    var resultdir = path.join(
+      config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', 'alpha'
+    );
+    
+    beforeEach(function(done){
+      fix.files(this.test, done);
+    });
+    
+    afterEach(function(done) {
+      rimraf(resultdir, done);
+    });
+    
+    it('should assign grades', function(done) {
+      mock.user('eve');
+      request.post(root + 'grade/labs/lab3/alpha/sweep', { form: {
+        datetime: when,
+        usernames: 'alice\nbob\n\n'
+      } }, function(err, res, body) {
+        res.statusCode.should.equal(302);
+        grader.findMilestoneGrade(spec, 'alpha', function(finderr, graded) {
+          graded.rev.should.eql('abcd789');
+          graded.grade.should.include({ score: 90, outof: 100 });
+          done(err || finderr);
+        });
+      });
+    });
+    it('should only allow staff', function(done) {
+      mock.user('alice');
+      request.post(root + 'grade/labs/lab3/alpha/sweep', { form: {
+        datetime: when,
+        usernames: 'alice\n'
+      } }, function(err, res, body) {
+        body.should.match(/alice/).and.match(/You are not staff/);
+        grader.findMilestoneGrade(spec, 'alpha', function(finderr, graded) {
+          should.exist(finderr);
+          done(err);
+        });
       });
     });
   });
