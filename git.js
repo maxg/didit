@@ -56,13 +56,24 @@ function findRev(dir, gitargs, callback) {
   });
 }
 
+// find all projects with a starting repo
+exports.findProjects = function(callback) {
+  glob(path.join(config.student.semester, '*', '*'), { cwd: config.student.repos },
+    function(err, dirs) {
+      callback(err, dirs.map(function(dir){
+        var parts = dir.split(path.sep);
+        return { kind: parts[1], proj: parts[2] };
+      }));
+    });
+};
+
 // find all the student repos matching a kind, project and/or users
 exports.findStudentRepos = function(spec, callback) {
   var kind = spec.kind || '*';
   var proj = spec.proj || '*';
   var users = spec.users ? '?(*-)' + spec.users.join('-') + '?(-*)' : '*';
   log.info('findRepos', kind, proj, users);
-  glob(path.join(config.student.semester, kind, proj, users + '.git'), {
+  glob(path.join(config.student.semester, kind, proj, users + '.git', 'config'), {
     cwd: config.student.repos
   }, function(err, dirs) {
     callback(err, dirs.map(function(dir) {
@@ -70,6 +81,43 @@ exports.findStudentRepos = function(spec, callback) {
       return { kind: parts[1], proj: parts[2], users: parts[3].split('.')[0].split('-') };
     }));
   });
+};
+
+// find which students have permission to copy the starting repo for a given kind and project
+exports.findStudentPermissions = function(spec, callback) {
+  log.info({ spec: spec }, 'findPermissions');
+  glob(path.join(config.student.semester, spec.kind, spec.proj, '*' + '.git'), {
+    cwd: config.student.repos
+  }, function(err, dirs) {
+    callback(err, dirs.map(function(dir) {
+      // return just the usernames
+      var parts = dir.split(path.sep);
+      return parts[3].replace(/\.git/, '');
+    }));
+  });
+};
+
+// add permission for a single student
+function addPermission(spec, user, callback) {
+  var dir = path.join(config.student.repos, config.student.semester, spec.kind,
+   spec.proj, user + '.git');
+  fs.exists(dir, function(exists) {
+    if ( ! exists) {
+      return fs.mkdir(dir, callback);
+    }
+    callback();
+  });
+}
+
+// add permission for students to create copies of the starting repo
+exports.addStudentPermissions = function(spec, usernames, callback) {
+  log.info({ spec: spec, usernames: usernames }, 'addStudentPermissions');
+  //var baseDir = path.join(config.student.repos, config.student.semester, spec.kind, spec.proj);
+  var tasks = [];
+  for (var i = 0; i < usernames.length; i++) {
+    tasks.push(async.apply(addPermission, spec, usernames[i]));
+  }
+  async.parallel(tasks, callback);
 };
 
 exports.studentSourceRev = function(spec, callback) {
@@ -342,8 +390,30 @@ exports.startingExists = function(spec, callback) {
   });
 };
 
+// check if a student has permission to copy a given project
+// callback returns the name of the repo that can be copied, or false if no permission
+exports.checkPermission = function(spec, callback) {
+  var user = '?(*-)' + spec.users + '?(-*)';
+  glob(path.join(spec.kind, spec.proj, user + '.git'), { 
+    cwd: path.join(config.student.repos, config.student.semester)
+  }, function(err, files) {
+      if (err) {
+        return callback(err);
+      }
+      console.log('files: ',files);
+      var result = files[0]
+      if ( ! result){
+        return callback(null, false);
+      }
+      // if there is permission, return a list of usernames 
+      var users = result.split(path.sep)[2].replace(/\.git/, '').split('-');
+      callback(null, users);
+  });
+}
+
 // copy starting repo for a student
 exports.copyStarting = function (spec, callback) {
+  console.log('spec: ',spec);
   log.info({ spec: spec }, 'copyStarting');
   var source = path.join(config.student.repos, config.student.semester, spec.kind, spec.proj);
   var dest = path.join(source, spec.users.join('-') + '.git');
@@ -351,7 +421,7 @@ exports.copyStarting = function (spec, callback) {
   async.series([ 
     async.apply(ncp, startingRepo, dest),
     async.apply(ncp, path.join(__dirname, 'hooks'), path.join(dest, 'hooks'))
-    ], callback);
+  ], callback);
 }
 
 // command-line git

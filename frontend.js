@@ -108,9 +108,9 @@ app.get('*', function(req, res, next) {
 app.get('/', function(req, res, next) {
   async.auto({
     findRepos: async.apply(git.findStudentRepos, { users: [ res.locals.authuser ] }),
-    findStartingProjects: builder.findStartingProjects,
-    findNew: [ 'findRepos', 'findStartingProjects', function(next, results) {
-      var allProjs = results.findStartingProjects;
+    findProjects: git.findProjects,
+    findNew: [ 'findRepos', 'findProjects', function(next, results) {
+      var allProjs = results.findProjects;
       var myProjs = results.findRepos;
       // newProjs is all projects that don't have a corresponding repo for the student
       var newProjs = allProjs.filter(function(started) {
@@ -124,7 +124,7 @@ app.get('/', function(req, res, next) {
     res.render('index', {
       repos: results.findRepos,
       available: results.findNew,
-      projects: res.locals.authstaff ? builder.findProjectsSync() : []
+      projects: res.locals.authstaff ? results.findProjects : []
     });
   });
 });
@@ -234,6 +234,9 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
     findAll.sweeps = async.apply(sweeper.findSweeps, req.params);
     findAll.schedSweeps = async.apply(sweeper.scheduledSweeps, req.params);
     findAll.milestones = async.apply(grader.findMilestones, req.params);
+    findAll.permissions = async.apply(git.findStudentPermissions, req.params);
+  } else {
+    findAll.hasPermission = async.apply(git.checkPermission, req.params)
   }
   async.auto(findAll, function(err, results) {
     res.render('proj', {
@@ -243,7 +246,9 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
       sweeps: results.sweeps,
       schedSweeps: results.schedSweeps,
       milestones: results.milestones,
-      startingExists: results.startingExists
+      startingExists: results.startingExists,
+      permissions: results.permissions,
+      hasPermission: results.hasPermission
     });
   });
 });
@@ -536,18 +541,43 @@ app.post('/starting/:kind/:proj', staffonly, function(req, res, next) {
 });
 
 // edit who can create a starting repo
-// app.post('/permissions/:kind/:proj/')
+app.post('/permissions/:kind/:proj', staffonly, function(req, res, next) {
+  var usernames = req.body.usernames.split('\n').map(function(user) {
+    return user.trim();
+  }).filter(function(user) {
+    return user.length > 0;
+  });
+  git.addStudentPermissions(req.params, usernames, function(err, results) {
+    if (err) {
+      err.dmesg = err.dmesg || 'Error adding student permissions';
+      return next(err);
+    }
+    res.redirect('/' + req.params.kind + '/' + req.params.proj);
+  });
+});
 
 // copy starting repo for student
-app.post('/starting/:kind/:proj/:users', authorize, function(req, res, next) {
-  console.log(req.params);
-  git.copyStarting({ kind: req.params.kind, proj: req.params.proj, users: req.params.users },
-    function(err, results) {
-      if (err) {
-        err.dmesg = err.dmesg || 'Error copying starting repository';
-        return next(err);
+app.post('/starting/:kind/:proj/copy', authorize, function(req, res, next) {
+  git.checkPermission({ kind: req.params.kind, proj: req.params.proj, users: res.locals.authuser },
+    function(err, permitted) {
+      //var permittedUsers = res.locals.authstaff ? [ res.locals.authuser ] : permitted;
+      //console.log("permitted:",permittedUsers)
+      if ( ! permitted) {
+        if (res.locals.authstaff) {
+          permitted = [ res.locals.authuser ];
+        } else {
+          return next({ dmesg: 'You do not have permission to copy this repository' });
+        }
       }
-      res.redirect('/' + req.params.kind + '/' + req.params.proj + '/' + req.params.users.join('-'));
+      git.copyStarting({ kind: req.params.kind, proj: req.params.proj, users: permitted },
+        function(err, results) {
+          if (err) {
+            err.dmesg = err.dmesg || 'Error copying starting repository';
+            return next(err);
+          }
+          res.redirect('/' + req.params.kind + '/' + req.params.proj + '/' +
+           permitted.join('-'));
+      });
     });
 });
 

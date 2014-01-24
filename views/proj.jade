@@ -11,7 +11,7 @@ block content
       h1
         tt #{kind}/#{proj}
 
-    form#copy-repo.modal.hide.form-horizontal(action = "/starting/#{kind}/#{proj}/#{authuser}", method='post', tabindex='-1')
+    form#copy-repo.modal.hide.form-horizontal(action = "/starting/#{kind}/#{proj}/copy", method='post', tabindex='-1')
       div.modal-header
         a.close(data-dismiss='modal') &times;
         h3 Copy starting repo
@@ -78,6 +78,21 @@ block content
         div.modal-footer
           a.btn(href='#', data-dismiss='modal') Cancel
           button.btn.btn-info Create #{kind}/#{proj} starting repo
+
+      form#edit-permissions.modal.hide.form-horizontal(action="/permissions/#{kind}/#{proj}", method='post', tabindex='-1')
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3 Add student permissions
+        div.modal-body
+          label(for='existing-permissions-list') Students already allowed to create repos:
+          ul#existing-permissions-list
+            each student in permissions
+              li= student
+          label(for='new-permissions-list') List usernames to add:
+          textarea#new-permissions-list.span8.teletype(rows=10, name='usernames')
+        div.modal-footer
+          a.btn(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Add listed permissions
       
       div.span6.pull-right
         div.well
@@ -86,6 +101,7 @@ block content
             h4.muted Starting repo exists
           else
             a.btn.btn-small.btn-info(href='#create-starting', data-toggle='modal') Create starting repo
+          a.btn.btn-small.btn-info(href='#edit-permissions', data-toggle='modal') Edit student permissions
         div.well
           h3= sweeps.length + schedSweeps.length > 0 ? 'Sweeps' : 'No sweeps'
           each sweep in sweeps
@@ -108,7 +124,10 @@ block content
       div.span6.pull-right
         div.well
           h3 Copy starting repo
-          a.btn.btn-info(href='#copy-repo', data-toggle='modal') Copy starting repo
+          if hasPermission || authstaff
+            a.btn.btn-info(href='#copy-repo', data-toggle='modal') Copy starting repo
+          else
+            h4.muted You do not have permission to copy this repo
 
     h2= repos.length > 0 ? 'Repositories' : 'No repositories'
     each repo in repos
