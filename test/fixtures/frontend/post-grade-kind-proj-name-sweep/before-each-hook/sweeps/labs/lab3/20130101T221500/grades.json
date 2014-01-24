@@ -1,0 +1,7 @@
+[
+  {
+    "spec": { "kind": "labs", "proj": "lab3", "users": [ "alice" ], "rev": "abcd789" },
+    "score": 90,
+    "outof": 100
+  }
+]
