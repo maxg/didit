@@ -85,7 +85,7 @@ block content
           h3 Add student permissions
         div.modal-body
           label(for='existing-permissions-list') Students already allowed to create repos:
-          ul#existing-permissions-list
+          ul.inline#existing-permissions-list
             each student in permissions
               li= student
           label(for='new-permissions-list') List usernames to add:

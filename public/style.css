@@ -144,3 +144,8 @@ table.grades td.splitter + td.splitter {
   top: auto;
   bottom: 10%;
 }
+
+#existing-permissions-list {
+  max-height:100px;
+  overflow:auto;
+}
