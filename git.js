@@ -56,7 +56,7 @@ function findRev(dir, gitargs, callback) {
   });
 }
 
-// find all projects with a starting repo
+// find all projects with a created starting repo
 exports.findProjects = function(callback) {
   glob(path.join(config.student.semester, '*', '*'), { cwd: config.student.repos },
     function(err, dirs) {
@@ -226,22 +226,50 @@ exports.staffDirRevBefore = function(dir, upto, callback) {
 
 // fetch all projects in the staff repo
 // find some way to do this without having to grep the massive list of directories
-// ths is on hold. Do not call this function!
 // **** 
-/*exports.fetchStaffProjects = function(callback) {
-  var out = byline(spawnAndLog('git', [ 'ls-tree', '-r', '-d', '--name-only', 'master' ], { 
-    cwd: config.staff.repo
-  }).stdout, { encoding: 'utf8' });
-  var allFiles = [];
-
-  out.on('data', function(data) {
-    allFiles.push(data);
+exports.findAvailableProjects = function(callback) {
+  log.info('findAvailableProjects');
+  // look only for directories in the current semester
+  var find = spawnAndLog('git',
+    [ 'ls-tree', '-r', '-d', '--name-only', 'master', config.staff.semester ], { 
+    cwd: config.staff.repo, 
+    stdio: 'pipe'
   });
-  out.on('end', function() {
-    console.log('results according to fetchStaffProjects: ', allFiles);
-    callback(null, allFiles);
+  find.stdout.setEncoding('utf8');
+  var results = [];
+  find.stdout.on('data', function(data) {
+    results = results.concat(data.split('\n'));
   });
-};*/
+  find.on('exit', function(code) {
+    if (code != 0) {
+      return callback({ dmesg: 'Error finding available projects in staff repository'});
+    }
+    var gradingProjects = [];
+    var startingProjects = [];
+    // sort results into projects with starting directories and projects with grading directories
+    // is there a better way to do this?
+    results.map(function(result) {
+      var parts = result.split(path.sep);
+      var project = { kind: parts[1], proj: parts[2] };
+      if (parts[3] == 'grading') {
+        gradingProjects.push(project);
+      }
+      if (parts[3] == 'starting') {
+        startingProjects.push(project);
+      }
+    });
+    var finalResults = gradingProjects.filter(function(gProject) {
+      return startingProjects.some(function(sProject) {
+        return sProject.kind == gProject.kind && sProject.proj == gProject.proj;
+      });
+    });
+    callback(null, gradingProjects.filter(function(gProject) {
+      return startingProjects.some(function(sProject) {
+        return sProject.kind == gProject.kind && sProject.proj == gProject.proj;
+      });
+    }));
+  });
+};
 
 // fetch directory from staff repo
 // callback returns staff commit hash
@@ -400,7 +428,6 @@ exports.checkPermission = function(spec, callback) {
       if (err) {
         return callback(err);
       }
-      console.log('files: ',files);
       var result = files[0]
       if ( ! result){
         return callback(null, false);

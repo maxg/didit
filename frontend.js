@@ -119,8 +119,10 @@ app.get('/', function(req, res, next) {
         }));
       });
       next(null, newProjs);
-    } ]
+    } ],
+    findUnstarted: git.findAvailableProjects
   }, function(err, results) {
+    console.log('findUnstarted results: ',results.findUnstarted);
     res.render('index', {
       repos: results.findRepos,
       available: results.findNew,
