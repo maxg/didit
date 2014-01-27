@@ -248,7 +248,12 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
     findAll.sweeps = async.apply(sweeper.findSweeps, req.params);
     findAll.schedSweeps = async.apply(sweeper.scheduledSweeps, req.params);
     findAll.milestones = async.apply(grader.findMilestones, req.params);
-    findAll.permissions = async.apply(git.findStudentPermissions, req.params);
+    findAll.permissions = ['startingExists', function(next, results) {
+      if (results.startingExists) {
+        return git.findStudentPermissions(req.params, next);
+      }
+      next(null, []);
+    } ];
   } else {
     findAll.hasPermission = async.apply(git.checkPermission, req.params)
   }
@@ -574,8 +579,6 @@ app.post('/permissions/:kind/:proj', staffonly, function(req, res, next) {
 app.post('/starting/:kind/:proj/copy', authorize, function(req, res, next) {
   git.checkPermission({ kind: req.params.kind, proj: req.params.proj, users: res.locals.authuser },
     function(err, permitted) {
-      //var permittedUsers = res.locals.authstaff ? [ res.locals.authuser ] : permitted;
-      //console.log("permitted:",permittedUsers)
       if ( ! permitted) {
         if (res.locals.authstaff) {
           permitted = [ res.locals.authuser ];

@@ -11,6 +11,13 @@ var ncp = require('ncp');
 var config = require('./config');
 var log = require('./logger').cat('git');
 
+var perm;
+if (config.student.permission) {
+  perm = require('./'+config.student.permission);
+} else {
+  perm = require('./default_permission');
+}
+
 function studentSourcePath(spec) {
   return [ config.student.repos, config.student.semester, spec.kind, spec.proj, spec.users.join('-') ].join('/') + '.git';
 }
@@ -76,7 +83,10 @@ exports.findStudentRepos = function(spec, callback) {
   glob(path.join(config.student.semester, kind, proj, users + '.git', 'config'), {
     cwd: config.student.repos
   }, function(err, dirs) {
-    callback(err, dirs.map(function(dir) {
+    if (err) {
+      return callback({ dmesg: err.dmesg ? err.dmesg : 'Error finding student repos' });
+    }
+    callback(null, dirs.map(function(dir) {
       var parts = dir.split(path.sep);
       return { kind: parts[1], proj: parts[2], users: parts[3].split('.')[0].split('-') };
     }));
@@ -89,7 +99,10 @@ exports.findStudentPermissions = function(spec, callback) {
   glob(path.join(config.student.semester, spec.kind, spec.proj, '*' + '.git'), {
     cwd: config.student.repos
   }, function(err, dirs) {
-    callback(err, dirs.map(function(dir) {
+    if (err) {
+      return callback({ dmesg: err.dmesg ? err.dmesg : 'Error finding empty student repos' });
+    }
+    callback(null, dirs.map(function(dir) {
       // return just the usernames
       var parts = dir.split(path.sep);
       return parts[3].replace(/\.git/, '');
@@ -225,8 +238,6 @@ exports.staffDirRevBefore = function(dir, upto, callback) {
 
 
 // fetch all projects in the staff repo
-// find some way to do this without having to grep the massive list of directories
-// **** 
 exports.findAvailableProjects = function(callback) {
   log.info('findAvailableProjects');
   // look only for directories in the current semester
@@ -247,7 +258,7 @@ exports.findAvailableProjects = function(callback) {
     var gradingProjects = [];
     var startingProjects = [];
     // sort results into projects with starting directories and projects with grading directories
-    // is there a better way to do this?
+    // is there a better way to do this? 
     results.map(function(result) {
       var parts = result.split(path.sep);
       var project = { kind: parts[1], proj: parts[2] };
@@ -388,24 +399,12 @@ function initStarting(dir, callback) {
 exports.createStarting = function(spec, callback) {
   log.info({ spec: spec }, 'createStarting');
   var dir = path.join(config.student.repos, config.student.semester, spec.kind, spec.proj, 'starting');
-  mkdirp(dir, function(mkderr, made) {
-    if (mkderr) {
-      log.error(mkderr, 'error creating starting directory');
-      return callback(mkderr, null);
-    }
-    exports.fetchStarting(spec, dir, function(fsterr, commitID) {
-      if (fsterr) {
-        log.error(fsterr, 'error fetching starting directory from staff repo');
-        return callback(fsterr, null);
-      }
-      initStarting(dir, function(err, success) {
-        if (err) {
-          return callback(err, null);
-        }
-        callback(null, commitID);
-      });
-    });
-  });
+  async.series([
+    async.apply(mkdirp, dir),
+    async.apply(exports.fetchStarting, spec, dir),
+    async.apply(initStarting, dir),
+    async.apply(perm.setStartingPermission, spec)
+  ], callback);
 };
 
 // check if the starting repo has been created already
@@ -440,14 +439,14 @@ exports.checkPermission = function(spec, callback) {
 
 // copy starting repo for a student
 exports.copyStarting = function (spec, callback) {
-  console.log('spec: ',spec);
   log.info({ spec: spec }, 'copyStarting');
   var source = path.join(config.student.repos, config.student.semester, spec.kind, spec.proj);
   var dest = path.join(source, spec.users.join('-') + '.git');
   var startingRepo = path.join(source, 'starting', '.git');
   async.series([ 
     async.apply(ncp, startingRepo, dest),
-    async.apply(ncp, path.join(__dirname, 'hooks'), path.join(dest, 'hooks'))
+    async.apply(ncp, path.join(__dirname, 'hooks'), path.join(dest, 'hooks')),
+    async.apply(perm.setStudentPermission, spec)
   ], callback);
 }
 
