@@ -99,9 +99,9 @@ block content
           h3 Assignment
           if startingExists
             h4.muted Starting repo exists
+            a.btn.btn-small.btn-info(href='#edit-permissions', data-toggle='modal') Edit student permissions
           else
             a.btn.btn-small.btn-info(href='#create-starting', data-toggle='modal') Create starting repo
-          a.btn.btn-small.btn-info(href='#edit-permissions', data-toggle='modal') Edit student permissions
         div.well
           h3= sweeps.length + schedSweeps.length > 0 ? 'Sweeps' : 'No sweeps'
           each sweep in sweeps

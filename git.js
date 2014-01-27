@@ -57,7 +57,7 @@ function findRev(dir, gitargs, callback) {
 }
 
 // find all projects with a created starting repo
-exports.findProjects = function(callback) {
+exports.findStartedProjects = function(callback) {
   glob(path.join(config.student.semester, '*', '*'), { cwd: config.student.repos },
     function(err, dirs) {
       callback(err, dirs.map(function(dir){

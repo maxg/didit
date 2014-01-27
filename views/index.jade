@@ -14,6 +14,8 @@ block content
       h2= projects.length > 0 ? 'All projects' : 'No projects'
       each project in projects
         h3: a(href="/#{project.kind}/#{project.proj}") #{project.kind}/#{project.proj}
+      each unstarted in unstartedProjects
+        h3: a(class="text-warning", href="/#{unstarted.kind}/#{unstarted.proj}") #{unstarted.kind}/#{unstarted.proj}
       br
 
     h2= repos.length > 0 ? 'My repositories' : 'No repositories'
@@ -21,8 +23,8 @@ block content
       h3: a(href="/#{repo.kind}/#{repo.proj}/#{repo.users.join('-')}").
         #{repo.kind}/#{repo.proj} #{repo.users.join('-')}
 
-    if available.length > 0
+    if newAssignments.length > 0
       h2 New assignments
-      each project in available
+      each project in newAssignments
         h3: a(href="/#{project.kind}/#{project.proj}").
           #{project.kind}/#{project.proj}

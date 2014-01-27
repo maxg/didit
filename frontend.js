@@ -106,11 +106,11 @@ app.get('*', function(req, res, next) {
 });
 
 app.get('/', function(req, res, next) {
-  async.auto({
+  var findAll = {
     findRepos: async.apply(git.findStudentRepos, { users: [ res.locals.authuser ] }),
-    findProjects: git.findProjects,
-    findNew: [ 'findRepos', 'findProjects', function(next, results) {
-      var allProjs = results.findProjects;
+    findStartedProjects: git.findStartedProjects,
+    findNew: [ 'findRepos', 'findStartedProjects', function(next, results) {
+      var allProjs = results.findStartedProjects;
       var myProjs = results.findRepos;
       // newProjs is all projects that don't have a corresponding repo for the student
       var newProjs = allProjs.filter(function(started) {
@@ -119,14 +119,26 @@ app.get('/', function(req, res, next) {
         }));
       });
       next(null, newProjs);
-    } ],
-    findUnstarted: git.findAvailableProjects
-  }, function(err, results) {
-    console.log('findUnstarted results: ',results.findUnstarted);
-    res.render('index', {
+    } ]
+  };
+  if (res.locals.authstaff) {
+    findAll.findAvailable = git.findAvailableProjects;
+    findAll.findUnstarted = [ 'findStartedProjects', 'findAvailable', function(next, results) {
+      var availProjs = results.findAvailable;
+      var startedProjs = results.findStartedProjects;
+      var unstarted = availProjs.filter(function(avail) {
+        return ( ! startedProjs.some(function(started) {
+          return started.kind == avail.kind && started.proj == avail.proj;
+        }));
+      });
+      next(null, unstarted);
+    } ];
+  }
+  async.auto(findAll, function(err, results) {    res.render('index', {
       repos: results.findRepos,
-      available: results.findNew,
-      projects: res.locals.authstaff ? results.findProjects : []
+      newAssignments: results.findNew,
+      projects: results.findStartedProjects,
+      unstartedProjects: results.findUnstarted
     });
   });
 });
