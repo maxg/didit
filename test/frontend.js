@@ -1,7 +1,12 @@
 var async = require('async');
+var byline = require('byline');
 var http = require('http');
+var path = require('path');
 var request = require('request');
+var rimraf = require('rimraf');
+var should = require('should');
 var sinon = require('sinon');
+var zlib = require('zlib');
 
 var fixtures = require('./fixtures');
 var mocks = require('./mocks');
@@ -11,6 +16,7 @@ describe('frontend', function() {
   var config = require('../config');
   var builder = require('../builder');
   var frontend = require('../frontend');
+  var grader = require('../grader');
   var rolodex = require('../rolodex');
   
   var fix = fixtures();
@@ -102,6 +108,59 @@ describe('frontend', function() {
       mock.user('eve');
       request(root + 'milestone/labs/lab3/alice/final', function(err, res, body) {
         body.should.match(/not released to student/).and.match(/Auto-graded rev.*abcd789/);
+        done(err);
+      });
+    });
+  });
+  
+  describe('GET /milestone/:kind/:proj/:name', function() {
+    it('should render HTML', function(done) {
+      mock.user('eve');
+      request(root + 'milestone/projects/helloworld/hello', function(err, res, body) {
+        body.should.match(/projects\/helloworld\/alice-bob\/123abc7/);
+        done(err);
+      });
+    });
+    it('should render CSV', function(done) {
+      mock.user('eve');
+      request(root + 'milestone/projects/helloworld/hello.csv', function(err, res, body) {
+        var unquoted = body.replace(/"/g, '');
+        unquoted.should.match(/Username,Revision,Grade,out of,greeting,salutation/);
+        unquoted.should.match(/alice,.*123abc7.*15,20,10,5/);
+        unquoted.should.match(/bob,[^0-9]*$/m);
+        done(err);
+      });
+    });
+    it('should only allow staff', function(done) {
+      mock.user('alice');
+      request(root + 'milestone/projects/helloworld/hello', function(err, res, body) {
+        body.should.match(/alice/).and.match(/You are not staff/);
+        body.should.not.match(/grade|grading|15/i);
+        done(err);
+      });
+    });
+  });
+  
+  describe('GET /sweep/:kind/:proj/:datetime', function() {
+    it('should render HTML', function(done) {
+      mock.user('eve');
+      request(root + 'sweep/projects/helloworld/20130929T110000', function(err, res, body) {
+        body.should.match(/projects\/helloworld\/alice-bob\/123abc7/);
+        done(err);
+      });
+    });
+    it('should render CSV', function(done) {
+      mock.user('eve');
+      request(root + 'sweep/projects/helloworld/20130929T110000.csv', function(err, res, body) {
+        body.should.match(/alice,bob,.*123abc7/);
+        done(err);
+      });
+    });
+    it('should only allow staff', function(done) {
+      mock.user('alice');
+      request(root + 'sweep/projects/helloworld/20130929T110000', function(err, res, body) {
+        body.should.match(/alice/).and.match(/You are not staff/);
+        body.should.not.match(/revision|123abc7/i);
         done(err);
       });
     });
@@ -306,6 +365,94 @@ describe('frontend', function() {
     });
   });
   
+  describe('GET /:kind/:proj/:users/:rev/payload/...', function() {
+    it('should deliver text data', function(done) {
+      mock.user('f_tony');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/quotation.txt', function(err, res, body) {
+        res.headers['content-type'].should.eql('text/plain');
+        body.should.eql("What's a truck?\n");
+        done(err);
+      });
+    });
+    it('should deliver binary data', function(done) {
+      mock.user('f_tony');
+      request({
+        url: root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/ziptation.txt.gz',
+        encoding: null
+      }, function(err, res, body) {
+        res.headers['content-type'].should.eql('text/plain');
+        res.headers['content-encoding'].should.eql('gzip');
+        zlib.gunzip(body, function(zerr, result) {
+          result.toString().should.eql("What's a truck?\n");
+          done(err || zerr);
+        });
+      });
+    });
+    it('should fail for test with no payload', function(done) {
+      mock.user('f_tony');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/silence', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        body.should.match(/Not found/i);
+        done(err);
+      });
+    });
+    it('should fail for missing test case', function(done) {
+      mock.user('f_tony');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/missing', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        body.should.match(/Not found/i);
+        done(err);
+      });
+    });
+    it('should fail for missing test suite', function(done) {
+      mock.user('f_tony');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Public/quotation.txt', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        body.should.match(/Not found/i);
+        done(err);
+      });
+    });
+    it('should reject unauthorized students', function(done) {
+      mock.user('alice');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/quotation.txt', function(err, res, body) {
+        body.should.match(/You are not f_tony/);
+        body.should.not.match(/truck/);
+        done(err);
+      });
+    });
+    it('should reject hidden payloads', function(done) {
+      mock.user('f_tony');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/hidden/Secret/quotation.txt', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        body.should.match(/Not found/i);
+        body.should.not.match(/dumb/);
+        done(err);
+      });
+    });
+    it('should allow staff', function(done) {
+      mock.user('eve');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/quotation.txt', function(err, res, body) {
+        body.should.eql("What's a truck?\n");
+        done(err);
+      });
+    });
+    it('should allow staff on hidden payload', function(done) {
+      mock.user('eve');
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/hidden/Secret/quotation.txt', function(err, res, body) {
+        body.should.eql("Don't play dumb with me!\n");
+        done(err);
+      });
+    });
+    it('should reject illegal category', function(done) {
+      mock.user('f_tony');
+      sandbox.stub(builder, 'findBuild').throws();
+      request(root + 'projects/truck/f_tony/ab34ef7/payload/evil/Visible/quotation.txt', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        done(err);
+      });
+    });
+  });
+  
   describe('GET /:kind/:proj/:users/:rev/grade', function() {
     it('should render a grade report', function(done) {
       mock.user('eve');
@@ -338,6 +485,135 @@ describe('frontend', function() {
         body.should.match(/alice/).and.match(/You are not staff/);
         body.should.not.match(/grade|grading/i);
         done(err);
+      });
+    });
+  });
+  
+  describe('POST /build/:kind/:proj/:users/:rev', function() {
+    it('should start a build and report results', function(done) {
+      sandbox.stub(builder, 'findBuild').yields();
+      sandbox.stub(builder, 'startBuild').yields(null, 'fake');
+      sandbox.stub(builder, 'monitor', function() {
+        var emitter = new events.EventEmitter();
+        process.nextTick(emitter.emit.bind(emitter, 'start'));
+        process.nextTick(emitter.emit.bind(emitter, 'progress', {
+          message: 'Forward, not backward!'
+        }));
+        process.nextTick(emitter.emit.bind(emitter, 'done', {
+          result: { compile: true, public: false, hidden: true }
+        }));
+        return emitter;
+      });
+      var expected = [
+        /started/i,
+        /Forward/,
+        /compilation succeeded/i,
+        /public tests failed/i,
+        /details.*labs\/lab2\/alice/i
+      ];
+      var req = request.post(root + 'build/labs/lab2/alice/abcd123');
+      byline(req, { encoding: 'utf8' }).on('data', function(line) {
+        line.should.match(expected.shift());
+        if (expected.length == 0) { done(); }
+      });
+    });
+    it('should skip an existing build', function(done) {
+      sandbox.stub(builder, 'findBuild').yields(null, 'fake');
+      sandbox.stub(builder, 'startBuild').throws();
+      request.post(root + 'build/labs/lab2/alice/abcd123', function(err, res, body) {
+        body.should.match(/revision already built.*labs\/lab2\/alice/i);
+        done(err);
+      });
+    });
+  });
+  
+  describe('POST /grade/:kind/:proj/:name/revs', function() {
+    
+    var spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
+    var rev = 'abcd789';
+    var resultdir = path.join(
+      config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', 'alpha'
+    );
+    
+    beforeEach(function(done){
+      fix.files(this.test, done);
+    });
+    
+    afterEach(function(done) {
+      rimraf(resultdir, done);
+    });
+    
+    it('should assign grades', function(done) {
+      mock.user('eve');
+      request.post(root + 'grade/labs/lab3/alpha/revs', { form: {
+        revision: { alice: rev, bob: '1234abc' }
+      } }, function(err, res, body) {
+        body.should.match(/error.*bob/i).and.not.match(/lab3\/bob/);
+        body.should.match(/assigned.*alice/i).and.match(/lab3\/alice\/abcd789/);
+        grader.findMilestoneGrade(spec, 'alpha', function(finderr, graded) {
+          graded.rev.should.eql(rev);
+          graded.grade.should.include({ score: 5, outof: 15 });
+          done(err || finderr);
+        });
+      });
+    });
+    it('should only allow staff', function(done) {
+      mock.user('alice');
+      sandbox.stub(builder, 'findRepos').throws();
+      sandbox.stub(grader, 'gradeFromBuilds').throws();
+      request.post(root + 'grade/labs/lab3/alpha/revs', { form: {
+        revision: { alice: rev }
+      } }, function(err, res, body) {
+        body.should.match(/alice/).and.match(/You are not staff/);
+        grader.findMilestoneGrade(spec, 'alpha', function(finderr, graded) {
+          should.exist(finderr);
+          done(err);
+        });
+      });
+    });
+  });
+  
+  describe('POST /grade/:kind/:proj/:name/sweep', function() {
+    
+    var spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
+    var when = '20130101T221500';
+    var resultdir = path.join(
+      config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', 'alpha'
+    );
+    
+    beforeEach(function(done){
+      fix.files(this.test, done);
+    });
+    
+    afterEach(function(done) {
+      rimraf(resultdir, done);
+    });
+    
+    it('should assign grades', function(done) {
+      mock.user('eve');
+      request.post(root + 'grade/labs/lab3/alpha/sweep', { form: {
+        datetime: when,
+        usernames: 'alice\nbob\n\n'
+      } }, function(err, res, body) {
+        res.statusCode.should.equal(302);
+        grader.findMilestoneGrade(spec, 'alpha', function(finderr, graded) {
+          graded.rev.should.eql('abcd789');
+          graded.grade.should.include({ score: 90, outof: 100 });
+          done(err || finderr);
+        });
+      });
+    });
+    it('should only allow staff', function(done) {
+      mock.user('alice');
+      request.post(root + 'grade/labs/lab3/alpha/sweep', { form: {
+        datetime: when,
+        usernames: 'alice\n'
+      } }, function(err, res, body) {
+        body.should.match(/alice/).and.match(/You are not staff/);
+        grader.findMilestoneGrade(spec, 'alpha', function(finderr, graded) {
+          should.exist(finderr);
+          done(err);
+        });
       });
     });
   });

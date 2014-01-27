@@ -1,0 +1,22 @@
+{
+  "kind": "projects", "proj": "helloworld", "users": [ "alice", "bob" ], "rev": "123abc7",
+  "grade": {
+    "spec": { "kind": "projects", "proj": "helloworld", "users": [ "alice", "bob" ], "rev": "123abc7" },
+    "score": 15,
+    "outof": 20,
+    "testsuites": [
+      {
+        "name": "Hello",
+        "testcases": [
+          { "name": "greeting", "grade": { "score": 10 } }
+        ]
+      },
+      {
+        "name": "Goodbye",
+        "testcases": [
+          { "name": "salutation", "grade": { "score": 5 } }
+        ]
+      }
+    ]
+  }
+}

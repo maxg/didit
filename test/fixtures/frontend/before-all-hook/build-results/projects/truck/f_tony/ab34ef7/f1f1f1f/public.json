@@ -1,0 +1,21 @@
+{
+  "testsuites": [
+    {
+      "package": "",
+      "name": "Visible",
+      "testcases": [
+        {
+          "name": "quotation",
+          "payload": { "type": "txt", "data": "V2hhdCdzIGEgdHJ1Y2s/Cg==" }
+        },
+        {
+          "name": "ziptation",
+          "payload": { "type": "txt.gz", "data": "H4sIAFTP3lIAAwvPSCxRL1ZIVCgpKk3OtucCAMrwjHMQAAAA" }
+        },
+        {
+          "name": "silence"
+        }
+      ]
+    }
+  ]
+}

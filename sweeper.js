@@ -172,7 +172,7 @@ exports.startSweep = function(spec, when, startCallback, finishCallback) {
     } ]
   }, function(err, results) {
     if (err) { log.error(err, 'sweeping error'); }
-    finishCallback(err, results.grades);
+    finishCallback(err, results.buildAndGrade);
   });
 };
 
@@ -220,7 +220,7 @@ function buildSweep(spec, when, staffrev, callback) {
     } ]
   }, function(err, results) {
     if (err) { log.error(err, 'sweeping build error'); }
-    callback(err, results.grades);
+    callback(err, results.grade);
   });
 }
 

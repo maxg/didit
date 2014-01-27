@@ -1,0 +1,5 @@
+{
+  "reporevs": [
+    { "kind": "labs", "proj": "lab2", "users": [ "alice" ], "rev": "abcd123" }
+  ]
+}

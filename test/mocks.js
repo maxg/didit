@@ -1,3 +1,5 @@
+var events = require('events');
+
 var config = require('../config');
 
 exports.HTTPS = function() {
@@ -21,4 +23,25 @@ MockHTTPS.prototype.user = function(username) {
 
 MockHTTPS.prototype.clear = function() {
   this.user();
+};
+
+exports.AWSHTTP = function() {
+  return new MockAWSHttpClient();
+};
+
+function MockAWSHttpClient() {
+  this.requests = [];
+}
+
+MockAWSHttpClient.prototype.handleRequest = function(req, opts, callback, errCallback) {
+  this.requests.push({
+    body: JSON.parse(req.body),
+    success: function() {
+      var res = new events.EventEmitter();
+      callback(res);
+      res.emit('headers', 200, {});
+      res.emit('end');
+    }
+  });
+  return new events.EventEmitter();
 };

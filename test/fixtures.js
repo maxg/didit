@@ -85,7 +85,7 @@ function testTitle(test) {
 
 function fixturePath(titles) {
   titles = titles.map(function(title) {
-    return title.replace(/([a-z])([A-Z]+)|\s+/g, '$1-$2').toLowerCase().replace(/[^\w-]/g, '');
+    return title.replace(/([a-z])([A-Z]+)|[\s\/]+/g, '$1-$2').toLowerCase().replace(/[^\w-]/g, '');
   });
   return path.join.apply(path, [ __dirname, 'fixtures' ].concat(titles));
 }
