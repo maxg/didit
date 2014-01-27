@@ -110,3 +110,25 @@ exports.parseJUnitResults = function(code, report, callback) {
     });
   });
 }
+
+// command-line parse
+if (require.main === module) {
+  var args = process.argv.slice(2);
+  if ( ! args.join(' ').match(/^.+\.xml .+\.json$/)) {
+    log.error('expected argument: <input.xml> <output.json>');
+    return;
+  }
+  exports.parseJUnitResults(0, args[0], function(err, result) {
+    if (err) {
+      log.error(err);
+      return;
+    }
+    fs.writeFile(args[1], JSON.stringify(result), function(err) {
+      if (err) {
+        log.error(err);
+      } else {
+        log.info(result);
+      }
+    });
+  });
+}
