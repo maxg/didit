@@ -127,6 +127,8 @@ app.get('/', function(req, res, next) {
       var availProjs = results.findAvailable;
       var startedProjs = results.findStartedProjects;
       var unstarted = availProjs.filter(function(avail) {
+        // check if something like indexOf works here
+        // possibly.
         return ( ! startedProjs.some(function(started) {
           return started.kind == avail.kind && started.proj == avail.proj;
         }));
@@ -134,7 +136,8 @@ app.get('/', function(req, res, next) {
       next(null, unstarted);
     } ];
   }
-  async.auto(findAll, function(err, results) {    res.render('index', {
+  async.auto(findAll, function(err, results) {
+    res.render('index', {
       repos: results.findRepos,
       newAssignments: results.findNew,
       projects: results.findStartedProjects,
@@ -248,7 +251,7 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
     findAll.sweeps = async.apply(sweeper.findSweeps, req.params);
     findAll.schedSweeps = async.apply(sweeper.scheduledSweeps, req.params);
     findAll.milestones = async.apply(grader.findMilestones, req.params);
-    findAll.permissions = ['startingExists', function(next, results) {
+    findAll.permissions = [ 'startingExists', function(next, results) {
       if (results.startingExists) {
         return git.findStudentPermissions(req.params, next);
       }
@@ -549,17 +552,16 @@ app.post('/catchup/:kind/:proj', staffonly, function(req, res, next) {
 
 // create starting repo for students to copy
 app.post('/starting/:kind/:proj', staffonly, function(req, res, next) {
-  git.createStarting({ kind: req.params.kind, proj: req.params.proj }, 
-    function(err, commit){
-      if (err){
-        err.dmesg = err.dmesg || 'Error creating starting repo';
-        return next(err);
-      }
-      res.redirect('/' + req.params.kind + '/' + req.params.proj);
-    });
+  git.createStarting(req.params, function(err, commit) {
+    if (err){
+      err.dmesg = err.dmesg || 'Error creating starting repo';
+      return next(err);
+    }
+    res.redirect('/' + req.params.kind + '/' + req.params.proj);
+  });
 });
 
-// edit who can create a starting repo
+// edit who can copy a starting repo
 app.post('/permissions/:kind/:proj', staffonly, function(req, res, next) {
   var usernames = req.body.usernames.split('\n').map(function(user) {
     return user.trim();
@@ -576,26 +578,26 @@ app.post('/permissions/:kind/:proj', staffonly, function(req, res, next) {
 });
 
 // copy starting repo for student
-app.post('/starting/:kind/:proj/copy', authorize, function(req, res, next) {
-  git.checkPermission({ kind: req.params.kind, proj: req.params.proj, users: res.locals.authuser },
-    function(err, permitted) {
-      if ( ! permitted) {
-        if (res.locals.authstaff) {
-          permitted = [ res.locals.authuser ];
-        } else {
-          return next({ dmesg: 'You do not have permission to copy this repository' });
-        }
+app.post('/starting/:kind/:proj/copy', function(req, res, next) {
+  git.checkPermission({
+    kind: req.params.kind, proj: req.params.proj, users: res.locals.authuser
+  }, function(err, permitted) {
+    if ( ! permitted) {
+      if (res.locals.authstaff) {
+        permitted = [ res.locals.authuser ];
+      } else {
+        return next({ dmesg: 'You do not have permission to copy this repository' });
       }
-      git.copyStarting({ kind: req.params.kind, proj: req.params.proj, users: permitted },
-        function(err, results) {
-          if (err) {
-            err.dmesg = err.dmesg || 'Error copying starting repository';
-            return next(err);
-          }
-          res.redirect('/' + req.params.kind + '/' + req.params.proj + '/' +
-           permitted.join('-'));
-      });
+    }
+    git.copyStarting({ kind: req.params.kind, proj: req.params.proj, users: permitted },
+      function(err, results) {
+        if (err) {
+          err.dmesg = err.dmesg || 'Error copying starting repository';
+          return next(err);
+        }
+        res.redirect('/' + req.params.kind + '/' + req.params.proj + '/' + permitted.join('-'));
     });
+  });
 });
 
 app.post('/:kind/:proj/:users/:rev/rebuild', staffonly, function(req, res, next) {

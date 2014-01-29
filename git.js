@@ -2,11 +2,11 @@ var async = require('async');
 var byline = require('byline');
 var fs = require('fs');
 var glob = require('glob');
-var moment = require('moment');
-var path = require('path');
 var mkdirp = require('mkdirp');
-var spawn = require('child_process').spawn;
+var moment = require('moment');
 var ncp = require('ncp');
+var path = require('path');
+var spawn = require('child_process').spawn;
 
 var config = require('./config');
 var log = require('./logger').cat('git');
@@ -15,7 +15,14 @@ var perm;
 if (config.student.permission) {
   perm = require('./'+config.student.permission);
 } else {
-  perm = require('./default_permission');
+  perm = {
+    setStudentPermission: function(spec, callback) {
+      log.warn({ spec: spec }, 'not setting student permissions');
+    },
+    setStartingPermission: function(spec, callback) {
+      log.warn({ spec: spec }, 'not setting starting permissions');
+    }
+  };
 }
 
 function studentSourcePath(spec) {
@@ -32,7 +39,7 @@ function startingDir(spec) {
 
 // spawn a process and log stderr
 // options must include a 'pipe' setting for stderr
-function spawnAndLog(command, args, options) {
+function spawnAndLog(command, args, options, callback) {
   var child = spawn(command, args, options);
   child.on('error', function(err) {
     log.error({ err: err, command: command, args: args, options: options });
@@ -40,6 +47,9 @@ function spawnAndLog(command, args, options) {
   byline(child.stderr, { encoding: 'utf8' }).on('data', function(line) {
     log.error({ err: line, command: command, args: args, options: options });
   });
+  if (callback) {
+    // do the exit stuff from gitCommand
+  }
   return child;
 }
 
@@ -65,7 +75,7 @@ function findRev(dir, gitargs, callback) {
 
 // find all projects with a created starting repo
 exports.findStartedProjects = function(callback) {
-  glob(path.join(config.student.semester, '*', '*'), { cwd: config.student.repos },
+  glob(path.join(config.student.semester, '*', '*', 'starting'), { cwd: config.student.repos },
     function(err, dirs) {
       callback(err, dirs.map(function(dir){
         var parts = dir.split(path.sep);
@@ -80,7 +90,7 @@ exports.findStudentRepos = function(spec, callback) {
   var proj = spec.proj || '*';
   var users = spec.users ? '?(*-)' + spec.users.join('-') + '?(-*)' : '*';
   log.info('findRepos', kind, proj, users);
-  glob(path.join(config.student.semester, kind, proj, users + '.git', 'config'), {
+  glob(path.join(config.student.semester, kind, proj, users + '.git', 'HEAD'), {
     cwd: config.student.repos
   }, function(err, dirs) {
     if (err) {
@@ -111,9 +121,9 @@ exports.findStudentPermissions = function(spec, callback) {
 };
 
 // add permission for a single student
+// mkdirp here??
 function addPermission(spec, user, callback) {
-  var dir = path.join(config.student.repos, config.student.semester, spec.kind,
-   spec.proj, user + '.git');
+  var dir = path.join(config.student.repos, config.student.semester, spec.kind, spec.proj, user + '.git');
   fs.exists(dir, function(exists) {
     if ( ! exists) {
       return fs.mkdir(dir, callback);
@@ -247,10 +257,13 @@ exports.findAvailableProjects = function(callback) {
     stdio: 'pipe'
   });
   find.stdout.setEncoding('utf8');
+  // byline this
   var results = [];
   find.stdout.on('data', function(data) {
     results = results.concat(data.split('\n'));
   });
+  // stdout.on('end')
+  // don't need to worry about exit code b/c spawn and log deals with this
   find.on('exit', function(code) {
     if (code != 0) {
       return callback({ dmesg: 'Error finding available projects in staff repository'});
@@ -284,7 +297,7 @@ exports.findAvailableProjects = function(callback) {
 
 // fetch directory from staff repo
 // callback returns staff commit hash
-exports.exportStaffDir = function(dir, dest, callback) {
+function exportStaffDir(dir, dest, callback) {
   log.info({ dir: dir, dest: dest }, 'exportStaffDir');
   //var dir = builderDir(spec);
   var procs = [ 'id', 'tar' ];
@@ -351,18 +364,18 @@ exports.exportStaffDir = function(dir, dest, callback) {
   }, function(err, results) {
     callback(err, results && results.staffrev && results.staffrev.substring(0, 7));
   });
-};
+}
 
 // fetch staff build materials
 // callback returns staff commit hash
 exports.fetchBuilder = function(spec, dest, callback) {
-  exports.exportStaffDir(builderDir(spec), dest, callback);
+  exportStaffDir(builderDir(spec), dest, callback);
 };
 
 // fetch starting repo
 // callback returns staff commit hash
 exports.fetchStarting = function(spec, dest, callback) {
-  exports.exportStaffDir(startingDir(spec), dest, callback);
+  exportStaffDir(startingDir(spec), dest, callback);
 };
 
 // create a function that runs the specified git command 
@@ -385,9 +398,9 @@ function initStarting(dir, callback) {
   log.info({ dir: dir }, 'initStarting');
   var options = { cwd: dir, stdio: 'pipe' };
   async.series([
-    gitCommand([ 'init', '-q' ], options, 'Error initializing repository'),
-    gitCommand([ 'add', '.' ], options, 'Error adding starting files'), // this might not always work
-    gitCommand([ 'commit', '-q', '-m', 'Commit starting code' ], options,
+    gitCommand([ 'init', '--quiet' ], options, 'Error initializing repository'),
+    gitCommand([ 'add', '.' ], options, 'Error adding starting files'),
+    gitCommand([ 'commit', '--quiet', '--author=Didit', '-m', 'Starting code' ], options,
       'Error committing starting files'),
     gitCommand([ 'config', '--bool', 'core.bare', 'true' ], options,
       'Error converting to bare repository')
@@ -408,7 +421,6 @@ exports.createStarting = function(spec, callback) {
 };
 
 // check if the starting repo has been created already
-// callback returns only true or false
 exports.startingExists = function(spec, callback) {
   log.info({ spec: spec }, 'startingExists');
   fs.exists(path.join(config.student.repos, config.student.semester, spec.kind, spec.proj,
@@ -419,6 +431,7 @@ exports.startingExists = function(spec, callback) {
 
 // check if a student has permission to copy a given project
 // callback returns the name of the repo that can be copied, or false if no permission
+// look for exact matches
 exports.checkPermission = function(spec, callback) {
   var user = '?(*-)' + spec.users + '?(-*)';
   glob(path.join(spec.kind, spec.proj, user + '.git'), { 
@@ -440,9 +453,9 @@ exports.checkPermission = function(spec, callback) {
 // copy starting repo for a student
 exports.copyStarting = function (spec, callback) {
   log.info({ spec: spec }, 'copyStarting');
-  var source = path.join(config.student.repos, config.student.semester, spec.kind, spec.proj);
-  var dest = path.join(source, spec.users.join('-') + '.git');
-  var startingRepo = path.join(source, 'starting', '.git');
+  var base = path.join(config.student.repos, config.student.semester, spec.kind, spec.proj);
+  var dest = path.join(base, spec.users.join('-') + '.git');
+  var startingRepo = path.join(base, 'starting', '.git');
   async.series([ 
     async.apply(ncp, startingRepo, dest),
     async.apply(ncp, path.join(__dirname, 'hooks'), path.join(dest, 'hooks')),

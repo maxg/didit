@@ -41,7 +41,6 @@ function buildOutputBase(spec, staffrev, target) {
 // find all projects that have a starting repo
 exports.findStartingProjects = function(callback) {
   log.info('findStartingProjects');
-  var dir = path.join(config.student.repos, config.student.semester);
   glob(path.join('*', '*', 'starting'), {
     cwd: path.join(config.student.repos, config.student.semester)
   }, function(err, files) {

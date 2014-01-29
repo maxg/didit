@@ -17,8 +17,8 @@ if [ "$branch" != "$master" -o -z "$newrev" ]; then
   exit 0
 fi
 
-repohost="$GIT_DIR/hooks/didit-host" # the host might be in the hooks dir...
-projhost="$GIT_DIR/../../../didit-host"    # or it might be in the repo parent dir
+repohost="$GIT_DIR/hooks/didit-host"    # the host might be in the hooks dir...
+projhost="$GIT_DIR/../../../didit-host" # or it might be in the repo parent dir
 
 if [ -f "$repohost" ]; then
   didit=`cat "$repohost"`
