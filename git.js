@@ -33,10 +33,6 @@ function builderDir(spec) {
   return [ config.staff.semester, spec.kind, spec.proj, 'grading' ].join('/');
 }
 
-function startingDir(spec) {
-  return [ config.staff.semester, spec.kind, spec.proj, 'starting' ].join('/');
-}
-
 // spawn a process and log stderr
 // options must include a 'pipe' setting for stderr
 function spawnAndLog(command, args, options, callback) {
@@ -120,25 +116,15 @@ exports.findStudentPermissions = function(spec, callback) {
   });
 };
 
-// add permission for a single student
-// mkdirp here??
-function addPermission(spec, user, callback) {
-  var dir = path.join(config.student.repos, config.student.semester, spec.kind, spec.proj, user + '.git');
-  fs.exists(dir, function(exists) {
-    if ( ! exists) {
-      return fs.mkdir(dir, callback);
-    }
-    callback();
-  });
-}
-
 // add permission for students to create copies of the starting repo
 exports.addStudentPermissions = function(spec, usernames, callback) {
   log.info({ spec: spec, usernames: usernames }, 'addStudentPermissions');
   //var baseDir = path.join(config.student.repos, config.student.semester, spec.kind, spec.proj);
   var tasks = [];
   for (var i = 0; i < usernames.length; i++) {
-    tasks.push(async.apply(addPermission, spec, usernames[i]));
+    tasks.push(async.apply(mkdirp,
+      path.join(config.student.repos, config.student.semester, spec.kind, spec.proj, usernames[i] + '.git')
+    ));
   }
   async.parallel(tasks, callback);
 };
@@ -375,7 +361,7 @@ exports.fetchBuilder = function(spec, dest, callback) {
 // fetch starting repo
 // callback returns staff commit hash
 exports.fetchStarting = function(spec, dest, callback) {
-  exportStaffDir(startingDir(spec), dest, callback);
+  exportStaffDir(path.join(config.staff.semester, spec.kind, spec.proj, 'starting'), dest, callback);
 };
 
 // create a function that runs the specified git command 
@@ -400,7 +386,7 @@ function initStarting(dir, callback) {
   async.series([
     gitCommand([ 'init', '--quiet' ], options, 'Error initializing repository'),
     gitCommand([ 'add', '.' ], options, 'Error adding starting files'),
-    gitCommand([ 'commit', '--quiet', '--author=Didit', '-m', 'Starting code' ], options,
+    gitCommand([ 'commit', '--quiet', '-m', 'Starting code' ], options,
       'Error committing starting files'),
     gitCommand([ 'config', '--bool', 'core.bare', 'true' ], options,
       'Error converting to bare repository')
@@ -433,8 +419,8 @@ exports.startingExists = function(spec, callback) {
 // callback returns the name of the repo that can be copied, or false if no permission
 // look for exact matches
 exports.checkPermission = function(spec, callback) {
-  var user = '?(*-)' + spec.users + '?(-*)';
-  glob(path.join(spec.kind, spec.proj, user + '.git'), { 
+  var requester = '?(*-)' + spec.users.join('-') + '?(-*)';
+  glob(path.join(spec.kind, spec.proj, requester + '.git'), {
     cwd: path.join(config.student.repos, config.student.semester)
   }, function(err, files) {
       if (err) {
@@ -445,7 +431,7 @@ exports.checkPermission = function(spec, callback) {
         return callback(null, false);
       }
       // if there is permission, return a list of usernames 
-      var users = result.split(path.sep)[2].replace(/\.git/, '').split('-');
+      var users = result.split(path.sep)[2].replace(/\.git/, '');
       callback(null, users);
   });
 }
