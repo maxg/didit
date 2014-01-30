@@ -243,36 +243,55 @@ exports.findAvailableProjects = function(callback) {
     stdio: 'pipe'
   }).stdout, { encoding: 'utf8' });
   var results = [];
-  find.stdout.on('data', function(data) {
+  find.on('data', function(data) {
     results = results.concat(data);
   });
-  // stdout.on('end')
-  // don't need to worry about exit code b/c spawn and log deals with this
   find.on('end', function() {
-    var gradingProjects = [];
-    var startingProjects = [];
-    // sort results into projects with starting directories and projects with grading directories
-    // is there a better way to do this? 
-    results.map(function(result) {
-      var parts = result.split(path.sep);
-      var project = { kind: parts[1], proj: parts[2] };
-      if (parts[3] == 'grading') {
-        gradingProjects.push(project);
+    var specials = [ 'grading', 'starting' ];
+    var seen = {};
+    var projects = [];
+    for (var i = 0; i < results.length; i ++) {
+      var parts = results[i].split(path.sep);
+      // check the results for special directories
+      // Once a 'kind/proj' key has seen all the special directories,
+      // add it to the list of available projects
+      if (specials.indexOf(parts[3]) != -1) {
+        var key = parts[1] + '/' + parts[2];
+        if (seen[key]) {
+          seen[key] += 1;
+        } else {
+          seen[key] = 1;
+        }
+        if (seen[key] == specials.length) {
+          projects.push({ kind: parts[1], proj: parts[2] });
+        }
       }
-      if (parts[3] == 'starting') {
-        startingProjects.push(project);
-      }
-    });
-    var finalResults = gradingProjects.filter(function(gProject) {
-      return startingProjects.some(function(sProject) {
-        return sProject.kind == gProject.kind && sProject.proj == gProject.proj;
-      });
-    });
-    callback(null, gradingProjects.filter(function(gProject) {
-      return startingProjects.some(function(sProject) {
-        return sProject.kind == gProject.kind && sProject.proj == gProject.proj;
-      });
-    }));
+    }
+    callback(null, projects);
+    // var gradingProjects = [];
+    // var startingProjects = [];
+    // // sort results into projects with starting directories and projects with grading directories
+    // // is there a better way to do this? 
+    // results.map(function(result) {
+    //   var parts = result.split(path.sep);
+    //   var project = { kind: parts[1], proj: parts[2] };
+    //   if (parts[3] == 'grading') {
+    //     gradingProjects.push(project);
+    //   }
+    //   if (parts[3] == 'starting') {
+    //     startingProjects.push(project);
+    //   }
+    // });
+    // var finalResults = gradingProjects.filter(function(gProject) {
+    //   return startingProjects.some(function(sProject) {
+    //     return sProject.kind == gProject.kind && sProject.proj == gProject.proj;
+    //   });
+    // });
+    // callback(null, gradingProjects.filter(function(gProject) {
+    //   return startingProjects.some(function(sProject) {
+    //     return sProject.kind == gProject.kind && sProject.proj == gProject.proj;
+    //   });
+    // }));
   });
 };
 
