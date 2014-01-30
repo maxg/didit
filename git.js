@@ -237,23 +237,18 @@ exports.staffDirRevBefore = function(dir, upto, callback) {
 exports.findAvailableProjects = function(callback) {
   log.info('findAvailableProjects');
   // look only for directories in the current semester
-  var find = spawnAndLog('git',
+  var find = byline(spawnAndLog('git',
     [ 'ls-tree', '-r', '-d', '--name-only', 'master', config.staff.semester ], { 
     cwd: config.staff.repo, 
     stdio: 'pipe'
-  });
-  find.stdout.setEncoding('utf8');
-  // byline this
+  }).stdout, { encoding: 'utf8' });
   var results = [];
   find.stdout.on('data', function(data) {
-    results = results.concat(data.split('\n'));
+    results = results.concat(data);
   });
   // stdout.on('end')
   // don't need to worry about exit code b/c spawn and log deals with this
-  find.on('exit', function(code) {
-    if (code != 0) {
-      return callback({ dmesg: 'Error finding available projects in staff repository'});
-    }
+  find.on('end', function() {
     var gradingProjects = [];
     var startingProjects = [];
     // sort results into projects with starting directories and projects with grading directories
