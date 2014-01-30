@@ -96,7 +96,7 @@ block content
       
       div.span6.pull-right
         div.well
-          h3 Assignment
+          h3= startingExists ? 'Assignment' : 'Assignment unavailable'
           if startingExists
             h4.muted Starting repo exists
             a.btn.btn-small.btn-info(href='#edit-permissions', data-toggle='modal') Edit student permissions

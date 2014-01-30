@@ -35,6 +35,7 @@ function builderDir(spec) {
 
 // spawn a process and log stderr
 // options must include a 'pipe' setting for stderr
+// callback argument is optional
 function spawnAndLog(command, args, options, callback) {
   var child = spawn(command, args, options);
   child.on('error', function(err) {
@@ -44,7 +45,12 @@ function spawnAndLog(command, args, options, callback) {
     log.error({ err: line, command: command, args: args, options: options });
   });
   if (callback) {
-    // do the exit stuff from gitCommand
+    child.on('exit', function(code) {
+      if (code != 0) {
+        return callback({ dmesg: 'Error running ' + command + args[0] });
+      }
+      callback();
+    });
   }
   return child;
 }
@@ -398,12 +404,10 @@ function initStarting(dir, callback) {
   log.info({ dir: dir }, 'initStarting');
   var options = { cwd: dir, stdio: 'pipe' };
   async.series([
-    gitCommand([ 'init', '--quiet' ], options, 'Error initializing repository'),
-    gitCommand([ 'add', '.' ], options, 'Error adding starting files'),
-    gitCommand([ 'commit', '--quiet', '-m', 'Starting code' ], options,
-      'Error committing starting files'),
-    gitCommand([ 'config', '--bool', 'core.bare', 'true' ], options,
-      'Error converting to bare repository')
+    async.apply(spawnAndLog, 'git', [ 'init', '--quiet' ], options),
+    async.apply(spawnAndLog, 'git', [ 'add', '.' ], options),
+    async.apply(spawnAndLog, 'git', [ 'commit', '--quiet', '-m', 'Starting code' ], options),
+    async.apply(spawnAndLog, 'git', [ 'config', '--bool', 'core.bare', 'true' ], options)
   ], callback);
 }
 
@@ -431,7 +435,6 @@ exports.startingExists = function(spec, callback) {
 
 // check if a student has permission to copy a given project
 // callback returns the name of the repo that can be copied, or false if no permission
-// look for exact matches
 exports.checkPermission = function(spec, callback) {
   var requester = '?(*-)' + spec.users.join('-') + '?(-*)';
   glob(path.join(spec.kind, spec.proj, requester + '.git'), {

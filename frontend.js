@@ -556,8 +556,10 @@ app.post('/catchup/:kind/:proj', staffonly, function(req, res, next) {
 });
 
 // create starting repo for students to copy
+// commit hash isn't used at all, but is good information to have floating aroud. Or something.
 app.post('/starting/:kind/:proj', staffonly, function(req, res, next) {
-  git.createStarting(req.params, function(err, commit) {
+  git.createStarting(req.params, function(err, results) {
+    var commitHash = results[1];
     if (err){
       err.dmesg = err.dmesg || 'Error creating starting repo';
       return next(err);
