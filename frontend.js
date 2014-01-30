@@ -232,9 +232,6 @@ app.get('/u/:users', authorize, function(req, res, next) {
 });
 
 app.get('/:kind/:proj', authorize, function(req, res, next) {
-  if ( ! res.locals.authstaff) {
-    req.params.users = [ res.locals.authuser ];
-  }
   var findAll = {
     startingExists: async.apply(git.startingExists, req.params),
     repos: async.apply(git.findStudentRepos, req.params),
@@ -245,20 +242,28 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
           callback();
         });
       }, function(err) { callback(); });
-    } ]
+    } ],
+    permittedRepoName: function(next) {
+      git.checkPermission({
+        kind: req.params.kind, proj: req.params.proj, users: [ res.locals.authuser ]
+      }, function(err, result) {
+        if (res.locals.authstaff && ! result) {
+          return next(err, res.locals.authuser);
+        }
+        return next(err, result);
+      });
+    }
   };
   if (res.locals.authstaff) {
     findAll.sweeps = async.apply(sweeper.findSweeps, req.params);
     findAll.schedSweeps = async.apply(sweeper.scheduledSweeps, req.params);
     findAll.milestones = async.apply(grader.findMilestones, req.params);
-    findAll.permissions = [ 'startingExists', function(next, results) {
+    findAll.allPermissions = [ 'startingExists', function(next, results) {
       if (results.startingExists) {
         return git.findStudentPermissions(req.params, next);
       }
       next(null, []);
     } ];
-  } else {
-    findAll.hasPermission = async.apply(git.checkPermission, req.params)
   }
   async.auto(findAll, function(err, results) {
     res.render('proj', {
@@ -269,8 +274,8 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
       schedSweeps: results.schedSweeps,
       milestones: results.milestones,
       startingExists: results.startingExists,
-      permissions: results.permissions,
-      hasPermission: results.hasPermission
+      permissions: results.allPermissions,
+      permittedRepoName: results.permittedRepoName
     });
   });
 });
@@ -578,24 +583,20 @@ app.post('/permissions/:kind/:proj', staffonly, function(req, res, next) {
 });
 
 // copy starting repo for student
-app.post('/starting/:kind/:proj/copy', function(req, res, next) {
-  git.checkPermission({
-    kind: req.params.kind, proj: req.params.proj, users: res.locals.authuser
-  }, function(err, permitted) {
-    if ( ! permitted) {
-      if (res.locals.authstaff) {
-        permitted = [ res.locals.authuser ];
-      } else {
-        return next({ dmesg: 'You do not have permission to copy this repository' });
-      }
+app.post('/starting/:kind/:proj/:users', authorize, function(req, res, next) {
+  // possibly make a new function here instead of checkPermission (or rename above use of checkPermission)
+  // that given an exact repo name, looks if it's allowed, separate from taking a single username
+  // and checking what, if any, repos are allowed to that user
+  git.checkPermission(req.params, function(err, permitted) {
+    if ( ! permitted && ! res.locals.authstaff) {
+      return next({ dmesg: 'No permission' });
     }
-    git.copyStarting({ kind: req.params.kind, proj: req.params.proj, users: permitted },
-      function(err, results) {
-        if (err) {
-          err.dmesg = err.dmesg || 'Error copying starting repository';
-          return next(err);
-        }
-        res.redirect('/' + req.params.kind + '/' + req.params.proj + '/' + permitted.join('-'));
+    git.copyStarting(req.params, function(err, results) {
+      if (err) {
+        err.dmesg = err.dmesg || 'Error copying starting repository';
+        return next(err);
+      }
+      res.redirect('/' + req.params.kind + '/' + req.params.proj + '/' + req.params.users.join('-'));
     });
   });
 });

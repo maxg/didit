@@ -11,7 +11,7 @@ block content
       h1
         tt #{kind}/#{proj}
 
-    form#copy-repo.modal.hide.form-horizontal(action = "/starting/#{kind}/#{proj}/copy", method='post', tabindex='-1')
+    form#copy-repo.modal.hide.form-horizontal(action = "/starting/#{kind}/#{proj}/#{permittedRepoName}", method='post', tabindex='-1')
       div.modal-header
         a.close(data-dismiss='modal') &times;
         h3 Copy starting repo
@@ -19,7 +19,7 @@ block content
         p A new git repository will be created based on the starting code.
       div.modal-footer
         a.btn(href='#', data-dismiss='modal') Cancel
-        button.btn.btn-info Create repo #{kind}/#{proj} for user #{authuser}
+        button.btn.btn-info Create repo #{kind}/#{proj} for #{permittedRepoName}
     
     if authstaff
       
@@ -124,7 +124,7 @@ block content
       div.span6.pull-right
         div.well
           h3 Copy starting repo
-          if hasPermission || authstaff
+          if permittedRepoName || authstaff
             a.btn.btn-info(href='#copy-repo', data-toggle='modal') Copy starting repo
           else
             h4.muted You do not have permission to copy this repo
