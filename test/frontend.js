@@ -617,4 +617,76 @@ describe('frontend', function() {
       });
     });
   });
+  
+  describe('POST /milestone/:kind/:proj', function() {
+    
+    var milestone = 'alpha' + +new Date();
+    var resultdir = path.join(
+      config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', milestone
+    );
+    
+    afterEach(function(done) {
+      rimraf(resultdir, done);
+    });
+    
+    it('should create a new milestone', function(done) {
+      mock.user('eve');
+      request.post(root + 'milestone/labs/lab3', { form: {
+        name: milestone
+      } }, function(err, res, body) {
+        res.statusCode.should.equal(302);
+        grader.findMilestones({}, function(finderr, milestones) {
+          milestones.should.includeEql({
+            kind: 'labs', proj: 'lab3', name: milestone, released: false
+          });
+          done(err || finderr);
+        });
+      });
+    });
+    it('should only allow staff', function(done) {
+      mock.user('alice');
+      sandbox.stub(grader, 'createMilestone').throws();
+      request.post(root + 'milestone/labs/lab3', { form: {
+        name: milestone
+      } }, function(err, res, body) {
+        body.should.match(/alice/).and.match(/You are not staff/);
+        done(err);
+      });
+    });
+  });
+  
+  describe('POST /milestone/:kind/:proj/:name/release', function() {
+    
+    var spec = { kind: 'labs', proj: 'lab3' };
+    var milestone = 'alpha';
+    var resultdir = path.join(
+      config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', milestone
+    );
+    
+    beforeEach(function(done){
+      fix.files(this.test, done);
+    });
+    
+    afterEach(function(done) {
+      rimraf(resultdir, done);
+    });
+    
+    it('should release a milestone', function(done) {
+      mock.user('eve');
+      request.post(root + 'milestone/labs/lab3/alpha/release', function(err, res, body) {
+        res.statusCode.should.equal(302);
+        grader.isMilestoneReleasedSync(spec, milestone).should.true;
+        done(err);
+      });
+    });
+    it('should only allow staff', function(done) {
+      mock.user('alice');
+      sandbox.stub(grader, 'releaseMilestone').throws();
+      request.post(root + 'milestone/labs/lab3/alpha/release', function(err, res, body) {
+        body.should.match(/alice/).and.match(/You are not staff/);
+        grader.isMilestoneReleasedSync(spec, milestone).should.false;
+        done(err);
+      });
+    });
+  });
 });
