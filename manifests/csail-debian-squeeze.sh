@@ -4,7 +4,7 @@
 # CSAIL VM setup script.
 #
 
-node_ver='v0.10.17'
+node_ver='v0.10.25'
 node_dist='linux-x64'
 
 # Install packages
