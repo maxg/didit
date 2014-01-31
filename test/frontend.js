@@ -41,6 +41,22 @@ describe('frontend', function() {
     server.close(done);
   });
   
+  describe('GET 404', function() {
+    it('should require authentication', function(done) {
+      request(root + '404', function(err, res, body) {
+        res.statusCode.should.equal(401);
+        done(err);
+      });
+    });
+    it('should render 404', function(done) {
+      mock.user('alice');
+      request(root + '404', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        done(err);
+      });
+    });
+  });
+  
   describe('GET /', function() {
     it('should render index for students', function(done) {
       mock.user('alice');
@@ -484,6 +500,22 @@ describe('frontend', function() {
       request(root + 'labs/lab3/alice/abcd789/grade', function(err, res, body) {
         body.should.match(/alice/).and.match(/You are not staff/);
         body.should.not.match(/grade|grading/i);
+        done(err);
+      });
+    });
+  });
+  
+  describe('POST 404', function() {
+    it('should require authentication', function(done) {
+      request.post(root + '404', function(err, res, body) {
+        res.statusCode.should.equal(401);
+        done(err);
+      });
+    });
+    it('should render 404', function(done) {
+      mock.user('alice');
+      request.post(root + '404', function(err, res, body) {
+        res.statusCode.should.equal(404);
         done(err);
       });
     });
