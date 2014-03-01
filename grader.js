@@ -259,3 +259,24 @@ exports.gradeFromSweep = function(spec, milestone, usernames, sweep, callback) {
     callback(err);
   });
 };
+
+// command-line grade
+if (require.main === module) {
+  var args = process.argv.slice(2);
+  if ( ! args.join(' ').match(/^\{.+\} .+ .+\.json .+\.json .+$/)) {
+    log.error('expected arguments: <spec> <grading-dir> <public.json> <hidden.json> <output-basename>');
+    return;
+  }
+  exports.grade(JSON.parse(args[0]), args[1], {
+    json: {
+      public: JSON.parse(fs.readFileSync(args[2])),
+      hidden: JSON.parse(fs.readFileSync(args[3]))
+    }
+  }, args[4], function(err, report) {
+    if (err) {
+      log.error(err);
+    } else {
+      log.info({ score: report.score, outof: report.outof });
+    }
+  });
+}
