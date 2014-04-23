@@ -177,7 +177,7 @@ exports.createServer = function(callback) {
   function updateStats() {
     var interval = {
       oldestDate: Math.floor(+new Date()/1000) - (60 * 30),
-      latestDate: Math.ceil(new Date()/1000)
+      latestDate: Math.floor(new Date()/1000)
     };
     async.auto({
       open: function(next) {
@@ -185,6 +185,20 @@ exports.createServer = function(callback) {
           startTimeFilter: { oldestDate: 0 }
         }, function(err, data) {
           next(err, data ? data.count : null);
+        });
+      },
+      decisions: function(next) {
+        swf.countPendingDecisionTasks({
+          taskList: config.swf.decisions
+        }, function(err, data) {
+          next(err, data ? data.count: null);
+        });
+      },
+      activities: function(next) {
+        swf.countPendingActivityTasks({
+          taskList: config.swf.activities
+        }, function(err, data) {
+          next(err, data ? data.count: null);
         });
       },
       closed: function(next) {
