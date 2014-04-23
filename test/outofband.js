@@ -15,19 +15,19 @@ describe('outofband', function() {
     sandbox.restore();
   });
   
-  describe('notify', function() {
+  describe('notifyBuild', function() {
     
     beforeEach(function() {
-      // will need to emit 'done' event for notify to process build
+      // will need to emit 'done' event for notifyBuild to process build
       sandbox.spy(builder, 'monitor');
-      // notify will request the build...
+      // notifyBuild will request the build...
       sandbox.stub(builder, 'findBuild').yields();
       // ... and the changelog
       sandbox.stub(git, 'studentSourceLog').yields();
     });
     
     it('should email a single-rev changelog', function(done) {
-      outofband.notify(spec, 'fake', [], { /* oldrev undefined */ });
+      outofband.notifyBuild(spec, 'fake', [], { /* oldrev undefined */ });
       sandbox.stub(mailer, 'sendMail', function() {
         git.studentSourceLog.firstCall.args[1].should.eql([ '-1', 'abc1234' ]);
         done();
@@ -36,7 +36,7 @@ describe('outofband', function() {
     });
     
     it('should email an initial-rev changelog', function(done) {
-      outofband.notify(spec, 'fake', [], { oldrev: '0000000' });
+      outofband.notifyBuild(spec, 'fake', [], { oldrev: '0000000' });
       sandbox.stub(mailer, 'sendMail', function() {
         git.studentSourceLog.firstCall.args[1].should.eql([ 'abc1234' ]);
         done();
@@ -45,7 +45,7 @@ describe('outofband', function() {
     });
     
     it('should email a multi-rev changelog', function(done) {
-      outofband.notify(spec, 'fake', [], { oldrev: 'abc0000' });
+      outofband.notifyBuild(spec, 'fake', [], { oldrev: 'abc0000' });
       sandbox.stub(mailer, 'sendMail', function() {
         git.studentSourceLog.firstCall.args[1].should.eql([ 'abc0000..abc1234' ]);
         done();
@@ -55,7 +55,7 @@ describe('outofband', function() {
     
     it('should email about a slow build', function(done) {
       sandbox.useFakeTimers('setTimeout');
-      outofband.notify(spec, 'fake', [], {});
+      outofband.notifyBuild(spec, 'fake', [], {});
       sandbox.stub(mailer, 'sendMail', function() {
         builder.findBuild.calledOnce.should.be.true;
         done();

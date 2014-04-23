@@ -5,8 +5,8 @@ var git = require('./git');
 var mailer = require('./mailer');
 var log = require('./logger').cat('outofband');
 
-exports.notify = function(spec, buildId, listeners, options) {
-  log.info({ spec: spec, listeners: listeners, options: options }, 'notify', buildId);
+exports.notifyBuild = function(spec, buildId, listeners, options) {
+  log.info({ spec: spec, listeners: listeners, options: options }, 'notifyBuild', buildId);
   var monitor = builder.monitor(buildId);
   async.auto({
     built: function(next) {
