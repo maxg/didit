@@ -408,6 +408,7 @@ app.post('/grade/:kind/:proj/:name/revs', staffonly, function(req, res, next) {
         err.dmesg = err.dmesg || 'Error assigning grades';
         return next(err);
       }
+      outofband.notifyGradeFromBuilds(req.params, accepts, res.locals.authuser);
       res.render('graded', {
         kind: req.params.kind,
         proj: req.params.proj,
@@ -436,6 +437,7 @@ app.post('/grade/:kind/:proj/:name/sweep', staffonly, function(req, res, next) {
         err.dmesg = err.dmesg || 'Error assigning grades';
         return next(err);
       }
+      outofband.notifyGradeFromSweep(req.params, usernames, res.locals.authuser);
       res.redirect('/milestone/' + req.params.kind + '/' + req.params.proj + '/' + req.params.name);
     });
   });
@@ -457,38 +459,48 @@ app.post('/milestone/:kind/:proj/:name/release', staffonly, function(req, res, n
       err.dmesg = err.dmesg || 'Error releasing milestone grades';
       return next(err);
     }
+    outofband.notifyMilestoneRelease(req.params, res.locals.authuser);
     res.redirect('/milestone/' + req.params.kind + '/' + req.params.proj + '/' + req.params.name);
   })
 });
 
 app.post('/sweep/:kind/:proj/:datetime/rebuild', staffonly, function(req, res, next) {
-  sweeper.rebuildSweep(req.params, function(err) {
+  var params = req.params;
+  var datetime = req.params.datetime;
+  var requester = res.locals.authuser;
+  sweeper.rebuildSweep(params, function(err) {
     if (err) {
       err.dmesg = err.dmesg || 'Error rebuilding sweep';
       return next(err);
     }
-    res.redirect('/sweep/' + req.params.kind + '/' + req.params.proj
-                 + '/' + req.params.datetime.format(moment.compactFormat));
+    outofband.notifySweepRebuildStart(params, datetime, requester);
+    res.redirect('/sweep/' + params.kind + '/' + params.proj
+                 + '/' + datetime.format(moment.compactFormat));
   }, function(err) {
-    log.info({ spec: req.params, when: req.params.datetime }, 'finished rebuild');
+    outofband.notifySweepRebuildComplete(params, datetime, requester);
+    log.info({ spec: params, when: datetime }, 'finished rebuild');
   });
 });
 
 app.post('/sweep/:kind/:proj', staffonly, function(req, res, next) {
+  var params = req.params;
   var datetime = moment(req.body.date + ' ' + req.body.time, moment.gitFormat);
+  var requester = res.locals.authuser;
   if ( ! datetime.isValid()) {
     return next({ dmesg: 'Invalid date and time' });
   }
-  sweeper.scheduleSweep(req.params, datetime, function(err) {
+  sweeper.scheduleSweep(params, datetime, function(err) {
     if (err) {
       err.dmesg = err.dmesg || 'Error starting sweep';
       return next(err);
     }
-    res.redirect('/' + req.params.kind + '/' + req.params.proj);
+    res.redirect('/' + params.kind + '/' + params.proj);
   }, function(err) {
-    log.info({ spec: req.params, when: datetime }, 'started sweep');
+    outofband.notifySweepStart(params, datetime, requester);
+    log.info({ spec: params, when: datetime }, 'started sweep');
   }, function(err) {
-    log.info({ spec: req.params, when: datetime }, 'finished sweep');
+    outofband.notifySweepComplete(params, datetime, requester);
+    log.info({ spec: params, when: datetime }, 'finished sweep');
   });
 });
 

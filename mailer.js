@@ -112,6 +112,16 @@ exports.sendMail = function(recipients, subject, template, locals, callback) {
   });
 };
 
+// pick up mail delivered with the pickup transport
+exports.pickup = function(result, callback) {
+  if (config.mail.transport != 'PICKUP') {
+    callback({ dmesg: 'not configured with pickup transport' });
+    return;
+  }
+  var filename = path.join(config.mail.directory, result.messageId + '.eml');
+  fs.readFile(filename, { encoding: 'utf8' }, callback);
+};
+
 // command-line email
 if (require.main === module) {
   process.nextTick(function() { // log is not available yet

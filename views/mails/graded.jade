@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  p
+    strong
+      tt #{params.kind}/#{params.proj}
+      |  #{params.name}
+  div.alert.alert-info
+    h2 #{usernames.length} grade#{usernames.length == 1 ? '' : 's'} assigned
+    h3= assigned
+    ul
+      each username in usernames
+        li: tt= username
+    p: strong assigned by&nbsp;
+      tt= user

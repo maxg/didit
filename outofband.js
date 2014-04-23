@@ -1,5 +1,6 @@
 var async = require('async');
 
+var config = require('./config');
 var builder = require('./builder');
 var git = require('./git');
 var mailer = require('./mailer');
@@ -59,3 +60,53 @@ exports.notifyBuild = function(spec, buildId, listeners, options) {
     });
   });
 };
+
+exports.notifyGradeFromBuilds = function(params, accepts, user, callback) {
+  notify(params.kind + '/' + params.proj + ' ' + params.name + ' grades assigned', 'graded', {
+    params: params,
+    user: user,
+    usernames: accepts.map(function(accept) { return accept.users.join('-'); }),
+    assigned: 'by revision'
+  }, callback);
+};
+
+exports.notifyGradeFromSweep = function(params, usernames, user, callback) {
+  notify(params.kind + '/' + params.proj + ' ' + params.name + ' grades assigned', 'graded', {
+    params: params,
+    user: user,
+    usernames: usernames,
+    assigned: 'from sweep ' + params.kind + '/' + params.proj + ' ' + params.datetime.format('llll')
+  }, callback);
+};
+
+exports.notifyMilestoneRelease = function(params, user, callback) {
+  notify(params.kind + '/' + params.proj + ' ' + params.name + ' grades released', 'released', {
+    params: params,
+    user: user
+  }, callback);
+};
+
+exports.notifySweepStart = async.apply(notifySweep, 'Sweeping', 'sweep-start');
+exports.notifySweepComplete = async.apply(notifySweep, 'Finished sweeping', 'sweep-complete');
+exports.notifySweepRebuildStart = async.apply(notifySweep, 'Rebuilding sweep', 'rebuild-start');
+exports.notifySweepRebuildComplete = async.apply(notifySweep, 'Finished rebuilding sweep', 'rebuild-complete');
+
+function notifySweep(prefix, template, params, when, user, callback) {
+  notify(prefix + ' ' + params.kind + '/' + params.proj + ' ' + when.format('llll'), template, {
+    params: params,
+    when: when,
+    user: user
+  }, callback);
+}
+
+function notify(subject, template, locals, callback) {
+  if ( ! config.log.mail) { return; }
+  mailer.sendMail({ to: config.log.mail }, subject, template, locals, function(err, result) {
+    if (err) {
+      log.error(err, 'error sending mail');
+    }
+    if (callback) {
+      callback(err, result);
+    }
+  });
+}

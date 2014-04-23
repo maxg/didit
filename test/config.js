@@ -27,6 +27,9 @@ var override = {
   },
   build: {
     results: temp.mkdirSync('test-build-results-')
+  },
+  log: {
+    mail: undefined
   }
 };
 
