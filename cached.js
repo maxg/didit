@@ -18,7 +18,7 @@ exports.static = function(root, options) {
     if (this.statusCode == 200 || this.statusCode == 304) {
       this.setHeader('Cache-Control', 'public, max-age=2592000');
     } else {
-      log.info({ req: req, statusCode: this.statusCode }, 'cannot allow caching');
+      log.info({ req: this.req, statusCode: this.statusCode }, 'cannot allow caching');
     }
   }
   

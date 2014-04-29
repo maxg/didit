@@ -66,6 +66,16 @@ describe('cached', function() {
         done();
       });
     });
+    it('should not allow caching for redirects', function(done) {
+      request({
+        url: url() + '/0000000000000000/dir',
+        followRedirect: false
+      }, function(req, res, body) {
+        res.statusCode.should.equal(303);
+        should.not.exist(res.headers['cache-control']);
+        done();
+      });
+    });
     it('should not allow caching for missing slug', function(done) {
       request(url() + '/hello.txt', function(req, res, body) {
         res.statusCode.should.equal(200);
@@ -76,7 +86,7 @@ describe('cached', function() {
     });
     it('should not allow caching for unhandled URLs', function(done) {
       app.get('/goodbye.txt', function(req, res) {
-        res.end('Goodbye, world!')
+        res.end('Goodbye, world!');
       });
       request(url() + '/goodbye.txt', function(req, res, body) {
         res.statusCode.should.equal(200);
