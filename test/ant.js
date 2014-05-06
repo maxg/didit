@@ -1,5 +1,6 @@
 var async = require('async');
 var path = require('path');
+var should = require('should');
 var temp = require('temp');
 
 var fixtures = require('./fixtures');
@@ -105,6 +106,13 @@ describe('ant', function() {
           data.should.match(/BUILD SUCCESSFUL/);
           done(err || fserr);
         });
+      });
+    });
+    it('should fail with malformed test output', function(done) {
+      ant.test(nospec, fix.fixdir, 'test', path.join(fix.fixdir, 'out'), function(err, result) {
+        err.should.be.an.instanceof(Error);
+        should.not.exist(result);
+        done();
       });
     });
     it('should return false when build fails', function(done) {

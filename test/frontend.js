@@ -405,6 +405,14 @@ describe('frontend', function() {
         });
       });
     });
+    it('should fail for missing build', function(done) {
+      mock.user('f_tony');
+      request(root + 'projects/truck/f_tony/abcd123/payload/public/Visible/quotation.txt', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        body.should.match(/Not found/i);
+        done(err);
+      });
+    });
     it('should fail for test with no payload', function(done) {
       mock.user('f_tony');
       request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/silence', function(err, res, body) {
@@ -555,6 +563,15 @@ describe('frontend', function() {
       sandbox.stub(builder, 'startBuild').throws();
       request.post(root + 'build/labs/lab2/alice/abcd123', function(err, res, body) {
         body.should.match(/revision already built.*labs\/lab2\/alice/i);
+        done(err);
+      });
+    });
+    it('should fail with failing build', function(done) {
+      sandbox.stub(builder, 'findBuild').yields();
+      sandbox.stub(builder, 'startBuild').yields(new Error());
+      sandbox.stub(builder, 'monitor').throws();
+      request.post(root + 'build/labs/lab2/alice/abcd123', function(err, res, body) {
+        body.should.match(/error starting build/i);
         done(err);
       });
     });
