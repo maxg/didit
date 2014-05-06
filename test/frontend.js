@@ -1,5 +1,6 @@
 var async = require('async');
 var byline = require('byline');
+var events = require('events');
 var http = require('http');
 var path = require('path');
 var request = require('request');
