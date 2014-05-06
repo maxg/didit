@@ -341,8 +341,8 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res, next) {
         if (output.result) {
           res.write('Compilation ' + (output.result.compile ? 'succeeded' : 'FAILED') + '\n');
           res.write('Public tests ' + (output.result.public ? 'passed' : 'FAILED') + '\n');
-        } else if (err) {
-          res.write('Error running build: ' + (err.dmesg || 'unknown error') + '\n');
+        } else if (output.err) {
+          res.write('Error running build: ' + (output.err.dmesg || 'unknown error') + '\n');
         }
         res.end('Details: < ' + url + ' >\n');
       });
