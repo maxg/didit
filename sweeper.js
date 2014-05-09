@@ -157,13 +157,20 @@ exports.startSweep = function(spec, when, startCallback, finishCallback) {
         });
       }, function(err) { next(err); });
     } ],
-    record: [ 'revisions', function(next, results) {
+    sorted: [ 'revisions', function(next, results) {
+      async.sortBy(results.repos, function(reporev, use) {
+        use(null, (config.staff.users.indexOf(reporev.users[0]) < 0 ? '-' : '') + reporev.users.join('-'));
+      }, function(err, reporevs) {
+        next(err, reporevs);
+      });
+    } ],
+    record: [ 'sorted', function(next, results) {
       fs.writeFile(sweepResultFile(spec, when, 'sweep'), JSON.stringify({
         spec: spec,
         when: +when,
         started: started,
         finished: +new Date(),
-        reporevs: results.repos
+        reporevs: results.sorted
       }), function(err) { next(err); });
     } ],
     builder: async.apply(git.builderRev, spec),

@@ -179,7 +179,7 @@ exports.findMilestone = function(spec, name, callback) {
       }, function(err) { next(err); });
     }, function(err) {
       async.sortBy(reporevs, function(reporev, use) {
-        use(null, config.staff.users.indexOf(reporev.users[0]) + reporev.users[0]);
+        use(null, (config.staff.users.indexOf(reporev.users[0]) < 0 ? '-' : '') + reporev.users.join('-'));
       }, function(sorterr, reporevs) {
         callback(err || sorterr, {
           kind: spec.kind,
