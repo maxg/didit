@@ -251,5 +251,20 @@ describe('sweeper', function() {
         done(err);
       });
     });
+    it('should sort repositories', function(done) {
+      git.findStudentRepos.yields(null, [
+        [ 'bob' ], [ 'alice', 'zach' ], [ 'eve' ], [ 'yolanda' ]
+      ].map(function(users) { return { users: users }; }));
+      sandbox.stub(git, 'studentSourceRevAt').yields(null, '0000000');
+      sandbox.stub(builder, 'findBuild', function(spec, callback) {
+        callback(null, { json: { grade: { spec: spec } } });
+      });
+      sweeper.startSweep(specs.sweep, moment(), function() {}, function(err, grades) {
+        grades.map(function(grade) { return grade.spec.users; }).should.eql([
+          [ 'alice', 'zach' ], [ 'bob' ], [ 'yolanda' ], [ 'eve' ]
+        ]);
+        done(err);
+      });
+    });
   });
 });

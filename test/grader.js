@@ -241,6 +241,17 @@ describe('grader', function() {
         done(err);
       });
     });
+    it('should sort repositories', function(done) {
+      sandbox.stub(git, 'findStudentRepos').yields(null, [
+        [ 'bob' ], [ 'alice', 'zach' ], [ 'eve' ], [ 'yolanda' ]
+      ].map(function(users) { return { users: users }; }));
+      grader.findMilestone({ kind: 'labs', proj: 'lab3' }, 'beta', function(err, milestone) {
+        milestone.reporevs.map(function(reporev) { return reporev.users; }).should.eql([
+          [ 'alice' ], [ 'bob' ], [ 'yolanda' ], [ 'zach' ], [ 'eve' ]
+        ]);
+        done(err);
+      });
+    });
     it('should fail with invalid grade file', function(done) {
       var spec = { kind: 'labs', proj: 'lab3', users: [ 'charlie' ] };
       sandbox.stub(git, 'findStudentRepos').yields(null, [ spec ]);
