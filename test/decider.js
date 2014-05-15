@@ -145,6 +145,48 @@ describe('decider', function() {
     });
   });
   
+  describe('createServer', function() {
+    
+    var swf = aws.SimpleWorkflow.prototype.getLatestServiceClass().prototype;
+    
+    it('should register types', function(done) {
+      sandbox.stub(swf, 'registerWorkflowType').yields(null, {});
+      sandbox.stub(swf, 'registerActivityType').yields(null, {});
+      decider.createServer(function() {
+        swf.registerWorkflowType.calledOnce.should.be.true;
+        swf.registerActivityType.calledOnce.should.be.true;
+        done();
+      });
+    });
+    it('should poll for decision task', function(done) {
+      sandbox.stub(swf, 'pollForDecisionTask');
+      decider.createServer(function() {
+        swf.pollForDecisionTask.calledOnce.should.be.true;
+        done();
+      });
+    });
+    it('should request statistics', function(done) {
+      var statistics = {
+        countOpenWorkflowExecutions: 4,
+        countPendingDecisionTasks: 1,
+        countPendingActivityTasks: 3,
+        countClosedWorkflowExecutions: 7
+      };
+      for (method in statistics) {
+        sandbox.stub(swf, method).yields(null, { count: statistics[method] });
+      }
+      sandbox.useFakeTimers();
+      decider.createServer(function() {
+        sandbox.clock.tick(0);
+        decider.stats().should.include({
+          open: 4, decisions: 1, activities: 3,
+          closed: 7, completed: 7, failed: 0
+        });
+        done();
+      });
+    });
+  });
+  
   describe('startWorkflow', function() {
     it('should start a build workflow', function(done) {
       var spec = { spec: true };
