@@ -1,6 +1,8 @@
 var async = require('async');
+var fs = require('fs');
 var moment = require('moment');
 var should = require('should');
+var sinon = require('sinon');
 
 var fixtures = require('./fixtures');
 
@@ -16,6 +18,7 @@ describe('git', function() {
     { kind: 'projects', proj: 'helloworld', users: [ 'alice', 'bob' ] }
   ];
   var repo = repos[0];
+  var sandbox = sinon.sandbox.create();
   
   before(function(done) {
     fix.files(this.test, done);
@@ -27,6 +30,7 @@ describe('git', function() {
   
   afterEach(function() {
     fix.forget();
+    sandbox.restore();
   });
   
   after(function(done) {
@@ -67,6 +71,14 @@ describe('git', function() {
           });
         }
       ], done);
+    });
+    it('should fail with filesystem error', function(done) {
+      sandbox.stub(fs, 'readdir').yields(new Error());
+      sandbox.stub(console, 'error');
+      git.findStudentRepos({ kind: 'labs' }, function(err, found) {
+        should.exist(err);
+        done();
+      });
     });
   });
   

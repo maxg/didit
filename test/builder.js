@@ -33,9 +33,14 @@ describe('builder', function() {
       ]
     }
   };
+  var sandbox = sinon.sandbox.create();
   
   before(function(done) {
     fix.files(this.test, done);
+  });
+  
+  afterEach(function() {
+    sandbox.restore();
   });
   
   after(function(done) {
@@ -88,6 +93,25 @@ describe('builder', function() {
         }
       ], done);
     });
+    it('should fail with filesystem error', function(done) {
+      sandbox.stub(fs, 'readdir').yields(new Error());
+      sandbox.stub(console, 'error');
+      builder.findRepos({ kind: 'labs' }, function(err, repos) {
+        should.exist(err);
+        done();
+      });
+    });
+  });
+  
+  describe('findBuilds', function() {
+    it('should fail with filesystem error', function(done) {
+      sandbox.stub(fs, 'readdir').yields(new Error());
+      sandbox.stub(console, 'error');
+      builder.findBuilds(fixed.repo.lab[0], function(err, builds) {
+        should.exist(err);
+        done();
+      });
+    });
   });
   
   describe('findBuild', function() {
@@ -127,6 +151,14 @@ describe('builder', function() {
         done();
       })
     });
+    it('should fail with filesystem error', function(done) {
+      sandbox.stub(fs, 'readdir').yields(new Error());
+      sandbox.stub(console, 'error');
+      builder.findRepos(fixed.rev.lab[0], function(err, repos) {
+        should.exist(err);
+        done();
+      });
+    });
   });
   
   describe('startBuild', function() {
@@ -134,11 +166,7 @@ describe('builder', function() {
     var decider = require('../decider');
     
     beforeEach(function() {
-      sinon.stub(decider, 'startWorkflow');
-    });
-    
-    afterEach(function() {
-      decider.startWorkflow.restore();
+      sandbox.stub(decider, 'startWorkflow');
     });
     
     it('should start a build workflow', function(done) {
@@ -170,8 +198,6 @@ describe('builder', function() {
       spec.kind, spec.proj, spec.users[0], spec.rev
     );
     
-    var sandbox = sinon.sandbox.create();
-    
     beforeEach(function() {
       var test = this.currentTest;
       sandbox.stub(git, 'cloneStudentSource', function(spec, dest, callback) {
@@ -180,10 +206,6 @@ describe('builder', function() {
         });
       });
       sandbox.stub(git, 'fetchBuilder').yields(null, 'f0f0f0f');
-    });
-    
-    afterEach(function() {
-      sandbox.restore();
     });
     
     it('should report when source is cloned', function(done) {

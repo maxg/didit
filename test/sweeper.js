@@ -57,6 +57,14 @@ describe('sweeper', function() {
         done(err);
       });
     });
+    it('should fail with filesystem error', function(done) {
+      sandbox.stub(fs, 'readdir').yields(new Error());
+      sandbox.stub(console, 'error');
+      sweeper.findSweeps({ kind: 'labs' }, function(err, specs) {
+        should.exist(err);
+        done();
+      });
+    });
   });
   
   describe('findSweep', function() {

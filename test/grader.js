@@ -211,6 +211,14 @@ describe('grader', function() {
         done(err);
       });
     });
+    it('should fail with filesystem error', function(done) {
+      sandbox.stub(fs, 'readdir').yields(new Error());
+      sandbox.stub(console, 'error');
+      grader.findMilestones({ kind: 'labs' }, function(err, found) {
+        should.exist(err);
+        done();
+      });
+    });
   });
   
   describe('findMilestone', function() {
