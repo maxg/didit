@@ -25,9 +25,9 @@ exec {
   'get bootstrap':
     command => 'wget -q --post-data=`node -pe "require(\'../../config/bootstrap.js\')"` http://bootstrap.herokuapp.com -O bootstrap.zip && unzip bootstrap.zip && rm bootstrap.zip',
     path => [ '/bin', '/usr/bin' ],
-    cwd => '/vagrant/public/bootstrap',
+    cwd => "$app_path/public/bootstrap",
     require => Package['nodejs', 'unzip'],
-    creates => '/vagrant/public/bootstrap/css/bootstrap.min.css';
+    creates => "$app_path/public/bootstrap/css/bootstrap.min.css";
 }
 
 # Generate SSL certificate
@@ -35,14 +35,14 @@ exec {
   'ssl certificate':
     command => 'openssl genrsa -out ssl-private-key.pem 1024 && openssl req -new -key ssl-private-key.pem -config config/openssl.conf | openssl x509 -req -signkey ssl-private-key.pem -out ssl-certificate.pem',
     path => '/usr/bin',
-    cwd => '/vagrant',
-    creates => '/vagrant/ssl-certificate.pem';
+    cwd => "$app_path",
+    creates => "$app_path/ssl-certificate.pem";
   
   'ssl ca':
     command => 'wget -q -O - http://ca.mit.edu/mitClient.crt | openssl x509 -inform der -out ssl-ca.pem',
     path => '/usr/bin',
-    cwd => '/vagrant',
-    creates => '/vagrant/ssl-ca.pem';
+    cwd => "$app_path",
+    creates => "$app_path/ssl-ca.pem";
 }
 
 # Set time zone

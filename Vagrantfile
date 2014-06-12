@@ -10,6 +10,8 @@ Vagrant.configure("2") do |config|
 
   config.vm.network :private_network, ip: "10.18.6.20"
 
-  config.vm.provision :puppet
+  config.vm.provision :puppet do |puppet|
+    puppet.facter = { "app_path" => "/vagrant" }
+  end
 
 end
