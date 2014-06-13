@@ -24,4 +24,4 @@ afspath=`node -pe "require('$dir/config/production.js').staff.repo"`
 export KINIT_PROG="aklog -path '$afspath'"
 
 sudo -u "$user" NODE_ENV="$NODE_ENV" KINIT_PROG="$KINIT_PROG" -- \
-  k5start -f "/etc/$host.keytab" -t -U -- "$@"
+  k5start -f "$dir/config/didit.keytab" -t -U -- "$@"

@@ -35,7 +35,7 @@ case "$cmd" in
     # start-stop-daemon -> k5start -> authbind -> forever wrapper
     # only runs if didit user is not already running k5start
     start-stop-daemon -v --start --chuid "$user" --user "$user" --exec \
-      /usr/bin/k5start -- -b -L -f "/etc/$host.keytab" -t -U -- \
+      /usr/bin/k5start -- -b -L -f "$dir/config/didit.keytab" -t -U -- \
       authbind --depth 4 \
       "$dir/bin/forever" "$script"
     ;;
