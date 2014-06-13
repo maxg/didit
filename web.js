@@ -13,9 +13,9 @@ decider.createServer(function() {
 
 var web = require('./frontend');
 var ssl = {
-  key: fs.readFileSync('./ssl-private-key.pem'),
-  cert: fs.readFileSync('./ssl-certificate.pem'),
-  ca: [ fs.readFileSync('./ssl-ca.pem') ],
+  key: fs.readFileSync('./config/ssl-private-key.pem'),
+  cert: fs.readFileSync('./config/ssl-certificate.pem'),
+  ca: [ fs.readFileSync('./config/ssl-ca.pem') ],
   requestCert: true
 };
 var webserver = https.createServer(ssl, web);

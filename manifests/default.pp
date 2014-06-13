@@ -33,16 +33,16 @@ exec {
 # Generate SSL certificate
 exec {
   'ssl certificate':
-    command => 'openssl genrsa -out ssl-private-key.pem 1024 && openssl req -new -key ssl-private-key.pem -config config/openssl.conf | openssl x509 -req -signkey ssl-private-key.pem -out ssl-certificate.pem',
+    command => 'openssl genrsa -out ssl-private-key.pem 2048 && openssl req -new -key ssl-private-key.pem -config openssl.conf | openssl x509 -req -signkey ssl-private-key.pem -out ssl-certificate.pem',
     path => '/usr/bin',
-    cwd => "$app_path",
-    creates => "$app_path/ssl-certificate.pem";
+    cwd => "$app_path/config",
+    creates => "$app_path/config/ssl-certificate.pem";
   
   'ssl ca':
     command => 'wget -q -O - http://ca.mit.edu/mitClient.crt | openssl x509 -inform der -out ssl-ca.pem',
     path => '/usr/bin',
-    cwd => "$app_path",
-    creates => "$app_path/ssl-ca.pem";
+    cwd => "$app_path/config",
+    creates => "$app_path/config/ssl-ca.pem";
 }
 
 # Set time zone

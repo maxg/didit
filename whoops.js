@@ -27,9 +27,9 @@ app.post('*', function(req, res) {
 
 exports.start = function() {
   var ssl = {
-    key: fs.readFileSync('./ssl-private-key.pem'),
-    cert: fs.readFileSync('./ssl-certificate.pem'),
-    ca: [ fs.readFileSync('./ssl-ca.pem') ]
+    key: fs.readFileSync('./config/ssl-private-key.pem'),
+    cert: fs.readFileSync('./config/ssl-certificate.pem'),
+    ca: [ fs.readFileSync('./config/ssl-ca.pem') ]
   };
   exports.server = https.createServer(ssl, app).listen(config.web.port, function() {
     log.info('whoops started on HTTPS port ' + config.web.port);
