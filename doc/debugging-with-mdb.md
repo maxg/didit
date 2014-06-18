@@ -1,3 +1,9 @@
+---
+title: Debugging with mdb
+subtitle: Take a tour of the heap
+category: dev
+---
+
 # Debugging with `mdb`
 
 Even when running on Linux, it is possible to debug `node` memory issues using [`mdb`, the illumos debugger][mdb]: [MDB and Linux][mdb-linux].

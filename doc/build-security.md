@@ -1,3 +1,9 @@
+---
+title: Build security
+subtitle: Didit does not automatically provide security
+category: user
+---
+
 # Build security
 
 **Didit does not implement any security or sandboxing features for running student code.**

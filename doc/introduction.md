@@ -1,3 +1,9 @@
+---
+title: Introduction
+subtitle: What does Didit do?
+category: intro
+---
+
 # Introduction
 
 Didit is a continuous build system for the classroom.
