@@ -1,3 +1,9 @@
+---
+title: Grade assignment
+subtitle: Assigning grades with grade.csv
+category: user
+---
+
 # Grade assignment
 
 Didit computes a grade based on the results of public and hidden tests every time it builds a student submission.

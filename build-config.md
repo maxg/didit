@@ -1,3 +1,9 @@
+---
+title: Build configuration
+subtitle: Compiling and testing with build.xml
+category: user
+---
+
 # Building configuration: `build.xml`
 
 Didit builds projects using [Ant](http://ant.apache.org).

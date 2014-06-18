@@ -1,3 +1,9 @@
+---
+title: Manual regrading
+subtitle: Break glass in case of emergency
+category: user
+---
+
 # Manual regrading
 
 Unfortunately, you may need to grade a student's submission using a modified version of the staff tests.

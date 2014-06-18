@@ -1,3 +1,9 @@
+---
+title: Building locally
+subtitle: Staff can run the build locally for development
+category: user
+---
+
 # Building locally
 
 To write and debug public and hidden test code and `build.xml`, you will want to run the Didit build locally on your machine.

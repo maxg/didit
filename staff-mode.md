@@ -1,3 +1,9 @@
+---
+title: Staff mode
+subtitle: The butler keeps many secrets
+category: user
+---
+
 # Staff mode
 
 Didit is configured with a list of course staff.
