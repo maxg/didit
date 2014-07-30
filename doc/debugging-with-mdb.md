@@ -8,22 +8,22 @@ category: dev
 
 Even when running on Linux, it is possible to debug `node` memory issues using [`mdb`, the illumos debugger][mdb]: [MDB and Linux][mdb-linux].
 
-0. Generate a core dump of the `node` process using `gcore`.
+0.  Generate a core dump of the `node` process using `gcore`.
 
-0. [Install the Manta utilities][install].
-   Even if they conflict with existing binaries, the commands can be run directly from `/usr/lib/node_modules/manta/bin/`. 
+0.  [Install the Manta utilities][install].
+    Even if they conflict with existing binaries, the commands can be run directly from `/usr/lib/node_modules/manta/bin/`. 
 
-0. Copy the `node` binary and the `core` file into a `debug` directory.
+0.  Copy the `node` binary and the `core` file into a `debug` directory.
 
-0. Per the installation instructions, [export Manta environment vars][environment].
+0.  Per the installation instructions, [export Manta environment vars][environment].
 
-   Upload `node` and `core` using `mput`:
-   
-   `tar cz debug | mput ~~/stor/debug.tar.gz`
+    Upload `node` and `core` using `mput`:
+    
+    `tar cz debug | mput ~~/stor/debug.tar.gz`
 
-0. Follow the instructions to [create and run `mmdb.sh`][mdb-linux]:
+0.  Follow the instructions to [create and run `mmdb.sh`][mdb-linux]:
 
-   `./mmdb.sh ~~/stor/debug.tar.gz`
+    `./mmdb.sh ~~/stor/debug.tar.gz`
 
 In `mdb`, [use `::findjsobjects` and `::jsprint` to navigate and print objects][findjsobjects]:
 

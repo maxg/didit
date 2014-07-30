@@ -10,24 +10,24 @@ category: user
 
 Didit uses a hook script in student repos to trigger a build every time a student pushes new commits to their assignment repo:
 
-0. The web front-end queues the build and maintains an open connection to the requester.
-   Progress is reported over that connection, and Git echos the output back to the original `git push` command so students receive feedback right in their terminal.
+0.  The web front-end queues the build and maintains an open connection to the requester.
+    Progress is reported over that connection, and Git echos the output back to the original `git push` command so students receive feedback right in their terminal.
 
-0. A worker picks up the build...
+0.  A worker picks up the build...
 
-   0. clones the relevant revision of the student repository into a temporary directory
-   
-   0. exports current build materials from the staff repository into that same directory
-   
-   0. runs Ant with the `compile`, `public`, and `hidden` targets defined in [**`build.xml`**][build configuration]
-   
-   0. uses [**`grade.csv`**][grade assignment] to grade the test results
-   
-   0. stores the results in the filesystem
+    0. clones the relevant revision of the student repository into a temporary directory
+    
+    0. exports current build materials from the staff repository into that same directory
+    
+    0. runs Ant with the `compile`, `public`, and `hidden` targets defined in [**`build.xml`**][build configuration]
+    
+    0. uses [**`grade.csv`**][grade assignment] to grade the test results
+    
+    0. stores the results in the filesystem
 
-0. The web front-end finishes reporting build results back to the student's terminal, or times out with a link to the results page.
+0.  The web front-end finishes reporting build results back to the student's terminal, or times out with a link to the results page.
 
-0. For multi-person repositories, the front-end sends a build notification email.
+0.  For multi-person repositories, the front-end sends a build notification email.
 
 <div class="thumbnail pull-right">
 <a class="btn btn-xs btn-default">build</a>

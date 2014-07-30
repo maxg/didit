@@ -31,31 +31,31 @@ This target removes any existing Ant JUnit test reports and creates a fresh [Jav
 
 In the security policy:
 
-+ Allow the JRE and JUnit to work:
++   Allow the JRE and JUnit to work:
 
-      grant codebase "file:${ant.library.dir}/-" {
-          permission java.security.AllPermission;
-      };
-      grant codebase "file:${eclipse.home}/-" {
-          permission java.security.AllPermission;
-      };
-      grant codebase "file:/usr/share/java/-" {
-          permission java.security.AllPermission;
-      };
+        grant codebase "file:${ant.library.dir}/-" {
+            permission java.security.AllPermission;
+        };
+        grant codebase "file:${eclipse.home}/-" {
+            permission java.security.AllPermission;
+        };
+        grant codebase "file:/usr/share/java/-" {
+            permission java.security.AllPermission;
+        };
 
-+ If staff tests are compiled to `bin-test`, they might need special permissions:
++   If staff tests are compiled to `bin-test`, they might need special permissions:
 
-      grant codebase "file:${basedir}/bin-tests/-" {
-          permission java.net.SocketPermission "127.0.0.1", "connect";
-      };
+        grant codebase "file:${basedir}/bin-tests/-" {
+            permission java.net.SocketPermission "127.0.0.1", "connect";
+        };
 
-+ And student code might be granted some permissions:
++   And student code might be granted some permissions:
 
-      grant {
-          permission java.io.FilePermission "./src/-", "read";
-          permission java.io.FilePermission "./bin-tests/autograder/resources/-", "read";
-          permission java.net.SocketPermission "127.0.0.1:4000-", "accept,listen";
-      };
+        grant {
+            permission java.io.FilePermission "./src/-", "read";
+            permission java.io.FilePermission "./bin-tests/autograder/resources/-", "read";
+            permission java.net.SocketPermission "127.0.0.1:4000-", "accept,listen";
+        };
 
 However, **do not allow student code to read or write `./`, `./-`, or other un-prefixed paths.**
 Students will be able to read test code or resources, write bogus test results, or commit other nefarious trickery.

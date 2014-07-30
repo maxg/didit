@@ -134,29 +134,29 @@ E.g.:
 <junit fork="yes" timeout="5000"> ... </junit>
 {% endhighlight %}
 
-+ You can select test classes individually with nested `test` elements:
++   You can select test classes individually with nested `test` elements:
   
-      <test name="ps0.staff.TurtleTest"/>
+        <test name="ps0.staff.TurtleTest"/>
   
-  Or multiple classes with `batchtest`:
+    Or multiple classes with `batchtest`:
   
-      <batchtest>
-          <fileset dir="bin-tests" includes="ps0/staff/*Test.class"/>
-      </batchtest>
+        <batchtest>
+            <fileset dir="bin-tests" includes="ps0/staff/*Test.class"/>
+        </batchtest>
 
-+ You want a JVM arguments line to enable the security manager:
++   You want a JVM arguments line to enable the security manager:
 
-      <jvmarg line="-Djava.security.manager -Djava.security.policy=security.policy"/>
+        <jvmarg line="-Djava.security.manager -Djava.security.policy=security.policy"/>
 
-+ You can also provide a description of these tests to be included on result pages by assigning a value to `didit.desc`:
++   You can also provide a description of these tests to be included on result pages by assigning a value to `didit.desc`:
 
-      <jvmarg value="-Ddidit.desc=Testing penup and pendown"/>
+        <jvmarg value="-Ddidit.desc=Testing penup and pendown"/>
 
-+ And you must set the test report formatter to write XML files:
++   And you must set the test report formatter to write XML files:
 
-      <formatter type="xml" usefile="true"/>
+        <formatter type="xml" usefile="true"/>
 
-  Each `junit` task will generate a `TEST-packagename.ClassName.xml` file.
+    Each `junit` task will generate a `TEST-packagename.ClassName.xml` file.
 
 Finally, after all of their `junit` tasks, both `public` and `hidden` should generate a summary report called `TESTS-TestSuites.xml` with all the test results:
 {% highlight xml %}
