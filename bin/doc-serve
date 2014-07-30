@@ -1,0 +1,9 @@
+#!/bin/bash
+
+#
+# Serve docs with Jekyll.
+#
+
+cd doc
+
+bundle exec jekyll serve --watch --force_polling
