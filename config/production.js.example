@@ -24,7 +24,7 @@ module.exports = {
     base: 'dc=mit,dc=edu'
   },
   build: {
-    eclipse: '/usr/lib/eclipse',
+    eclipse: '/usr/local/eclipse',
     results: '/afs/athena.mit.edu/course/.../didit',
     concurrency: 4
   },

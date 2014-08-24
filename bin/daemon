@@ -41,7 +41,8 @@ case "$cmd" in
     ;;
   stop)
     # kills ALL node processes owned by didit user
-    start-stop-daemon -v --stop --retry 90 --user "$user" --name node
+    # node might be a symlink to nodejs, so we cannot look for the process name
+    start-stop-daemon -v --stop --retry 90 --user "$user" --exec `which node`
     ;;
   *)
     echo "Usage: commands are {start,stop}"

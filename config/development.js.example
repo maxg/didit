@@ -20,7 +20,7 @@ module.exports = {
     debug: 'maxg'
   },
   build: {
-    eclipse: '/usr/lib/eclipse',
+    eclipse: '/usr/local/eclipse',
     results: '/vagrant/devel/builds',
     concurrency: 4
   },

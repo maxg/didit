@@ -10,11 +10,38 @@ exec {
     unless => '/usr/bin/test -f /etc/apt/sources.list.d/chris-lea-node_js*.list';
 }
 
+exec {
+  'add-apt java':
+    command => 'add-apt-repository ppa:webupd8team/java && apt-get update && echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections',
+    path => [ '/usr/bin', '/bin' ],
+    require => Package['python-software-properties'],
+    unless => '/usr/bin/test -f /etc/apt/sources.list.d/webupd8team-java*.list';
+}
+
+$eclipse_major='luna'
+$eclipse_minor='R'
+$eclipse_dir="/usr/local/eclipse-$eclipse_major-$eclipse_minor"
+exec {
+  'get eclipse':
+    command => "mkdir $eclipse_dir && curl --location 'http://www.eclipse.org/downloads/download.php?r=1&file=/technology/epp/downloads/release/$eclipse_major/$eclipse_minor/eclipse-java-$eclipse_major-$eclipse_minor-linux-gtk-x86_64.tar.gz' | tar zx --strip-components=1 --directory $eclipse_dir",
+    path => [ '/bin', '/usr/bin' ],
+    creates => "$eclipse_dir/eclipse";
+}
+file {
+  '/usr/local/eclipse':
+    ensure => 'link',
+    target => $eclipse_dir;
+}
+
 package {
   [ 'vim', 'python-software-properties',
-    'unzip', 'make', 'g++', 'libxml2-dev',
-    'git', 'openjdk-7-jdk', 'ant', 'eclipse-jdt' ]:
+    'unzip', 'make', 'g++', 'libxml2-dev', 'libxslt1-dev', 'python-pip',
+    'git' ]:
     ensure => 'installed';
+  
+  [ 'oracle-java8-installer', 'ant' ]:
+    ensure => 'installed',
+    require => Exec['add-apt java'];
   
   [ 'nodejs' ]:
     ensure => 'installed',

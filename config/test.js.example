@@ -4,7 +4,7 @@ module.exports = {
     redirect: 8080
   },
   build: {
-    eclipse: '/usr/lib/eclipse'
+    eclipse: '/usr/local/eclipse'
   },
   workflow: {
     domain: 'didit-test'
