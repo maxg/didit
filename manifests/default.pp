@@ -18,6 +18,14 @@ exec {
     unless => '/usr/bin/test -f /etc/apt/sources.list.d/webupd8team-java*.list';
 }
 
+exec {
+  'add-apt git':
+    command => 'add-apt-repository ppa:git-core/ppa && apt-get update',
+    path => [ '/usr/bin', '/bin' ],
+    require => Package['python-software-properties'],
+    unless => '/usr/bin/test -f /etc/apt/sources.list.d/git-core-ppa*.list';
+}
+
 $eclipse_major='luna'
 $eclipse_minor='R'
 $eclipse_dir="/usr/local/eclipse-$eclipse_major-$eclipse_minor"
@@ -35,9 +43,12 @@ file {
 
 package {
   [ 'vim', 'python-software-properties',
-    'unzip', 'make', 'g++', 'libxml2-dev', 'libxslt1-dev', 'python-pip',
-    'git' ]:
+    'unzip', 'make', 'g++', 'libxml2-dev', 'libxslt1-dev', 'python-pip' ]:
     ensure => 'installed';
+  
+  [ 'git' ]:
+    ensure => 'installed',
+    require => Exec['add-apt git'];
   
   [ 'oracle-java8-installer', 'ant' ]:
     ensure => 'installed',
