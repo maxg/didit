@@ -32,6 +32,7 @@ $eclipse_dir="/usr/local/eclipse-$eclipse_major-$eclipse_minor"
 exec {
   'get eclipse':
     command => "mkdir $eclipse_dir && curl --location 'http://www.eclipse.org/downloads/download.php?r=1&file=/technology/epp/downloads/release/$eclipse_major/$eclipse_minor/eclipse-java-$eclipse_major-$eclipse_minor-linux-gtk-x86_64.tar.gz' | tar zx --strip-components=1 --directory $eclipse_dir",
+    timeout => 600,
     path => [ '/bin', '/usr/bin' ],
     creates => "$eclipse_dir/eclipse";
 }
