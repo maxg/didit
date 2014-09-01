@@ -44,7 +44,7 @@ file {
 
 package {
   [ 'vim', 'python-software-properties',
-    'unzip', 'make', 'g++', 'libxml2-dev', 'libxslt1-dev', 'python-pip' ]:
+    'unzip', 'make', 'g++', 'libxml2-dev', 'libxslt1-dev', 'python-dev', 'python-oslo.config', 'python-pip' ]:
     ensure => 'installed';
   
   [ 'git' ]:

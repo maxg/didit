@@ -1,0 +1,143 @@
+#!/bin/bash
+
+#
+# Run OpenStack commands.
+# Requires: pip install python-novaclient python-cinderclient
+#
+
+set -e
+
+eval `sed -n 's/ *"\(.*\)": *"\(.*\)",*/\1 \2/p' < manifests/packer.conf.json | \
+      awk '{print $1"="$2}'`
+export OS_AUTH_URL="$openstack_auth_url"
+export OS_USERNAME="$openstack_username"
+export OS_PASSWORD="$openstack_password"
+export OS_TENANT_NAME="$openstack_tenant"
+
+cmd="$1"
+
+if [[ -z "$cmd" ]]; then
+  echo "Usage: $0 <cmd>..."
+  exit 1
+fi
+
+tablegrep() {
+  grep "\($1\|^+\|^| ID\)"
+}
+
+tablepick() {
+  field=$1
+  idx=$(($2+1))
+  grep "| *$field *|" | awk -F' *\\| *' "{print \$$idx}"
+}
+
+tableclean() {
+  fgrep -v '+----'
+}
+
+case "$cmd" in
+  
+  preflight)
+    for item in images keys secgroups flavors; do
+      echo $item
+      "$0" $item | tableclean
+    done
+    ;;
+    
+  launch)
+    image="${2:?Missing image ID}"
+    key="${3:?Missing key name}"
+    secgroup="${4:?Missing security group name}"
+    flavor="${5:?Missing flavor ID}"
+    name="${6:?Missing instance name}"
+    ipaddr="${7:?Specify IP addr or --dynip}"
+    volume="${8:?Specify --preserve or --remove}"
+    size=16
+    
+    imagename=`nova image-show $image | tablepick name 2`
+    [ -z $imagename ] && exit
+    echo "Booting $name from $imagename"
+    
+    if [[ "$ipaddr" != "--dynip" ]]; then
+      netid=`nova network-list | tablepick inet 1`
+      network="--nic net-id=$netid,v4-fixed-ip=$ipaddr"
+    fi
+    
+    case "$volume" in
+      --preserve)
+        cmd="cinder create --image-id $image
+              --display-name $name-`date +%s` --display-description $imagename
+              $size"
+        echo "$cmd"
+        vid=`$cmd | tablepick id 2`
+        [ -z $vid ] && exit
+        echo "Volume: $vid "
+        
+        until [[ "$volstatus" == "available" ]]; do
+          sleep 2
+          volstatus=`cinder show $vid | tablepick status 2`
+          echo -n .
+        done
+        echo
+        storage="--boot-volume $vid"
+        ;;
+        
+      --remove)
+        storage="--image $image"
+        ;;
+        
+      *)
+        echo "Specify --preserve or --remove"
+        exit
+    esac
+    
+    cmd="nova boot --flavor $flavor --key-name $key --security-groups $secgroup
+          $storage
+          $network
+          $name"
+    echo "$cmd"
+    iid=`$cmd | tablepick id 2`
+    [ -z $iid ] && exit
+    echo "Instance: $iid "
+    
+    until [[ "$inetaddr" ]]; do
+      sleep 2
+      inetaddr=`nova show $iid | tablepick 'inet network' 2`
+      echo -n .
+    done
+    echo
+    echo "IP addr: $inetaddr"
+    ;;
+    
+  flavors)
+    nova flavor-list | tablegrep 'ups\.'
+    ;;
+    
+  source-images)
+    nova image-list | tablegrep '[Uu]buntu.*LTS'
+    ;;
+    
+  images)
+    nova image-list | tablegrep $app
+    ;;
+    
+  secgroups)
+    nova secgroup-list
+    ;;
+    
+  keys)
+    nova keypair-list
+    ;;
+    
+  cinder)
+    "$@"
+    ;;
+    
+  nova)
+    "$@"
+    ;;
+    
+  *)
+    echo "Unknown command: $cmd"
+    ;;
+esac

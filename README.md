@@ -59,17 +59,33 @@ Didit relies on:
 Deployment
 ----------
 
-On CSAIL VMs...
+To build virtual machine images, install [Packer]. On OS X, use `brew install homebrew/binary/packer`.
 
- * Modify `/etc/csail/users.allow` to restrict machine login access
- * Create UNIX user `didit` with a `/bin/nologin` shell
- * Obtain an AFS user `didit.<hostname>` and a Kerberos keytab from TIG
+  [Packer]: http://www.packer.io/
 
-Run `manifests/csail.sh` to set up the VM.
+Fill in `manifests/packer.conf.json`.
 
-Fill in configuration files as above, but use `config/production.js`.
+Run `bin/pack <rev> [opts]` to build images using Packer:
 
-In `/var/didit`...
+ * If `<rev>` is `--working`, working-copy versions of tracked files will be packed
+ * Use `-only=openstack` or similar to build only certain images
+
+To manage OpenStack instances, install the [OpenStack CLI]. In the Vagrant VM, use `apt-get install python-pip`, `pip install python-novaclient python-cinderclient`. Then use `bin/openstack` to run commands with credentials.
+
+  [OpenStack CLI]: http://docs.openstack.org/user-guide/content/ch_cli.html
+
+The script automates common operations, including:
+
+ * `preflight`: gather information for starting instances
+ * `launch`: start a new instance
+
+After starting a new instance, use `bin/productionize` to copy configuration files from `prod`:
+
+ * Use `production.js`
+ * For a web front-end, use a production SSL certificate
+ * On AFS, use a production Kerberos keytab `didit.keytab` (in CSAIL, obtain an AFS user and keytab from TIG)
+
+On an instance, in `/var/didit`...
 
  * `bin/daemon start web` (or `worker`)
  * `bin/daemon stop`
@@ -94,3 +110,5 @@ Resources
    * [Async utilities](https://npmjs.org/package/async)
    * [Express web app framework](http://expressjs.com/)
    * [Jade template engine](https://github.com/visionmedia/jade)
+ * OpenStack
+   * [End User Guide](http://docs.openstack.org/user-guide/content/)

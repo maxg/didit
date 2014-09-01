@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#
+# Set up a server for production.
+#
+
+set -e
+
+eval `sed -n 's/ *"\(.*\)": *"\(.*\)",*/\1 \2/p' < manifests/packer.conf.json | \
+      awk '{print $1"="$2}'`
+
+hostname="${1:?Missing host}"
+
+scp -r prod/* ubuntu@$hostname:/var/$app/config/

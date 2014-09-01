@@ -9,5 +9,6 @@ devel
 log/*.log
 manifests/*.conf.json
 node_modules
+prod
 public/bootstrap
 ssl-*.pem
