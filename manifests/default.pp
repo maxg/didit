@@ -62,7 +62,7 @@ package {
 
 exec {
   'get bootstrap':
-    command => 'wget -q --post-data=`node -pe "require(\'../../config/bootstrap.js\')"` http://bootstrap.herokuapp.com -O bootstrap.zip && unzip bootstrap.zip && rm bootstrap.zip',
+    command => 'wget -q http://getbootstrap.com/2.3.2/assets/bootstrap.zip -O bootstrap.zip && unzip bootstrap.zip && rm bootstrap.zip',
     path => [ '/bin', '/usr/bin' ],
     cwd => "$app_path/public/bootstrap",
     require => Package['nodejs', 'unzip'],
