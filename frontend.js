@@ -101,13 +101,18 @@ function staffonly(req, res, next) {
   }
 }
 
-// all GET requests must be authenticated
-app.get('*', authenticate);
-
 app.get('*', function(req, res, next) {
   res.locals.stats = decider.stats();
   next();
 });
+
+// unauthenticated status page
+app.get('/status', function(req, res, next) {
+  res.json({ stats: res.locals.stats });
+});
+
+// all other GET requests must be authenticated
+app.get('*', authenticate);
 
 app.get('/', function(req, res, next) {
   builder.findRepos({ users: [ res.locals.authuser ] }, function(err, repos) {
