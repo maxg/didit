@@ -90,6 +90,19 @@ On an instance, in `/var/didit`...
  * `bin/daemon start web` (or `worker`)
  * `bin/daemon stop`
 
+See `monitor.js` for a simple monitoring app designed for use on [Heroku] to send alerts via SES:
+
+ * Create an application and add the [Heroku Scheduler] add-on
+ * Set [configuration variables][Heroku config vars]:
+   * `AWS_ACCESS_KEY` and `AWS_SECRET_KEY` for SES
+   * `DIDIT` = `https://.../`
+   * `SENDER` = `no-reply@...`
+   * `RECIPIENT` will receive alert emails
+ * Then create a scheduled job with the command `node monitor`
+
+  [Heroku]: https://www.heroku.com/
+  [Heroku Scheduler]: https://addons.heroku.com/scheduler
+  [Heroku config vars]: https://devcenter.heroku.com/articles/config-vars
 
 Resources
 ---------
