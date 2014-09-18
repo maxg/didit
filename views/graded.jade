@@ -13,7 +13,7 @@ block content
     
     if rejects.length > 0
       div.alert.alert-error
-        h2 #{rejects.length} Error#{rejects.length > 1 ? 's' : ''}
+        h2 #{rejects.length} Error#{rejects.length == 1 ? '' : 's'}
         ul
           each reject in rejects
             li
@@ -22,7 +22,7 @@ block content
                 |  rev&nbsp;
                 tt #{reject.rev}
     
-    h2 #{accepts.length} Grade#{accepts.length > 1 ? 's' : ''} Assigned
+    h2 #{accepts.length} Grade#{accepts.length == 1 ? '' : 's'} Assigned
     ul
       each accept in accepts
         li: a(href="/#{kind}/#{proj}/#{accept.users.join('-')}/#{accept.rev}")

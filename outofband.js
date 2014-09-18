@@ -61,23 +61,21 @@ exports.notifyBuild = function(spec, buildId, listeners, options) {
   });
 };
 
-exports.notifyGradeFromBuilds = function(params, accepts, user, callback) {
-  notify(params.kind + '/' + params.proj + ' ' + params.name + ' grades assigned', 'graded', {
-    params: params,
-    user: user,
-    usernames: accepts.map(function(accept) { return accept.users.join('-'); }),
-    assigned: 'by revision'
-  }, callback);
-};
+exports.notifyGradeFromBuilds = async.apply(notifyGrade, function(params) {
+  return 'by revision';
+});
+exports.notifyGradeFromSweep = async.apply(notifyGrade, function(params) {
+  return 'from sweep ' + params.kind + '/' + params.proj + ' ' + params.datetime.format('llll');
+});
 
-exports.notifyGradeFromSweep = function(params, accepts, user, callback) {
+function notifyGrade(assigned, params, accepts, user, callback) {
   notify(params.kind + '/' + params.proj + ' ' + params.name + ' grades assigned', 'graded', {
     params: params,
     user: user,
     usernames: accepts.map(function(accept) { return accept.users.join('-'); }),
-    assigned: 'from sweep ' + params.kind + '/' + params.proj + ' ' + params.datetime.format('llll')
+    assigned: assigned(params)
   }, callback);
-};
+}
 
 exports.notifyMilestoneRelease = function(params, user, callback) {
   notify(params.kind + '/' + params.proj + ' ' + params.name + ' grades released', 'released', {
