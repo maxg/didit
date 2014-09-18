@@ -1,9 +1,11 @@
 .DS_store
 .vagrant
 config/aws.json
+config/didit.keytab
 config/development.js
 config/production.js
 config/test.js
+config/ssl-*.pem
 coverage
 devel
 log/*.log
@@ -11,4 +13,3 @@ manifests/*.conf.json
 node_modules
 prod
 public/bootstrap
-ssl-*.pem
