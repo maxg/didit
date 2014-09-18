@@ -381,7 +381,6 @@ app.post('*', authenticate);
 
 app.post('/grade/:kind/:proj/:name/revs', staffonly, function(req, res, next) {
   var userBuilds = {};
-  var accepts = [];
   var rejects = [];
   async.each(Object.keys(req.body.revision), function(users, callback) {
     if ( ! req.body.revision[users]) { return callback(); }
@@ -408,25 +407,24 @@ app.post('/grade/:kind/:proj/:name/revs', staffonly, function(req, res, next) {
           log.warn({ params: req.params, users: users, rev: rev }, 'no build for grade');
           rejects.push({ users: users, rev: rev });
         } else {
-          accepts.push({ users: users, rev: build.spec.rev });
           users.forEach(function(user) { userBuilds[user] = build; });
         }
         callback();
       });
     });
   }, function(err) {
-    grader.gradeFromBuilds(req.params, req.params.name, userBuilds, function(err) {
+    grader.gradeFromBuilds(req.params, req.params.name, userBuilds, function(err, accepted, rejected) {
       if (err) {
         err.dmesg = err.dmesg || 'Error assigning grades';
         return next(err);
       }
-      outofband.notifyGradeFromBuilds(req.params, accepts, res.locals.authuser);
+      outofband.notifyGradeFromBuilds(req.params, accepted, res.locals.authuser);
       res.render('graded', {
         kind: req.params.kind,
         proj: req.params.proj,
         name: req.params.name,
-        accepts: accepts,
-        rejects: rejects
+        accepts: accepted,
+        rejects: rejects.concat(rejected)
       });
     });
   });
@@ -444,13 +442,19 @@ app.post('/grade/:kind/:proj/:name/sweep', staffonly, function(req, res, next) {
       err.dmesg = err.dmesg || 'Error finding sweep';
       return next(err);
     }
-    grader.gradeFromSweep(req.params, req.params.name, usernames, sweep, function(err) {
+    grader.gradeFromSweep(req.params, req.params.name, usernames, sweep, function(err, accepted, rejected) {
       if (err) {
         err.dmesg = err.dmesg || 'Error assigning grades';
         return next(err);
       }
-      outofband.notifyGradeFromSweep(req.params, usernames, res.locals.authuser);
-      res.redirect('/milestone/' + req.params.kind + '/' + req.params.proj + '/' + req.params.name);
+      outofband.notifyGradeFromSweep(req.params, accepted, res.locals.authuser);
+      res.render('graded', {
+        kind: req.params.kind,
+        proj: req.params.proj,
+        name: req.params.name,
+        accepts: accepted,
+        rejects: rejected
+      });
     });
   });
 });

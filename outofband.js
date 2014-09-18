@@ -70,11 +70,11 @@ exports.notifyGradeFromBuilds = function(params, accepts, user, callback) {
   }, callback);
 };
 
-exports.notifyGradeFromSweep = function(params, usernames, user, callback) {
+exports.notifyGradeFromSweep = function(params, accepts, user, callback) {
   notify(params.kind + '/' + params.proj + ' ' + params.name + ' grades assigned', 'graded', {
     params: params,
     user: user,
-    usernames: usernames,
+    usernames: accepts.map(function(accept) { return accept.users.join('-'); }),
     assigned: 'from sweep ' + params.kind + '/' + params.proj + ' ' + params.datetime.format('llll')
   }, callback);
 };

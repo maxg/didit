@@ -645,7 +645,8 @@ describe('frontend', function() {
         datetime: when,
         usernames: 'alice\nbob\n\n'
       } }, function(err, res, body) {
-        res.statusCode.should.equal(302);
+        body.should.match(/error.*bob/i).and.not.match(/lab3\/bob/);
+        body.should.match(/assigned.*alice/i).and.match(/lab3\/alice\/abcd789/);
         grader.findMilestoneGrade(spec, 'alpha', function(finderr, graded) {
           graded.rev.should.eql('abcd789');
           graded.grade.should.include({ score: 90, outof: 100 });

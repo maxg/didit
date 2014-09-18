@@ -239,29 +239,39 @@ exports.releaseMilestone = function(spec, name, callback) {
 
 exports.gradeFromBuilds = function(spec, milestone, userBuilds, callback) {
   log.info({ spec: spec, milestone: milestone, userBuilds: !!userBuilds }, 'gradeFromBuilds');
+  var accepts = [];
+  var rejects = [];
   async.each(Object.keys(userBuilds), function(username, next) {
     var build = userBuilds[username];
+    accepts.push({ users: [ username ], rev: build.spec.rev });
     build.spec.grade = build.json.grade;
     fs.writeFile(path.join(milestoneDir(spec, milestone), username + '.json'),
                  JSON.stringify(build.spec),
                  function(err) { next(err); });
   }, function(err) {
-    callback(err);
+    callback(err, accepts, rejects);
   });
 };
 
 exports.gradeFromSweep = function(spec, milestone, usernames, sweep, callback) {
   log.info({ spec: spec, milestone: milestone, usernames: usernames, sweep: !!sweep }, 'gradeFromSweep');
+  var accepts = [];
+  var rejects = [];
   async.each(usernames, function(username, next) {
     async.detect(sweep.reporevs, function(reporev, found) {
       found(reporev.users.indexOf(username) >= 0 && reporev.kind == spec.kind && reporev.proj == spec.proj);
     }, function(reporev) {
+      if ( ! reporev) {
+        rejects.push({ users: [ username ] });
+        return next();
+      }
+      accepts.push({ users: [ username ], rev: reporev.rev });
       fs.writeFile(path.join(milestoneDir(spec, milestone), username + '.json'),
                    JSON.stringify(reporev),
                    function(err) { next(err); });
     });
   }, function(err) {
-    callback(err);
+    callback(err, accepts, rejects);
   });
 };
 

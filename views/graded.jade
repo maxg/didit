@@ -18,8 +18,9 @@ block content
           each reject in rejects
             li
               tt #{reject.users.join('-')}
-              |  rev&nbsp;
-              tt #{reject.rev}
+              if reject.rev
+                |  rev&nbsp;
+                tt #{reject.rev}
     
     h2 #{accepts.length} Grade#{accepts.length > 1 ? 's' : ''} Assigned
     ul

@@ -96,7 +96,7 @@ describe('outofband', function() {
     describe('notifyGradeFromSweep', function() {
       it('should describe grading', function(done) {
         outofband.notifyGradeFromSweep({ datetime: moment() }, [
-          'alice-bob', 'zach'
+          { users: [ 'alice', 'bob' ] }, { users: [ 'zach' ] }
         ], 'eve', function(err, result) {
           mailer.pickup(result, function(pickuperr, email) {
             email.should.match(/2 grades assigned/).and.match(/from sweep/);
