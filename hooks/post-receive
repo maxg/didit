@@ -44,6 +44,13 @@ old="${oldrev:0:7}"
 rev="${newrev:0:7}"
 
 echo "Requesting Didit build for $repo rev $rev"
-curl --silent --insecure --no-buffer \
-     --data-urlencode "oldrev=$old" --data-urlencode "listeners=$listeners" \
-     "https://$didit/build/$repo/$rev"
+{ err=$(curl --silent --show-error --insecure --no-buffer --max-time 60 \
+             --data-urlencode "oldrev=$old" --data-urlencode "listeners=$listeners" \
+             "https://$didit/build/$repo/$rev" \
+        2>&1 1>&3- # send stderr into $err, and send stdout via fd 3...
+       ); } 3>&1   # ... out to the requester
+code=$?
+if [ $code -ne 0 ]; then
+  echo "Error requesting build"
+  echo "  ${err:-$code}"
+fi
