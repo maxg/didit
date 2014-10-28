@@ -72,12 +72,13 @@ mixin suiteresults(suite)
       td
         if ! test.grade
           span.label &middot;
-        else if test.grade.score == 0
-          if test.error
-            span.label.label-square.label-info X
-          else
-            span.label.label-square.label-important X
-        else if test.grade.score < test.outof
+        else if test.error
+          span.label.label-square.label-info X
+        else if test.failure
+          span.label.label-square.label-important X
+        else if test.grade.outof == 0
+          span.label.label-square.label-success &middot;
+        else if test.grade.score < test.grade.outof
           span.label.label-square.label-warning X
         else
           span.label.label-square.label-success &#x2713;
