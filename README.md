@@ -96,7 +96,7 @@ See `monitor.js` for a simple monitoring app designed for use on [Heroku] to sen
  * Set [configuration variables][Heroku config vars]:
    * `AWS_ACCESS_KEY` and `AWS_SECRET_KEY` for SES
    * `DIDIT` = `https://.../`
-   * `SENDER` = `no-reply@...`
+   * `SENDER` = `alert-no-reply@...`
    * `RECIPIENT` will receive alert emails
  * Then create a scheduled job with the command `node monitor`
 

@@ -48,28 +48,28 @@ fetchStatus(function(status) {
   var latest = moment(stats.interval.latestDate, 'X');
   var unit = 'minutes', maximum = 3;
   if (moment().subtract(unit, maximum).isAfter(latest)) {
-    return report('Stats more than ' + maximum + ' ' + unit + ' old');
+    return report('Stats out of date', 'Stats more than ' + maximum + ' ' + unit + ' old');
   }
   
   // ... workflows should not be failing
   if (stats.failed > 0) {
-    return report('Workflow failure count: ' + stats.failed);
+    return report('Workflow failures', 'Workflow failure count: ' + stats.failed);
   }
   
   // ... we should not have a backlog
   if (stats.open > stats.completed + 1) {
-    return report('[Warning] Task backlog: ' + stats.open + ' open, ' + stats.completed + ' completed');
+    return report('[warning] Task backlog', 'Task backlog: ' + stats.open + ' open, ' + stats.completed + ' completed');
   }
   
   process.exit();
 });
 
-function report(message, err) {
+function report(title, message, err) {
   console.error('!!!', message);
   transport.sendMail({
     from: 'Didit Monitor <' + process.env.SENDER + '>',
     to: process.env.RECIPIENT,
-    subject: '[Didit alert] ' + message,
+    subject: '[didit alert] ' + title,
     text: 'Error at ' + moment().format() + ': ' + message,
   }, function(err, res) {
     if (err) { console.error(err); }
