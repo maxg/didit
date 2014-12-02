@@ -57,7 +57,7 @@ fetchStatus(function(status) {
   }
   
   // ... we should not have a backlog
-  if (stats.open > stats.completed) {
+  if (stats.open > stats.completed + 1) {
     return report('[Warning] Task backlog: ' + stats.open + ' open, ' + stats.completed + ' completed');
   }
   
