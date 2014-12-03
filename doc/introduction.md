@@ -6,6 +6,8 @@ category: intro
 
 # Introduction
 
+[![Didit screenshot](public/didit-screenshot.png)](public/didit-screenshot.png)
+
 Didit is a continuous build system for the classroom.
 
 + Didit is integrated with student [Git] repositories.
