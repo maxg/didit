@@ -283,6 +283,20 @@ describe('frontend', function() {
     });
   });
   
+  describe('GET /:kind/:proj/:users.git', function() {
+    it('should redirect to a repo', function(done) {
+      mock.user('bob');
+      request({
+        url: root + 'labs/lab1/bob.git',
+        followRedirect: false
+      }, function(err, res, body) {
+        res.statusCode.should.equal(301);
+        res.headers.location.should.equal('/labs/lab1/bob');
+        done(err);
+      });
+    });
+  });
+  
   describe('GET /:kind/:proj/:users', function() {
     it('should render a repo', function(done) {
       mock.user('bob');
@@ -320,6 +334,20 @@ describe('frontend', function() {
       mock.user('eve');
       request(root + 'labs/lab1/bob', function(err, res, body) {
         body.should.match(/labs\/lab1\/bob\/1234abc/);
+        done(err);
+      });
+    });
+  });
+  
+  describe('GET /:kind/:proj/:users.git/:sha', function() {
+    it('should redirect to a build', function(done) {
+      mock.user('alice');
+      request({
+        url: root + 'labs/lab3/alice.git/abcd1234efab5678cdef9012abcd3456efab7890',
+        followRedirect: false
+      }, function(err, res, body) {
+        res.statusCode.should.equal(301);
+        res.headers.location.should.equal('/labs/lab3/alice/abcd123');
         done(err);
       });
     });

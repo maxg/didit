@@ -49,7 +49,7 @@ app.param('users', function(req, res, next, users) {
   req.params.users = users.split('-');
   next();
 });
-app.param('rev', '[a-f0-9]+');
+app.param('rev', '[a-f0-9]{7}');
 app.param('name', '\\w+');
 app.param('datetime', '\\d{8}T\\d{6}');
 app.param('datetime', function(req, res, next, datetime) {
@@ -243,6 +243,10 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
   });
 });
 
+app.get('/:kind/:proj/:users.git', authorize, function(req, res, next) {
+  res.redirect(301, req.path.replace(/\.git$/, ''));
+});
+
 app.get('/:kind/:proj/:users', authorize, function(req, res, next) {
   async.auto({
     builds: async.apply(builder.findBuilds, req.params),
@@ -270,6 +274,10 @@ app.get('/:kind/:proj/:users', authorize, function(req, res, next) {
       res.render('repo', locals);
     }
   });
+});
+
+app.get('/:kind/:proj/:users.git/:sha([a-f0-9]+)', authorize, function(req, res, next) {
+  res.redirect(301, req.path.replace(/\.git\/.*$/, '/'+req.params.sha.substr(0,7)));
 });
 
 app.get('/:kind/:proj/:users/:rev', authorize, function(req, res, next) {
