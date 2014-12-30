@@ -43,6 +43,9 @@ block content
         | #{build.source.author} committed #{locals.moment(parseInt(build.source.committertime)*1000).calendar()}
       else
         span.label.label-warning unknown
+      if gitweb
+        |  &mdash;&nbsp;
+        a(href=gitweb(build.spec)) view revision on gitweb
     p.muted builder&nbsp;
       if build.builder
         tt= build.builder

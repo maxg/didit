@@ -30,8 +30,18 @@ app.use(express.urlencoded());
 
 app.locals({
   config: require('./config'),
+  
+  // format dates & times
   moment: moment,
-  static: function(url) { return '/static' + static.url(url); }
+  
+  // generate static resource URLs
+  static: function(url) { return '/static' + static.url(url); },
+  
+  // generate gitweb URLs
+  gitweb: config.gitweb && function(spec) {
+    return config.gitweb.url + '/' + spec.kind + '/' + spec.proj
+           + '/' + spec.users.join('-') + '.git/' + (spec.rev || '');
+  }
 });
 
 // use string callbacks to check input against anchored regex

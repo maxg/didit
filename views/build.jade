@@ -14,6 +14,8 @@ block content
         tt= users.join('-')
         |  rev&nbsp;
         tt= rev
+      if gitweb
+        p: a(href=gitweb(locals)) view revision on gitweb
       if authstaff && staffmode
         div.btn-toolbar.pull-right
           button.btn.btn-mini(href='#rebuild', data-toggle='modal') rebuild

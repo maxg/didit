@@ -24,6 +24,8 @@ block content
         tt #{kind}/#{proj}
         |  by&nbsp;
         tt= users.join('-')
+      if gitweb
+        p: a(href=gitweb(locals)) view repository on gitweb
 
     if head || current
       
