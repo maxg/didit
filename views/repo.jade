@@ -81,6 +81,6 @@ block content
               a(class="#{milestone.released ? '' : 'text-warning'}",
                 href="/milestone/#{kind}/#{proj}/#{users.join('-')}/#{milestone.name}")= milestone.name
 
-    h2= builds.length > 0 ? 'Revisions' : 'No revisions'
+    h2= builds.length > 0 ? 'Builds' : 'No builds'
     each build in builds
       h3: a(href="/#{build.kind}/#{build.proj}/#{build.users.join('-')}/#{build.rev}"): tt= build.rev

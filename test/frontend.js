@@ -301,7 +301,7 @@ describe('frontend', function() {
     it('should render a repo', function(done) {
       mock.user('bob');
       request(root + 'labs/lab1/bob', function(err, res, body) {
-        body.should.match(/Revisions/)
+        body.should.match(/Builds/)
         body.should.match(/labs\/lab1\/bob\/1234abc/).and.match(/labs\/lab1\/bob\/5678abc/);
         done(err);
       });
@@ -309,7 +309,7 @@ describe('frontend', function() {
     it('should succeed with no builds', function(done) {
       mock.user('alice');
       request(root + 'labs/lab2/alice', function(err, res, body) {
-        body.should.match(/No revisions/);
+        body.should.match(/No builds/);
         done(err);
       });
     });
