@@ -25,6 +25,11 @@ pre {
   -moz-tab-size: 4;
 }
 
+.page-header,
+.page-header h1:first-child {
+  margin-top: 0;
+}
+
 .inline-header {
   margin: 10px 0;
 }
@@ -54,6 +59,10 @@ pre {
 .well h4 small {
   white-space: nowrap;
 }
+.well h2:last-child,
+.well h3:last-child,
+.well h4:last-child,
+.well p:last-child,
 .well div:last-child {
   margin-bottom: 0;
 }
