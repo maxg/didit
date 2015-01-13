@@ -54,7 +54,7 @@ app.param(function(name, fn) {
 });
 app.param('kind', '\\w+');
 app.param('proj', '\\w+');
-app.param('users', '[\\w-]+');
+app.param('users', '\\w+(-\\w+)*');
 app.param('users', function(req, res, next, users) {
   req.params.users = users.split('-');
   next();
