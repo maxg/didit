@@ -37,6 +37,12 @@ app.locals({
   // generate static resource URLs
   static: function(url) { return '/static' + static.url(url); },
   
+  // generate Git remote URLs
+  remote: config.student.remote && function(spec, user) {
+    return config.student.remote.replace('[user]', user) + '/' + config.student.semester
+           + '/' + spec.kind + '/' + spec.proj + '/' + spec.users.join('-') + '.git';
+  },
+  
   // generate gitweb URLs
   gitweb: config.gitweb && function(spec) {
     return config.gitweb.url + '/' + spec.kind + '/' + spec.proj
