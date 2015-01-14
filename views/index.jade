@@ -11,8 +11,8 @@ block content
       h1 Didit
 
     if authstaff
-      h2= projects.length > 0 ? 'All projects' : 'No projects'
-      each project in projects
+      h2= built.length ? 'All projects' : 'No projects'
+      each project in built
         h3: a(href="/#{project.kind}/#{project.proj}") #{project.kind}/#{project.proj}
       br
 

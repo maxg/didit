@@ -47,14 +47,16 @@ describe('builder', function() {
     fix.remove(done);
   });
   
-  describe('findProjectsSync', function() {
-    it('should return project specifications', function() {
-      var specs = builder.findProjectsSync();
-      specs.should.eql([
-        { kind: 'labs', proj: 'lab1' },
-        { kind: 'labs', proj: 'lab2' },
-        { kind: 'projects', proj: 'helloworld' }
-      ]);
+  describe('findProjects', function() {
+    it('should return project specifications', function(done) {
+      builder.findProjects(function(err, specs) {
+        specs.should.eql([
+          { kind: 'labs', proj: 'lab1' },
+          { kind: 'labs', proj: 'lab2' },
+          { kind: 'projects', proj: 'helloworld' }
+        ]);
+        done(err);
+      });
     });
   });
   

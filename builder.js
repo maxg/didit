@@ -39,14 +39,21 @@ function buildOutputBase(spec, staffrev, target) {
 }
 
 // find all projects
-exports.findProjectsSync = function() {
-  return glob.sync(path.join(config.student.semester, '*', '*'), {
+exports.findProjects = function(callback) {
+  glob(path.join(config.student.semester, '*', '*'), {
     cwd: config.build.results
-  }).map(function(dir) {
-    var parts = dir.split(path.sep);
-    return { kind: parts[1], proj: parts[2] };
+  }, function(err, dirs) {
+    if (err) {
+      err.dmesg = err.dmesg || 'error finding projects';
+      callback(err);
+      return;
+    }
+    callback(err, dirs.map(function(dir) {
+      var parts = dir.split(path.sep);
+      return { kind: parts[1], proj: parts[2] };
+    }));
   });
-}
+};
 
 // find all the repos matching a kind, project, and/or users
 exports.findRepos = function(spec, callback) {

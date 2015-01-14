@@ -131,12 +131,15 @@ app.get('/status', function(req, res, next) {
 app.get('*', authenticate);
 
 app.get('/', function(req, res, next) {
-  builder.findRepos({ users: [ res.locals.authuser ] }, function(err, repos) {
+  var findAll = {
+    repos: async.apply(builder.findRepos, { users: [ res.locals.authuser ] })
+  };
+  if (res.locals.authstaff) {
+    findAll.built = builder.findProjects;
+  }
+  async.auto(findAll, function(err, results) {
     if (err) { return next(err); }
-    res.render('index', {
-      repos: repos,
-      projects: res.locals.authstaff ? builder.findProjectsSync() : []
-    });
+    res.render('index', results);
   });
 });
 
