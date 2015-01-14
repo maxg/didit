@@ -163,22 +163,23 @@ exports.cloneStudentSource = function(spec, dest, callback) {
 };
 
 exports.builderRev = function(spec, callback) {
-  findRev(config.staff.repo,
-          [ 'rev-list', '--max-count=1', 'master', '--', builderDir(spec) ],
-          callback);
+  exports.builderRevBefore(spec, 'master', callback);
 };
 
 exports.builderRevBefore = function(spec, upto, callback) {
-  findRev(config.staff.repo,
-          [ 'rev-list', '--max-count=1', upto, '--', builderDir(spec) ],
-          callback);
+  staffDirRevBefore(builderDir(spec), upto, callback);
 };
 
-// fetch staff build materials
+function staffDirRevBefore(dir, upto, callback) {
+  findRev(config.staff.repo,
+          [ 'rev-list', '--max-count=1', upto, '--', dir ],
+          callback);
+}
+
+// fetch staff repository materials
 // callback returns staff commit hash
-exports.fetchBuilder = function(spec, dest, callback) {
-  log.info({ spec: spec, dest: dest }, 'fetchBuilder');
-  var dir = builderDir(spec);
+function fetchStaffDir(dir, dest, callback) {
+  log.info({ dir: dir, dest: dest }, 'fetchStaffDir');
   var procs = [ 'id', 'tar' ];
   async.auto({
     
@@ -191,7 +192,7 @@ exports.fetchBuilder = function(spec, dest, callback) {
       next(null, child);
     },
     
-    // untar the staff builder
+    // untar the archive
     tar: function(next) {
       next(null, spawn('tar', [ 'x',
         '--strip-components', dir.split('/').length
@@ -201,9 +202,8 @@ exports.fetchBuilder = function(spec, dest, callback) {
       }));
     },
     
-    // fetch the staff builder and send data to "id" and "tar"
+    // fetch the staff directory and send data to "id" and "tar"
     archive: procs.concat(function(next, results) {
-      log.info('fetchBuilder', 'archive');
       var git = spawn('git', [ 'archive',
         '--remote', [ 'file:/', config.staff.repo ].join('/'), 'master', '--',
         dir
@@ -225,24 +225,31 @@ exports.fetchBuilder = function(spec, dest, callback) {
       var running = procs.length * 2;
       function done(code) {
         if (code != 0) {
-          next({ dmesg: 'error fetching builder' });
+          next({ dmesg: 'error fetching staff dir' });
         } else if (--running == 0) {
-          next(staffrev.length > 0 ? null : { dmesg: 'error reading builder revision' }, staffrev);
+          next(staffrev.length > 0 ? null : { dmesg: 'error reading staff dir revision' }, staffrev);
         }
       }
       procs.forEach(function(proc) { results[proc].stdout.on('end', async.apply(done, 0)); });
       procs.forEach(function(proc) { results[proc].on('exit', done); });
     }),
     
-    // find the builder revision for this project
+    // find the latest revision for this directory
     staffrev: [ 'archive', function(next, results) {
-      exports.builderRevBefore(spec, results.archive.trim(), function(err, staffrev) {
+      staffDirRevBefore(dir, results.archive.trim(), function(err, staffrev) {
         next(err, staffrev);
       });
     } ]
   }, function(err, results) {
     callback(err, results && results.staffrev && results.staffrev.substring(0, 7));
   });
+};
+
+// fetch staff build materials
+// callback returns staff commit hash
+exports.fetchBuilder = function(spec, dest, callback) {
+  log.info({ spec: spec, dest: dest }, 'fetchBuilder');
+  fetchStaffDir(builderDir(spec), dest, callback);
 };
 
 // command-line git
