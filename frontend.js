@@ -231,11 +231,9 @@ app.get('/u/:users', authorize, function(req, res, next) {
 });
 
 app.get('/:kind/:proj', authorize, function(req, res, next) {
-  if ( ! res.locals.authstaff) {
-    req.params.users = [ res.locals.authuser ];
-  }
+  var mine = { kind: req.params.kind, proj: req.params.proj, users: [ res.locals.authuser ] };
   var findAll = {
-    repos: async.apply(builder.findRepos, req.params),
+    repos: async.apply(builder.findRepos, res.locals.authstaff ? req.params : mine),
     fullnames: [ 'repos', function(callback, results) {
       async.each(results.repos, function(repo, callback) {
         async.map(repo.users, rolodex.lookup, function(err, fullnames) {
@@ -251,14 +249,9 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
     findAll.milestones = async.apply(grader.findMilestones, req.params);
   }
   async.auto(findAll, function(err, results) {
-    res.render('proj', {
-      kind: req.params.kind,
-      proj: req.params.proj,
-      repos: results.repos,
-      sweeps: results.sweeps,
-      schedSweeps: results.schedSweeps,
-      milestones: results.milestones
-    });
+    results.kind = req.params.kind;
+    results.proj = req.params.proj;
+    res.render('proj', results);
   });
 });
 
