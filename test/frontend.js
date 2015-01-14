@@ -17,6 +17,7 @@ describe('frontend', function() {
   var config = require('../config');
   var builder = require('../builder');
   var frontend = require('../frontend');
+  var git = require('../git');
   var grader = require('../grader');
   var rolodex = require('../rolodex');
   
@@ -224,7 +225,7 @@ describe('frontend', function() {
     });
     it('should reject illegal username', function(done) {
       mock.user('eve');
-      sandbox.stub(builder, 'findRepos').throws();
+      sandbox.stub(git, 'findStudentRepos').throws();
       request(root + 'u/alice.bob', function(err, res, body) {
         res.statusCode.should.equal(404);
         done(err);
@@ -243,7 +244,7 @@ describe('frontend', function() {
     it('should render all repos for staff', function(done) {
       mock.user('eve');
       request(root + 'labs/lab1', function(err, res, body) {
-        body.should.match(/labs\/lab1\/alice/).and.match(/labs\/lab1\/bob/).and.not.match(/lab2/);
+        body.should.match(/labs\/lab1\/alice/).and.not.match(/labs\/lab1\/bob/).and.not.match(/lab2/);
         done(err);
       });
     });
@@ -267,7 +268,7 @@ describe('frontend', function() {
     });
     it('should reject illegal kind', function(done) {
       mock.user('eve');
-      sandbox.stub(builder, 'findRepos').throws();
+      sandbox.stub(git, 'findStudentRepos').throws();
       request(root + 'labs!/lab1', function(err, res, body) {
         res.statusCode.should.equal(404);
         done(err);
@@ -275,7 +276,7 @@ describe('frontend', function() {
     });
     it('should reject illegal project', function(done) {
       mock.user('eve');
-      sandbox.stub(builder, 'findRepos').throws();
+      sandbox.stub(git, 'findStudentRepos').throws();
       request(root + 'labs/lab!', function(err, res, body) {
         res.statusCode.should.equal(404);
         done(err);

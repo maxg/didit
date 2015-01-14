@@ -132,7 +132,7 @@ app.get('*', authenticate);
 
 app.get('/', function(req, res, next) {
   var findAll = {
-    repos: async.apply(builder.findRepos, { users: [ res.locals.authuser ] })
+    repos: async.apply(git.findStudentRepos, { users: [ res.locals.authuser ] })
   };
   if (res.locals.authstaff) {
     findAll.built = builder.findProjects;
@@ -214,7 +214,7 @@ app.get('/sweep/:kind/:proj/:datetime:extension(.csv)?', staffonly, function(req
 
 app.get('/u/:users', authorize, function(req, res, next) {
   async.auto({
-    repos: async.apply(builder.findRepos, req.params),
+    repos: async.apply(git.findStudentRepos, req.params),
     fullnames: function(callback) {
       async.map(req.params.users, rolodex.lookup, function(err, fullnames) {
         callback(null, fullnames);
@@ -233,7 +233,7 @@ app.get('/u/:users', authorize, function(req, res, next) {
 app.get('/:kind/:proj', authorize, function(req, res, next) {
   var mine = { kind: req.params.kind, proj: req.params.proj, users: [ res.locals.authuser ] };
   var findAll = {
-    repos: async.apply(builder.findRepos, res.locals.authstaff ? req.params : mine),
+    repos: async.apply(git.findStudentRepos, res.locals.authstaff ? req.params : mine),
     fullnames: [ 'repos', function(callback, results) {
       async.each(results.repos, function(repo, callback) {
         async.map(repo.users, rolodex.lookup, function(err, fullnames) {
