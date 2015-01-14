@@ -55,7 +55,7 @@ exports.findStudentRepos = function(spec, callback) {
   var kind = spec.kind || '*';
   var proj = spec.proj || '*';
   var users = spec.users ? '?(*-)' + spec.users.join('-') + '?(-*)' : '*';
-  log.info('findRepos', kind, proj, users);
+  log.info('findStudentRepos', kind, proj, users);
   glob(path.join(config.student.semester, kind, proj, users + '.git'), {
     cwd: config.student.repos
   }, function(err, dirs) {

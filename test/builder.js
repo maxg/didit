@@ -156,7 +156,7 @@ describe('builder', function() {
     it('should fail with filesystem error', function(done) {
       sandbox.stub(fs, 'readdir').yields(new Error());
       sandbox.stub(console, 'error');
-      builder.findRepos(fixed.rev.lab[0], function(err, repos) {
+      builder.findBuild(fixed.rev.lab[0], function(err, repos) {
         should.exist(err);
         done();
       });
