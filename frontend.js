@@ -13,6 +13,7 @@ var grader = require('./grader');
 var outofband = require('./outofband');
 var rolodex = require('./rolodex');
 var sweeper = require('./sweeper');
+var util = require('./util');
 var logger = require('./logger');
 var log = logger.cat('frontend');
 
@@ -131,11 +132,17 @@ app.get('/status', function(req, res, next) {
 app.get('*', authenticate);
 
 app.get('/', function(req, res, next) {
+  var difference = async.apply(util.difference, util.equalityModulo('kind', 'proj'));
   var findAll = {
     repos: async.apply(git.findStudentRepos, { users: [ res.locals.authuser ] })
   };
   if (res.locals.authstaff) {
     findAll.built = builder.findProjects;
+    findAll.releasable = [ 'built', function(next, results) {
+      git.findReleasableProjects(function(err, projects) {
+        next(err, projects && difference(projects, results.built));
+      });
+    } ];
   }
   async.auto(findAll, function(err, results) {
     if (err) { return next(err); }

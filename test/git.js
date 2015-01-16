@@ -161,6 +161,11 @@ describe('git', function() {
   });
   
   describe('builderRev', function() {
+    
+    before(function(done) {
+      fix.files(this.test, done);
+    });
+    
     it('should return current revision', function(done) {
       git.builderRev({ kind: 'labs', proj: 'lab2' }, function(err, staffrev) {
         staffrev.should.equal('df5a5e0');
@@ -176,6 +181,11 @@ describe('git', function() {
   });
   
   describe('builderRevBefore', function() {
+    
+    before(function(done) {
+      fix.files(this.test, done);
+    });
+    
     it('should return current revision', function(done) {
       git.builderRevBefore({ kind: 'labs', proj: 'lab2' }, 'df5a5e0', function(err, staffrev) {
         staffrev.should.equal('df5a5e0');
@@ -197,6 +207,11 @@ describe('git', function() {
   });
   
   describe('fetchBuilder', function() {
+    
+    before(function(done) {
+      fix.files(this.test, done);
+    });
+    
     it('should export staff build materials', function(done) {
       git.fetchBuilder({ kind: 'labs', proj: 'lab1' }, fix.fixdir, function(err, staffrev) {
         staffrev.should.equal('1178dcf');
@@ -204,6 +219,20 @@ describe('git', function() {
           data.should.match(/rambling, incoherent/);
           done(err || fserr);
         });
+      });
+    });
+  });
+  
+  describe('findReleasableProjects', function() {
+    
+    before(function(done) {
+      fix.files(this.test, done);
+    });
+    
+    it('should return releasable projects', function(done) {
+      git.findReleasableProjects(function(err, specs) {
+        specs.should.eql([ { kind: 'labs', proj: 'lab2' } ]);
+        done(err);
       });
     });
   });

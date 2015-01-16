@@ -252,6 +252,39 @@ exports.fetchBuilder = function(spec, dest, callback) {
   fetchStaffDir(builderDir(spec), dest, callback);
 };
 
+// find projects in the staff repository that have the materials required for release
+exports.findReleasableProjects = function(callback) {
+  var required = [ 'grading', 'starting' ];
+  var projects = {};
+  
+  var find = byline(spawnAndLog('git', [ 'ls-tree',
+    '-r', '-d', '--name-only', 'master', config.staff.semester
+  ], {
+    cwd: config.staff.repo,
+    stdio: 'pipe'
+  }).stdout, { encoding: 'utf8' });
+  
+  find.on('data', function(dir) {
+    var parts = dir.split(path.sep);
+    if (parts.length == 3) {
+      // found potential /semester/kind/proj
+      projects[dir] = 0;
+    } else if (parts.length == 4 && required.indexOf(parts[3]) >= 0) {
+      // found /semester/kind/proj/required
+      projects[parts.slice(0, 3).join(path.sep)]++;
+    }
+  });
+  find.on('end', function() {
+    callback(null, Object.keys(projects).filter(function(key) {
+      // does the project have all the required directories?
+      return projects[key] == required.length;
+    }).map(function(key) {
+      var parts = key.split(path.sep);
+      return { kind: parts[1], proj: parts[2] };
+    }));
+  });
+};
+
 // command-line git
 if (require.main === module) {
   var args = process.argv.slice(2);
