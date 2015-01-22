@@ -78,7 +78,7 @@ function notifyGrade(assigned, params, accepts, user, callback) {
 }
 
 exports.notifyMilestoneRelease = function(params, user, callback) {
-  notify(params.kind + '/' + params.proj + ' ' + params.name + ' grades released', 'released', {
+  notify(params.kind + '/' + params.proj + ' ' + params.name + ' grades released', 'grades-released', {
     params: params,
     user: user
   }, callback);
