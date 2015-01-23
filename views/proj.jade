@@ -13,6 +13,16 @@ block content
     
     if authstaff
       
+      form#create-starting.modal.hide.form-horizontal(action="/starting/#{kind}/#{proj}", method='post', tabindex='-1')
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3 Create starting repository
+        div.modal-body
+          p Create a starting repository based on the current staff repository.
+        div.modal-footer
+          a.btn(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Create #{kind}/#{proj} starting repo
+      
       form#confirm-sweep.modal.hide.form-horizontal(action="/sweep/#{kind}/#{proj}", method='post', tabindex='-1')
         div.modal-header
           a.close(data-dismiss='modal') &times;
@@ -60,6 +70,12 @@ block content
           button.btn.btn-info Create #{kind}/#{proj} milestone
       
       div.span6.pull-right
+        div.well
+          h3 Assignment
+          if starting
+            p: button.btn.btn-small.btn-success.disabled Starting repo exists
+          else
+            p: a.btn.btn-small.btn-info(href='#create-starting', data-toggle='modal') Create starting repo
         div.well
           h3= sweeps.length + schedSweeps.length > 0 ? 'Sweeps' : 'No sweeps'
           each sweep in sweeps

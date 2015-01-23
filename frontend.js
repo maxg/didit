@@ -251,6 +251,7 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
     } ]
   };
   if (res.locals.authstaff) {
+    findAll.starting = async.apply(git.hasStartingRepo, req.params);
     findAll.sweeps = async.apply(sweeper.findSweeps, req.params);
     findAll.schedSweeps = async.apply(sweeper.scheduledSweeps, req.params);
     findAll.milestones = async.apply(grader.findMilestones, req.params);
@@ -555,6 +556,16 @@ app.post('/catchup/:kind/:proj', staffonly, function(req, res, next) {
   sweeper.scheduleCatchups(req.params, hours, function(err) {
     if (err) {
       err.dmesg = err.dmesg || 'Error starting catch-up';
+      return next(err);
+    }
+    res.redirect('/' + req.params.kind + '/' + req.params.proj);
+  });
+});
+
+app.post('/starting/:kind/:proj', staffonly, function(req, res, next) {
+  git.createStartingRepo(req.params, res.locals.authuser, function(err) {
+    if (err) {
+      err.dmesg = err.dmesg || 'Error creating starting repository';
       return next(err);
     }
     res.redirect('/' + req.params.kind + '/' + req.params.proj);

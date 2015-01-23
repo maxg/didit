@@ -2,9 +2,12 @@ var async = require('async');
 var byline = require('byline');
 var fs = require('fs');
 var glob = require('glob');
+var mkdirp = require('mkdirp');
 var moment = require('moment');
 var path = require('path');
+var rimraf = require('rimraf');
 var spawn = require('child_process').spawn;
+var temp = require('temp');
 
 var config = require('./config');
 var log = require('./logger').cat('git');
@@ -13,8 +16,16 @@ function studentSourcePath(spec) {
   return [ config.student.repos, config.student.semester, spec.kind, spec.proj, spec.users.join('-') ].join('/') + '.git';
 }
 
+function startingSourcePath(spec) {
+  return [ config.student.repos, config.student.semester, spec.kind, spec.proj, 'didit', 'starting' ].join('/') + '.git';
+}
+
 function builderDir(spec) {
   return [ config.staff.semester, spec.kind, spec.proj, 'grading' ].join('/');
+}
+
+function startingDir(spec) {
+  return [ config.staff.semester, spec.kind, spec.proj, 'starting' ].join('/');
 }
 
 // spawn a process and log stderr
@@ -28,6 +39,12 @@ function spawnAndLog(command, args, options) {
     log.error({ err: line, command: command, args: args, options: options });
   });
   return child;
+}
+
+function onExit(child, callback) {
+  return child.on('exit', function(code) {
+    callback(code == 0 ? null : { code: code });
+  });
 }
 
 function findRev(dir, gitargs, callback) {
@@ -283,6 +300,87 @@ exports.findReleasableProjects = function(callback) {
       return { kind: parts[1], proj: parts[2] };
     }));
   });
+};
+
+exports.hasStartingRepo = function(spec, callback) {
+  fs.exists(path.join(startingSourcePath(spec), 'HEAD'), async.apply(callback, null));
+};
+
+exports.createStartingRepo = function(spec, committer, callback) {
+  log.info({ spec: spec }, 'createStartingRepo');
+  var dest = startingSourcePath(spec);
+  async.auto({
+    
+    // check that starting directory does not exist
+    check: function(next, results) {
+      fs.exists(dest, function(exists) {
+        next(exists ? { dmesg: 'starting directory exists' } : null);
+      });
+    },
+    
+    // create staging repo directory
+    staging: [ 'check', async.apply(temp.mkdir, 'didit-') ],
+    
+    // export starting code from staff repo into staging repo work dir
+    fetch: [ 'staging', function(next, results) {
+      fetchStaffDir(startingDir(spec), results.staging, next);
+    } ],
+    
+    // create starting repo directory
+    dir: [ 'fetch', async.apply(mkdirp, dest) ],
+    
+    // initialize starting repo
+    init: [ 'dir', function(next) {
+      async.eachSeries([
+        [ 'init', '--quiet', '--bare' ],
+        [ 'config', 'receive.denynonfastforwards', 'true' ]
+      ], function(args, next) {
+        onExit(spawnAndLog('git', args, {
+          cwd: dest,
+          stdio: 'pipe'
+        }), next);
+      }, next);
+    } ],
+    
+    // commit starting code in staging and push to starting
+    push: [ 'init', function(next, results) {
+      var name = committer + ' via Didit';
+      var email = committer + '@' + config.web.certDomain.toLowerCase();
+      var env = { GIT_AUTHOR_NAME: name, GIT_AUTHOR_EMAIL: email,
+                  GIT_COMMITTER_NAME: name, GIT_COMMITTER_EMAIL: email };
+      async.eachSeries([
+        [ 'init', '--quiet' ],
+        [ 'add', '.' ],
+        [ 'commit', '--quiet', '-m', 'Starting code for ' + spec.kind + '/' + spec.proj ],
+        [ 'push', '--quiet', 'file://' + dest, 'master' ]
+      ], function(args, next) {
+        onExit(spawnAndLog('git', args, {
+          cwd: results.staging,
+          env: env,
+          stdio: 'pipe'
+        }), next);
+      }, next);
+    } ],
+    
+    // clean up unnecessary files
+    cleanup: [ 'push', async.apply(async.auto, {
+      rmDescription: async.apply(fs.unlink, path.join(dest, 'description')),
+      sampleHooks: async.apply(glob, path.join(dest, 'hooks', '*.sample'), {}),
+      rmSampleHooks: [ 'sampleHooks', function(next, results) {
+        async.each(results.sampleHooks, fs.unlink, next);
+      } ]
+    }) ],
+    
+    // throw away staging
+    remove: [ 'push', function(next, results) {
+      setTimeout(function() {
+        rimraf(results.staging, function(err) {
+          if (err) { log.error(err, 'error removing staging directory'); }
+        });
+      }, 1000 * 60 * 60);
+      next();
+    } ]
+  }, callback);
 };
 
 // command-line git
