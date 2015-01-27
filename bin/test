@@ -6,4 +6,4 @@
 
 export NODE_ENV=test
 
-node_modules/.bin/mocha --require test/config --reporter list $@
+node_modules/.bin/mocha --require test/config --reporter list --timeout 3000 --slow 250 $@

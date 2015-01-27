@@ -91,7 +91,7 @@ describe('frontend', function() {
         body.should.match(/Not found/);
         done(err);
       });
-    }); 
+    });
     it('should fail with missing grade', function(done) {
       mock.user('bob');
       request(root + 'milestone/labs/lab2/bob/beta', function(err, res, body) {

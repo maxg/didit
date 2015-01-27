@@ -172,7 +172,7 @@ describe('decider', function() {
         countPendingActivityTasks: 3,
         countClosedWorkflowExecutions: 7
       };
-      for (method in statistics) {
+      for (var method in statistics) {
         sandbox.stub(swf, method).yields(null, { count: statistics[method] });
       }
       sandbox.useFakeTimers();
