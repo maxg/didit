@@ -8,6 +8,7 @@ var config = require('./config');
 var cached = require('./cached');
 var builder = require('./builder');
 var decider = require('./decider');
+var gatekeeper = require('./gatekeeper');
 var git = require('./git');
 var grader = require('./grader');
 var outofband = require('./outofband');
@@ -134,7 +135,12 @@ app.get('*', authenticate);
 app.get('/', function(req, res, next) {
   var difference = async.apply(util.difference, util.equalityModulo('kind', 'proj'));
   var findAll = {
-    repos: async.apply(git.findStudentRepos, { users: [ res.locals.authuser ] })
+    repos: async.apply(git.findStudentRepos, { users: [ res.locals.authuser ] }),
+    released: [ 'repos', function(next, results) {
+      gatekeeper.findReleasedProjects({}, function(err, projects) {
+        next(err, projects && difference(projects, results.repos));
+      });
+    } ]
   };
   if (res.locals.authstaff) {
     findAll.built = builder.findProjects;
@@ -240,6 +246,7 @@ app.get('/u/:users', authorize, function(req, res, next) {
 app.get('/:kind/:proj', authorize, function(req, res, next) {
   var mine = { kind: req.params.kind, proj: req.params.proj, users: [ res.locals.authuser ] };
   var findAll = {
+    myrepos: async.apply(git.findStudentRepos, mine),
     repos: async.apply(git.findStudentRepos, res.locals.authstaff ? req.params : mine),
     fullnames: [ 'repos', function(callback, results) {
       async.each(results.repos, function(repo, callback) {
@@ -248,10 +255,13 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
           callback();
         });
       }, function(err) { callback(); });
-    } ]
+    } ],
+    released: async.apply(gatekeeper.isProjectReleased, req.params),
+    startable: async.apply(gatekeeper.findTickets, mine)
   };
   if (res.locals.authstaff) {
     findAll.starting = async.apply(git.hasStartingRepo, req.params);
+    findAll.tickets = async.apply(gatekeeper.findTickets, req.params);
     findAll.sweeps = async.apply(sweeper.findSweeps, req.params);
     findAll.schedSweeps = async.apply(sweeper.scheduledSweeps, req.params);
     findAll.milestones = async.apply(grader.findMilestones, req.params);
@@ -406,6 +416,35 @@ app.post('/build/:kind/:proj/:users/:rev', function(req, res, next) {
 
 // all other POST requests must be authenticated
 app.post('*', authenticate);
+
+app.post('/start/:kind/:proj/:users', authorize, function(req, res, next) {
+  async.auto({
+    released: function(next) {
+      if (res.locals.authstaff) { return next(null, true); }
+      gatekeeper.isProjectReleased(req.params, next);
+    },
+    ticket: function(next) {
+      gatekeeper.findTickets(req.params, function(err, tickets) {
+        if (tickets.length == 0 && res.locals.authstaff) {
+          tickets = [ req.params ];
+        }
+        if (tickets.length > 1) {
+          return next('Multiple matching repository permissions');
+        }
+        next(null, tickets[0]);
+      });
+    }
+  }, function(err, results) {
+    if (err) { return next(err); }
+    if ( ! (results.released && results.ticket)) {
+      return res.render('404', { error: 'No permission to create repository' })
+    }
+    git.createStudentRepo(results.ticket, res.locals.authuser, function(err) {
+      if (err) { return next(err); }
+      res.redirect('/' + results.ticket.kind + '/' + results.ticket.proj + '/' + results.ticket.users.join('-'));
+    });
+  });
+});
 
 app.post('/grade/:kind/:proj/:name/revs', staffonly, function(req, res, next) {
   var userBuilds = {};
@@ -566,6 +605,33 @@ app.post('/starting/:kind/:proj', staffonly, function(req, res, next) {
   git.createStartingRepo(req.params, res.locals.authuser, function(err) {
     if (err) {
       err.dmesg = err.dmesg || 'Error creating starting repository';
+      return next(err);
+    }
+    res.redirect('/' + req.params.kind + '/' + req.params.proj);
+  });
+});
+
+app.post('/tickets/:kind/:proj', staffonly, function(req, res, next) {
+  var usernames = req.body.usernames.split('\n').map(function(users) {
+    return users.trim();
+  }).filter(function(users) {
+    return users.match(/^\w+(-\w+)*$/);
+  }).map(function(users) {
+    return users.split('-');
+  });
+  gatekeeper.createTickets(req.params, usernames, function(err) {
+    if (err) {
+      err.dmesg = err.dmesg || 'Error adding student permissions';
+      return next(err);
+    }
+    res.redirect('/' + req.params.kind + '/' + req.params.proj);
+  });
+});
+
+app.post('/release/:kind/:proj', staffonly, function(req, res, next) {
+  gatekeeper.releaseProject(req.params, function(err) {
+    if (err) {
+      err.dmesg = err.dmesg || 'Error releasing assignment';
       return next(err);
     }
     res.redirect('/' + req.params.kind + '/' + req.params.proj);

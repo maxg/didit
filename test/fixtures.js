@@ -41,6 +41,7 @@ Fixture.prototype.special = {
   'build-results': path.join(config.build.results, config.student.semester),
   'sweeps': path.join(config.build.results, 'sweeps', config.student.semester),
   'milestones': path.join(config.build.results, 'milestones', config.student.semester),
+  'tickets': path.join(config.build.results, 'tickets', config.student.semester),
 };
 
 function recursiveCopier(destination) {

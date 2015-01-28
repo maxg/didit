@@ -4,6 +4,7 @@ var fs = require('fs');
 var glob = require('glob');
 var mkdirp = require('mkdirp');
 var moment = require('moment');
+var ncp = require('ncp');
 var path = require('path');
 var rimraf = require('rimraf');
 var spawn = require('child_process').spawn;
@@ -381,6 +382,20 @@ exports.createStartingRepo = function(spec, committer, callback) {
       next();
     } ]
   }, callback);
+};
+
+exports.createStudentRepo = function(spec, committer, callback) {
+  log.info({ spec: spec }, 'createStudentRepo');
+  var dest = studentSourcePath(spec);
+  async.series([
+    
+    // copy starting repo
+    async.apply(ncp, startingSourcePath(spec), dest),
+    
+    // add hooks
+    async.apply(ncp, path.join(__dirname, 'hooks'), path.join(dest, 'hooks'))
+    
+  ], callback);
 };
 
 // command-line git

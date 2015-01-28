@@ -606,6 +606,85 @@ describe('frontend', function() {
     });
   });
   
+  describe('POST /start/:kind/:proj/:users', function() {
+    
+    beforeEach(function(done) {
+      fix.files(this.currentTest, done);
+    });
+    
+    afterEach(function(done) {
+      async.parallel([
+        async.apply(rimraf, path.join(config.student.repos, config.student.semester, 'labs', 'lab4')),
+        async.apply(rimraf, path.join(config.build.results, 'tickets', config.student.semester, 'labs', 'lab4'))
+      ], done);
+    });
+    
+    it('should create a repo', function(done) {
+      mock.user('alice');
+      request.post(root + 'start/labs/lab4/alice', function(err, res, body) {
+        res.statusCode.should.equal(302);
+        git.findStudentRepos({}, function(finderr, found) {
+          found.should.includeEql({
+            kind: 'labs', proj: 'lab4', users: [ 'alice' ]
+          });
+          done(err || finderr);
+        });
+      });
+    });
+    it('should fail with unreleased project', function(done) {
+      mock.user('alice');
+      sandbox.stub(git, 'createStudentRepo').throws();
+      request.post(root + 'start/labs/lab4/alice', function(err, res, body) {
+        body.should.match(/No permission/);
+        done(err);
+      });
+    });
+    it('should fail with missing ticket', function(done) {
+      mock.user('alice');
+      sandbox.stub(git, 'createStudentRepo').throws();
+      request.post(root + 'start/labs/lab4/alice', function(err, res, body) {
+        body.should.match(/No permission/);
+        done(err);
+      });
+    });
+    it('should allow staff without release or ticket', function(done) {
+      mock.user('eve');
+      request.post(root + 'start/labs/lab4/alice-eve', function(err, res, body) {
+        res.statusCode.should.equal(302);
+        git.findStudentRepos({}, function(finderr, found) {
+          found.should.includeEql({
+            kind: 'labs', proj: 'lab4', users: [ 'alice', 'eve' ]
+          });
+          done(err || finderr);
+        });
+      });
+    });
+    it('should reject illegal kind', function(done) {
+      mock.user('eve');
+      sandbox.stub(git, 'createStudentRepo').throws();
+      request.post(root + 'start/labs!/lab4/eve', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        done(err);
+      });
+    });
+    it('should reject illegal project', function(done) {
+      mock.user('eve');
+      sandbox.stub(git, 'createStudentRepo').throws();
+      request.post(root + 'start/labs/lab!/eve', function(err, res, body) {
+        res.statusCode.should.equal(404);
+        done(err);
+      });
+    });
+    it('should reject unauthorized students', function(done) {
+      mock.user('bob');
+      sandbox.stub(git, 'createStudentRepo').throws();
+      request.post(root + 'start/labs/lab4/alice', function(err, res, body) {
+        body.should.match(/You are not alice/);
+        done(err);
+      });
+    });
+  });
+  
   describe('POST /grade/:kind/:proj/:name/revs', function() {
     
     var spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
