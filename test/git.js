@@ -250,7 +250,7 @@ describe('git', function() {
     });
     
     it('should return true for project with starting repo', function(done) {
-      git.hasStartingRepo({ kind: 'labs', proj: 'lab1' }, function(err, starting) {
+      git.hasStartingRepo({ kind: 'labs', proj: 'lab4' }, function(err, starting) {
         starting.should.be.true;
         done(err);
       });
@@ -338,7 +338,7 @@ describe('git', function() {
     it('should fail with existing starting repo', function(done) {
       mkdirp(resultdirs.startable, function(fserr) {
         git.createStartingRepo(specs.startable, 'nobody', function(err) {
-          err.should.exist;
+          should.exist(err);
           fs.readdirSync(resultdirs.startable).should.eql([]);
           done(fserr);
         })
@@ -346,7 +346,63 @@ describe('git', function() {
     });
     it('should fail with missing starting materials', function(done) {
       git.createStartingRepo(specs.missing, 'nobody', function(err) {
-        err.should.exist;
+        should.exist(err);
+        fs.existsSync(resultdirs.missing).should.be.false;
+        done();
+      });
+    });
+  });
+  
+  describe('createStudentRepo', function() {
+    
+    var specs = {
+      startable: { kind: 'labs', proj: 'lab4', users: [ 'eve' ] },
+      missing: { kind: 'labs', proj: 'lab1', users: [ 'eve' ] }
+    };
+    var resultdirs = {};
+    Object.keys(specs).forEach(function(key) {
+      resultdirs[key] = path.join(
+        config.student.repos, config.student.semester,
+        specs[key].kind, specs[key].proj, specs[key].users.join('-')+'.git'
+      );
+    });
+    
+    before(function(done) {
+      fix.files(this.test, done);
+    });
+    
+    afterEach(function(done) {
+      async.each(Object.keys(resultdirs).map(function(key) {
+        return resultdirs[key];
+      }), rimraf, done);
+    });
+    
+    it('should create a student repo', function(done) {
+      fs.existsSync(resultdirs.startable).should.be.false;
+      git.createStudentRepo(specs.startable, 'nobody', function(err) {
+        var head = fs.readFileSync(path.join(resultdirs.startable, 'HEAD'), { encoding: 'utf8' });
+        head.should.eql('not: a/valid/head\n');
+        done(err);
+      });
+    });
+    it('should include repo hooks', function(done) {
+      git.createStudentRepo(specs.startable, 'nobody', function(err) {
+        fs.readdirSync(path.join(resultdirs.startable, 'hooks')).should.eql([ 'post-receive' ]);
+        done(err);
+      });
+    });
+    it('should fail with existing student repo', function(done) {
+      mkdirp(resultdirs.startable, function(fserr) {
+        git.createStudentRepo(specs.startable, 'nobody', function(err) {
+          should.exist(err);
+          fs.readdirSync(resultdirs.startable).should.eql([]);
+          done(fserr);
+        });
+      })
+    });
+    it('should fail with missing starting repo', function(done) {
+      git.createStudentRepo(specs.missing, 'nobody', function(err) {
+        should.exist(err);
         fs.existsSync(resultdirs.missing).should.be.false;
         done();
       });

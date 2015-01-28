@@ -389,6 +389,13 @@ exports.createStudentRepo = function(spec, committer, callback) {
   var dest = studentSourcePath(spec);
   async.series([
     
+    // check that repo does not exist
+    function(next) {
+      fs.exists(dest, function(exists) {
+        next(exists ? { dmesg: 'repository exists' } : null);
+      });
+    },
+    
     // copy starting repo
     async.apply(ncp, startingSourcePath(spec), dest),
     
