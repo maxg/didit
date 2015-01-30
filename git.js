@@ -11,6 +11,7 @@ var spawn = require('child_process').spawn;
 var temp = require('temp');
 
 var config = require('./config');
+var util = require('./util');
 var log = require('./logger').cat('git');
 
 function studentSourcePath(spec) {
@@ -29,31 +30,12 @@ function startingDir(spec) {
   return [ config.staff.semester, spec.kind, spec.proj, 'starting' ].join('/');
 }
 
-// spawn a process and log stderr
-// options must include a 'pipe' setting for stderr
-function spawnAndLog(command, args, options) {
-  var child = spawn(command, args, options);
-  child.on('error', function(err) {
-    log.error({ err: err, command: command, args: args, options: options });
-  });
-  byline(child.stderr, { encoding: 'utf8' }).on('data', function(line) {
-    log.error({ err: line, command: command, args: args, options: options });
-  });
-  return child;
-}
-
-function onExit(child, callback) {
-  return child.on('exit', function(code) {
-    callback(code == 0 ? null : { code: code });
-  });
-}
-
 function findRev(dir, gitargs, callback) {
   if ( ! fs.existsSync(dir)) {
     callback({ dmesg: 'no repository' });
     return;
   }
-  var out = byline(spawnAndLog('git', gitargs, {
+  var out = byline(util.spawnAndLog('git', gitargs, {
     cwd: dir,
     stdio: 'pipe'
   }).stdout, { encoding: 'utf8' });
@@ -106,7 +88,7 @@ exports.studentSourceLog = function(spec, range, callback) {
   var names = [ 'rev', 'author', 'authoremail', 'authortime', 'committer', 'committeremail', 'committertime', 'subject' ];
   var format = [ '%h', '%an', '%ae', '%at', '%cn', '%ce', '%ct', '%s' ].join('%x00');
   var lines = [];
-  var out = byline(spawnAndLog('git', [ 'log',
+  var out = byline(util.spawnAndLog('git', [ 'log',
     '--pretty=format:' + format
   ].concat(range).concat([ '--' ]), {
     cwd: studentSourcePath(spec),
@@ -129,7 +111,7 @@ exports.cloneStudentSource = function(spec, dest, callback) {
   async.auto({
     
     depth: function(next) {
-      var out = byline(spawnAndLog('git', [ 'rev-list',
+      var out = byline(util.spawnAndLog('git', [ 'rev-list',
         spec.rev + '..master', '--'
       ], {
         cwd: studentSourcePath(spec),
@@ -143,7 +125,7 @@ exports.cloneStudentSource = function(spec, dest, callback) {
     // clone the student's repository
     clone: [ 'depth', function(next, results) {
       log.info('cloneStudentSource', 'clone');
-      spawnAndLog('git', [ 'clone',
+      util.spawnAndLog('git', [ 'clone',
         '--quiet', '--no-checkout', '--depth', results.depth + 2, '--branch', 'master',
         'file://' + studentSourcePath(spec),
         '.'
@@ -158,7 +140,7 @@ exports.cloneStudentSource = function(spec, dest, callback) {
     // check out the specified revision
     checkout: [ 'clone', function(next) {
       log.info('cloneStudentSource', 'checkout');
-      spawnAndLog('git', [ 'checkout',
+      util.spawnAndLog('git', [ 'checkout',
         '--quiet', spec.rev
       ], {
         cwd: dest,
@@ -275,7 +257,7 @@ exports.findReleasableProjects = function(callback) {
   var required = [ 'grading', 'starting' ];
   var projects = {};
   
-  var find = byline(spawnAndLog('git', [ 'ls-tree',
+  var find = byline(util.spawnAndLog('git', [ 'ls-tree',
     '-r', '-d', '--name-only', 'master', config.staff.semester
   ], {
     cwd: config.staff.repo,
@@ -336,7 +318,7 @@ exports.createStartingRepo = function(spec, committer, callback) {
         [ 'init', '--quiet', '--bare' ],
         [ 'config', 'receive.denynonfastforwards', 'true' ]
       ], function(args, next) {
-        onExit(spawnAndLog('git', args, {
+        util.onExit(util.spawnAndLog('git', args, {
           cwd: dest,
           stdio: 'pipe'
         }), next);
@@ -355,7 +337,7 @@ exports.createStartingRepo = function(spec, committer, callback) {
         [ 'commit', '--quiet', '-m', 'Starting code for ' + spec.kind + '/' + spec.proj ],
         [ 'push', '--quiet', 'file://' + dest, 'master' ]
       ], function(args, next) {
-        onExit(spawnAndLog('git', args, {
+        util.onExit(util.spawnAndLog('git', args, {
           cwd: results.staging,
           env: env,
           stdio: 'pipe'
