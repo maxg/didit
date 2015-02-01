@@ -30,6 +30,17 @@ describe('acl', function() {
   
   describe('set', function() {
     
+    describe('none', function() {
+      
+      beforeEach(function() {
+        sandbox.stub(config.student, 'acl', 'none');
+      });
+      
+      it('should succeed', function(done) {
+        acl.set('/fake/directory', 'fakeuser', acl.level.none, done);
+      });
+    });
+    
     describe('afs', function() {
       
       var users = { other: 'system:anyuser' };
@@ -68,6 +79,13 @@ describe('acl', function() {
             next(err);
           });
         }, done);
+      });
+      it('should fail with invalid permission level', function(done) {
+        acl.set('/fake/directory', 'fakeuser', 'none', function(err) {
+          should.exist(err);
+          util.spawnAndLog.called.should.be.false;
+          done();
+        });
       });
       it('should fail with child error', function(done) {
         sandbox.childExitCode = null;
