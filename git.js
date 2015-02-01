@@ -11,6 +11,7 @@ var spawn = require('child_process').spawn;
 var temp = require('temp');
 
 var config = require('./config');
+var acl = require('./acl');
 var util = require('./util');
 var log = require('./logger').cat('git');
 
@@ -354,6 +355,9 @@ exports.createStartingRepo = function(spec, committer, callback) {
       } ]
     }) ],
     
+    // set filesystem permissions
+    acl: [ 'cleanup', async.apply(acl.set, dest, acl.user.other, acl.level.read) ],
+    
     // throw away staging
     remove: [ 'push', function(next, results) {
       setTimeout(function() {
@@ -382,8 +386,15 @@ exports.createStudentRepo = function(spec, committer, callback) {
     async.apply(ncp, startingSourcePath(spec), dest),
     
     // add hooks
-    async.apply(ncp, path.join(__dirname, 'hooks'), path.join(dest, 'hooks'))
+    async.apply(ncp, path.join(__dirname, 'hooks'), path.join(dest, 'hooks')),
     
+    // set filesystem permissions
+    async.apply(async.series, [
+      async.apply(acl.set, dest, acl.user.other, acl.level.none),
+      async.apply(async.series, spec.users.map(function(user) {
+        return async.apply(acl.set, dest, user, acl.level.write);
+      }))
+    ])
   ], callback);
 };
 

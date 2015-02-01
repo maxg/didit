@@ -14,6 +14,7 @@ var fixtures = require('./fixtures');
 describe('git', function() {
   
   var config = require('../config');
+  var acl = require('../acl');
   var git = require('../git');
   
   var fix = fixtures();
@@ -335,6 +336,14 @@ describe('git', function() {
         done(err);
       });
     });
+    it('should set filesystem permissions', function(done) {
+      git.createStartingRepo(specs.startable, 'nobody', function(err) {
+        acl.set.calls.slice(-1).should.eql([
+          { dir: resultdirs.startable, user: acl.user.other, perm: acl.level.read }
+        ]);
+        done(err);
+      });
+    });
     it('should fail with existing starting repo', function(done) {
       mkdirp(resultdirs.startable, function(fserr) {
         git.createStartingRepo(specs.startable, 'nobody', function(err) {
@@ -388,6 +397,15 @@ describe('git', function() {
     it('should include repo hooks', function(done) {
       git.createStudentRepo(specs.startable, 'nobody', function(err) {
         fs.readdirSync(path.join(resultdirs.startable, 'hooks')).should.eql([ 'post-receive' ]);
+        done(err);
+      });
+    });
+    it('should set filesystem permissions', function(done) {
+      git.createStudentRepo(specs.startable, 'nobody', function(err) {
+        acl.set.calls.slice(-2).should.eql([
+          { dir: resultdirs.startable, user: acl.user.other, perm: acl.level.none },
+          { dir: resultdirs.startable, user: 'eve', perm: acl.level.write }
+        ]);
         done(err);
       });
     });

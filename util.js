@@ -35,6 +35,6 @@ exports.spawnAndLog = function(command, args, options) {
 
 exports.onExit = function(child, callback) {
   return child.on('exit', function(code) {
-    callback(code == 0 ? null : { code: code });
+    callback(code === 0 ? null : { code: code });
   });
 };

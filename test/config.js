@@ -7,7 +7,8 @@ var config = require('../config');
 var override = {
   student: {
     semester: 'su00',
-    repos: temp.mkdirSync('test-student-repos-')
+    repos: temp.mkdirSync('test-student-repos-'),
+    acl: 'test'
   },
   staff: {
     semester: 'summer00',

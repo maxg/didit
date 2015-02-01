@@ -1,7 +1,8 @@
 module.exports = {
   student: {
     semester: 'sp13',
-    repos: '/vagrant/devel/repos'
+    repos: '/vagrant/devel/repos',
+    acl: 'none'
   },
   staff: {
     semester: 'spring13',
