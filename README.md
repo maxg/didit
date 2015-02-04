@@ -44,6 +44,12 @@ In a student repository, simulate a push:
 
     echo `git rev-parse HEAD^1 HEAD` refs/heads/master | GIT_DIR=. hooks/post-receive
 
+To use AFS:
+
+ * Install packages: `sudo apt-get install krb5-user openafs-client openafs-krb5 module-assistant` (for Athena: realm `ATHENA.MIT.EDU`, cell `athena.mit.edu`)
+ * And the kernel module: `sudo m-a prepare`, `sudo m-a auto-install openafs`, `sudo modprobe openafs`, `sudo service openafs-client restart`
+ * Then `kinit <username>@<REALM>` and `aklog`
+
 
 AWS
 ---
@@ -103,6 +109,7 @@ See `monitor.js` for a simple monitoring app designed for use on [Heroku] to sen
   [Heroku]: https://www.heroku.com/
   [Heroku Scheduler]: https://addons.heroku.com/scheduler
   [Heroku config vars]: https://devcenter.heroku.com/articles/config-vars
+
 
 Resources
 ---------
