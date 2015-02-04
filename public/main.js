@@ -5,6 +5,11 @@ $('#stafftoggle').on('click', function() {
   location.reload();
 });
 
+// avoid double-submits
+$('form.modal[method="post"]').on('submit', function(event) {
+  $('button', event.target).prop('disabled', true);
+});
+
 // initialize repo creation dialog
 $('#create-repo').on('show.bs.modal', function(event) {
   var spec = $(this).data('modal').options;
