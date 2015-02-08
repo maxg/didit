@@ -137,7 +137,7 @@ exports.isMilestoneReleasedSync = function(spec, name) {
 
 exports.findMilestones = function(spec, callback) {
   log.info({ spec: spec }, 'findMilestones');
-  var kind = spec.kind || '*';
+  var kind = spec.kind || config.glob.kind;
   var proj = spec.proj || '*';
   glob(path.join('milestones', config.student.semester, kind, proj, '*'), {
     cwd: config.build.results

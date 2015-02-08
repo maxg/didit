@@ -60,8 +60,11 @@ app.param(function(name, fn) {
     }
   }
 });
-app.param('kind', '\\w+');
-app.param('proj', '\\w+');
+app.param('kind', '[\\w-]+');
+app.param('kind', function(req, res, next, kind) {
+  next(config.student.kinds && config.student.kinds.indexOf(kind) < 0 ? 'route' : undefined);
+});
+app.param('proj', '[\\w-]+');
 app.param('users', '\\w+(-\\w+)*');
 app.param('users', function(req, res, next, users) {
   req.params.users = users.split('-');

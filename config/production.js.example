@@ -2,6 +2,7 @@ module.exports = {
   student: {
     semester: 'sp13',
     repos: '/afs/athena.mit.edu/course/.../git',
+    kinds: [ 'psets', 'projects' ],
     acl: 'afs',
     remote: 'ssh://[user]@athena.dialup.mit.edu/mit/.../git'
   },

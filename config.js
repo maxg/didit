@@ -5,6 +5,10 @@ var moment = require('moment');
 var env = process.env.NODE_ENV || 'development';
 module.exports = require('./config/' + env);
 
+module.exports.glob = {
+  kind: (module.exports.student || {}).kinds ? '@('+module.exports.student.kinds.join('|')+')' : '*'
+};
+
 [ 'footer', 'swf' ].forEach(function(config) {
   module.exports[config] = JSON.parse(fs.readFileSync('./config/' + config + '.json'), { encoding: 'utf8' });
 });

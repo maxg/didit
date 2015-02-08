@@ -53,7 +53,7 @@ function findRev(dir, gitargs, callback) {
 
 // find all the student repos matching a kind, project and/or users
 exports.findStudentRepos = function(spec, callback) {
-  var kind = spec.kind || '*';
+  var kind = spec.kind || config.glob.kind;
   var proj = spec.proj || '*';
   var users = spec.users ? '?(*-)' + spec.users.join('-') + '?(-*)' : '*';
   log.info('findStudentRepos', kind, proj, users);

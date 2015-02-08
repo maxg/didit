@@ -35,7 +35,7 @@ function sweepResultFile(spec, when, name) {
 // find sweeps by kind and project
 exports.findSweeps = function(spec, callback) {
   log.info({ spec: spec }, 'findSweeps');
-  var kind = spec.kind || '*';
+  var kind = spec.kind || config.glob.kind;
   var proj = spec.proj || '*';
   glob(path.join('sweeps', config.student.semester, kind, proj, '*', 'sweep.json'), {
     cwd: config.build.results

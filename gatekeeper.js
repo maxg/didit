@@ -19,7 +19,7 @@ function releasePath(spec) {
 // callback returns a list of repo specs
 exports.findTickets = function(spec, callback) {
   log.info({ spec: spec }, 'findTickets');
-  var kind = spec.kind || '*';
+  var kind = spec.kind || config.glob.kind;
   var proj = spec.proj || '*';
   var users = spec.users ? '?(*-)' + spec.users.join('-') + '?(-*)' : '*';
   glob(path.join('tickets', config.student.semester, kind, proj, users), {
@@ -58,7 +58,7 @@ exports.isProjectReleased = function(spec, callback) {
 // callback returns a list of project specs
 exports.findReleasedProjects = function(spec, callback) {
   log.info({ spec: spec }, 'findReleasedProjects');
-  var kind = spec.kind || '*';
+  var kind = spec.kind || config.glob.kind;
   var proj = spec.proj || '*';
   glob(path.join(config.student.semester, kind, proj, 'didit', 'released'), {
     cwd: config.student.repos

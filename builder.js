@@ -40,7 +40,7 @@ function buildOutputBase(spec, staffrev, target) {
 
 // find all projects
 exports.findProjects = function(callback) {
-  glob(path.join(config.student.semester, '*', '*'), {
+  glob(path.join(config.student.semester, config.glob.kind, '*'), {
     cwd: config.build.results
   }, function(err, dirs) {
     if (err) {
@@ -57,7 +57,7 @@ exports.findProjects = function(callback) {
 
 // find all the repos matching a kind, project, and/or users
 exports.findRepos = function(spec, callback) {
-  var kind = spec.kind || '*';
+  var kind = spec.kind || config.glob.kind;
   var proj = spec.proj || '*';
   var users = spec.users ? '?(*-)' + spec.users.join('-') + '?(-*)' : '*';
   log.info('findRepos', kind, proj, users);

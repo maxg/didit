@@ -8,6 +8,7 @@ var override = {
   student: {
     semester: 'su00',
     repos: temp.mkdirSync('test-student-repos-'),
+    kinds: undefined,
     acl: 'test'
   },
   staff: {
