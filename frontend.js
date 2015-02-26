@@ -21,6 +21,7 @@ var log = logger.cat('frontend');
 var app = express();
 
 app.set('view engine', 'jade');
+app.set('x-powered-by', false);
 
 var static = cached.static(path.join(__dirname, 'public'));
 
@@ -97,6 +98,7 @@ function authenticate(req, res, next) {
     res.locals.authuser = cert.subject.emailAddress.replace('@' + config.web.certDomain, '');
     res.locals.authstaff = config.staff.users.indexOf(res.locals.authuser) >= 0;
     res.locals.staffmode = res.locals.authstaff && req.cookies.staffmode == 'true';
+    res.setHeader('X-Authenticated-User', res.locals.authuser);
     next();
   }
 }
