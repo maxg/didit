@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  p
+    strong
+      tt #{params.kind}/#{params.proj}
+  div.alert.alert-info
+    h2 Starting repository created
+    p: strong by&nbsp;
+      tt= user

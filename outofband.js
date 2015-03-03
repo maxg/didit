@@ -97,6 +97,16 @@ function notifySweep(prefix, template, params, when, user, callback) {
   }, callback);
 }
 
+exports.notifyProjectStarting = async.apply(notifyProject, 'starting repository created', 'project-starting');
+exports.notifyProjectReleased = async.apply(notifyProject, 'released to students', 'project-released');
+
+function notifyProject(suffix, template, params, user, callback) {
+  notify(params.kind + '/' + params.proj + ' ' + suffix, template, {
+    params: params,
+    user: user
+  }, callback);
+}
+
 function notify(subject, template, locals, callback) {
   if ( ! config.log.mail) { return; }
   mailer.sendMail({ to: config.log.mail }, subject, template, locals, function(err, result) {

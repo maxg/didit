@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  p
+    strong
+      tt #{params.kind}/#{params.proj}
+  div.alert.alert-success
+    h2 Project released
+    p: strong by&nbsp;
+      tt= user

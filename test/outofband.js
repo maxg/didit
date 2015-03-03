@@ -176,5 +176,33 @@ describe('outofband', function() {
         });
       });
     });
+    
+    describe('notifyProjectStarting', function() {
+      it('should describe project', function(done) {
+        outofband.notifyProjectStarting({
+          kind: 'psets', proj: 'ps5'
+        }, 'eve', function(err, result) {
+          mailer.pickup(result, function(pickuperr, email) {
+            email.should.match(/psets\/ps5/).and.match(/starting repository created/i);
+            email.should.match(/by.*eve/);
+            done(err || pickuperr);
+          });
+        });
+      });
+    });
+    
+    describe('notifyProjectReleased', function() {
+      it('should describe project', function(done) {
+        outofband.notifyProjectReleased({
+          kind: 'psets', proj: 'ps6'
+        }, 'eve', function(err, result) {
+          mailer.pickup(result, function(pickuperr, email) {
+            email.should.match(/psets\/ps6/).and.match(/released to students/i);
+            email.should.match(/by.*eve/);
+            done(err || pickuperr);
+          });
+        });
+      });
+    });
   });
 });

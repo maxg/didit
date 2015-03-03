@@ -612,6 +612,7 @@ app.post('/starting/:kind/:proj', staffonly, function(req, res, next) {
       err.dmesg = err.dmesg || 'Error creating starting repository';
       return next(err);
     }
+    outofband.notifyProjectStarting(req.params, res.locals.authuser);
     res.redirect('/' + req.params.kind + '/' + req.params.proj);
   });
 });
@@ -639,6 +640,7 @@ app.post('/release/:kind/:proj', staffonly, function(req, res, next) {
       err.dmesg = err.dmesg || 'Error releasing assignment';
       return next(err);
     }
+    outofband.notifyProjectReleased(req.params, res.locals.authuser);
     res.redirect('/' + req.params.kind + '/' + req.params.proj);
   });
 });
