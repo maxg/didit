@@ -98,7 +98,7 @@ function authenticate(req, res, next) {
     res.locals.authuser = cert.subject.emailAddress.replace('@' + config.web.certDomain, '');
     res.locals.authstaff = config.staff.users.indexOf(res.locals.authuser) >= 0;
     res.locals.staffmode = res.locals.authstaff && req.cookies.staffmode == 'true';
-    res.setHeader('X-Authenticated-User', res.locals.authuser);
+    res.set('X-Authenticated-User', res.locals.authuser);
     next();
   }
 }
@@ -659,7 +659,7 @@ app.post('/:kind/:proj/:users/:rev/rebuild', staffonly, function(req, res, next)
 });
 
 app.use(function(err, req, res, next) {
-  log.error(err, 'application error');
+  log.error({ err: err, req: req }, 'application error');
   res.status(500);
   res.render('500', {
     error: err.dmesg || '',
