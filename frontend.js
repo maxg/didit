@@ -338,6 +338,8 @@ app.get('/:kind/:proj/:users/:rev/payload/:category/:suite/:filename', authorize
     grader.findTest(build, req.params.category, req.params.suite, testname, function(err, test) {
       if (err || ! test.payload) { return res.status(404).render('404'); }
       
+      res.set('Content-Security-Policy',
+              "default-src 'none'; style-src 'unsafe-inline'; img-src data:;");
       req.params.filename.exts.forEach(function(ext) {
         if (ext == 'gz') { return res.set('Content-Encoding', 'gzip'); }
         res.type(ext);
