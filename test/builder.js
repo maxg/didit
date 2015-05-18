@@ -270,7 +270,7 @@ describe('builder', function() {
     });
     it('should grade test results', function(done) {
       builder.build(spec, function() { }, function(err, results) {
-        results.grade.should.eql([ 5, 15 ]);
+        results.grade.should.eql([ 5, 31 ]);
         fs.readFile(path.join(resultdir, results.builder, 'grade.json'), { encoding: 'utf8' }, function(fserr, data) {
           var json = JSON.parse(data);
           json.testsuites[0].name.should.eql('FakePublic');
@@ -280,7 +280,7 @@ describe('builder', function() {
           json.testsuites[1].name.should.eql('FakeHidden');
           json.testsuites[1].testcases.map(function(test) {
             return test.name;
-          }).should.eql([ 'hiddenPass', 'hiddenError' ]);
+          }).should.eql([ 'hiddenPass', 'hiddenError', 'hiddenSkip' ]);
           done(err || fserr);
         });
       });

@@ -157,6 +157,7 @@ describe('ant', function() {
           json.tests.should.equal(0);
           json.failures.should.equal(0);
           json.errors.should.equal(0);
+          json.testsuites.should.eql([]);
           done(err || fserr);
         });
       });
@@ -205,6 +206,19 @@ describe('ant', function() {
       ant.parseJUnitResults(0, path.join(fix.fixdir, 'TESTS-TestSuites.xml'), function(err, result) {
         result.testsuites[0].sysout.should.eql([ 'text on stdout\n' ]);
         result.testsuites[0].syserr.should.eql([]);
+        done(err);
+      });
+    });
+    it('should handle skipped tests', function(done) {
+      var expected = {
+        One: [],
+        Two: [ 'pass' ]
+      };
+      ant.parseJUnitResults(0, path.join(fix.fixdir, 'TESTS-TestSuites.xml'), function(err, result) {
+        result.testsuites.should.have.length(2);
+        result.testsuites.forEach(function(suite) {
+          suite.testcases.map(function(test) { return test.name; }).should.eql(expected[suite.name]);
+        });
         done(err);
       });
     });

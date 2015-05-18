@@ -91,7 +91,9 @@ exports.parseJUnitResults = function(code, report, callback) {
         suiteJSON.syserr = (suite['system-err'] || []).filter(function(line) {
           return line.constructor == String;
         });
-        suiteJSON.testcases = (suite.testcase || []).map(function(test) {
+        suiteJSON.testcases = (suite.testcase || []).filter(function(test) {
+          return ! test.skipped;
+        }).map(function(test) {
           var testJSON = test.$;
           testJSON.error = test.error && (test.error[0]._ || test.error[0]);
           testJSON.failure = test.failure && (test.failure[0]._ || test.failure[0]);

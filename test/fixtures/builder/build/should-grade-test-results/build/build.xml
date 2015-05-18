@@ -31,6 +31,9 @@
         <testcase name="hiddenError">
           <error type="Fake">Fake error!</error>
         </testcase>
+        <testcase name="hiddenSkip">
+          <skipped/>
+        </testcase>
       </testsuite>
     </echoxml>
     

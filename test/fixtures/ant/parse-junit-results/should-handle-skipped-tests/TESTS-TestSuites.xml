@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites>
+  <testsuite errors="0" failures="0" skipped="1" name="One" package="" tests="1">
+    <testcase classname="One" name="skip" time="0.002">
+      <skipped/>
+    </testcase>
+    <properties>
+      <property name="ant.project.invoked-targets" value="test" />
+    </properties>
+    <system-out />
+    <system-err />
+  </testsuite>
+  <testsuite errors="0" failures="0" skipped="1" name="Two" package="" tests="2">
+    <testcase classname="Two" name="pass" time="0.002" />
+    <testcase classname="Three" name="alsoSkip" time="0.002">
+      <skipped/>
+    </testcase>
+    <properties>
+      <property name="ant.project.invoked-targets" value="test" />
+    </properties>
+    <system-out />
+    <system-err />
+  </testsuite>
+</testsuites>
