@@ -4,13 +4,15 @@ var spawn = require('child_process').spawn;
 
 var config = require('./config');
 
-var filename = 'log/didit-' + path.basename(require.main.filename, '.js') + '.log';
+var main = require.main ? require.main.filename : '_console';
+
+var filename = 'log/didit-' + path.basename(main, '.js') + '.log';
 
 var streams = [
   { path: filename }
 ];
 if (config.log.console) {
-  var bin = path.join(require.main.filename, '..', 'node_modules/bunyan/bin/bunyan');
+  var bin = path.join(main, '..', 'node_modules/bunyan/bin/bunyan');
   var pretty = spawn(bin, [ '--output', 'short' ], {
     stdio: [ 'pipe', process.stdout, process.stderr ]
   });
