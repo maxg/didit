@@ -125,6 +125,7 @@ function staffonly(req, res, next) {
 }
 
 app.get('*', function(req, res, next) {
+  res.set('Content-Security-Policy', "default-src 'self' https://*.googleapis.com https://*.gstatic.com")
   res.locals.stats = decider.stats();
   next();
 });

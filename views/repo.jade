@@ -3,18 +3,6 @@ extends layout
 append head
   title #{kind}/#{proj} - #{users.join('-')} - Didit
 
-append scripts
-  if authstaff
-    script.
-      $('#build').click(function() {
-        $.post('/build/#{kind}/#{proj}/#{users.join('-')}/#{head}').done(function(data) {
-          $('#build-output').text(data);
-        }).fail(function(req) {
-          $('#build-output').text(req.responseText);
-        });
-        $('#build-progress').modal('show');
-      });
-
 block content
   div.span3
     include sidebar
@@ -43,7 +31,8 @@ block content
               | a new build will not be started.
           div.modal-footer
             a.btn(href='#', data-dismiss='modal') Cancel
-            button#build.btn.btn-info(data-dismiss='modal') Build #{users.join('-')}@
+            button#build-repo.btn.btn-info(data-spec="#{kind}/#{proj}/#{users.join('-')}/#{head}", data-dismiss='modal')
+              | Build #{users.join('-')}@
               tt= head
         
         div#build-progress.modal.hide.modal-bottom(data-backdrop='', tabindex='-1')
