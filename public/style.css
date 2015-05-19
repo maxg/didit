@@ -98,6 +98,11 @@ ul.testresults ul .label {
   text-align: center;
 }
 
+.well.graderesult,
+.well.graderesult h3:not(.label) {
+  margin: 0;
+}
+
 table.testresults td {
   vertical-align: top;
 }

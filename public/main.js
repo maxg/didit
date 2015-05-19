@@ -1,3 +1,8 @@
+// set up progress bars
+$('.progress .bar[data-width]').each(function() {
+  this.style.width = $(this).data('width') + '%';
+});
+
 // toggle staff mode on and off
 $('#stafftoggle').on('click', function() {
   var staffmode = $(this).hasClass('btn-warning');

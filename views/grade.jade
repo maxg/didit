@@ -27,10 +27,10 @@ block content
           else
             span.label.label-warning not released to student
     
-    div.pull-right.well(style='margin:0')
+    div.pull-right.well.graderesult
       p.muted Auto-grading result:
       if grade
-        h3.pull-right(style='margin:0') #{grade.score}&nbsp;
+        h3.pull-right #{grade.score}&nbsp;
           small / #{grade.outof}
       else
         h3.pull-right.label.label-important NO GRADE

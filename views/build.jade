@@ -52,7 +52,7 @@ block content
     mixin testresults('Public tests', build, 'public', ! build.compile)
 
     div.progress.progress-striped(class="progress-#{build.compile ? 'success' : 'danger'}")
-      div.bar(style='width: 100%')
+      div.bar(data-width=100)
     div.alert(class="alert-#{build.compile ? 'success' : 'error'}")
       h2 Compilation #{build.compile ? 'succeeded' : 'FAILED'}
       if build.txt.compile
@@ -66,7 +66,7 @@ mixin testresults(title, build, category, collapse)
   - var results = build.json[category];
   if ( ! results) || (results.tests == 0)
     div.progress.progress-striped
-      div.bar.bar-danger(style='width: 100%')
+      div.bar.bar-danger(data-width=100)
     if collapse
       mixin testcollapse(category, 'error')
     div.alert.alert-error(id="testresults-#{category}", class="#{collapse ? 'collapse' : ''}")
@@ -77,8 +77,8 @@ mixin testresults(title, build, category, collapse)
     div.progress.progress-striped
       - var ok = results.tests - results.failures - results.errors
       - var frac = results.tests == 0 ? 0 : Math.floor(ok / results.tests * 100);
-      div.bar.bar-success(style="width: #{frac}%")
-      div.bar.bar-danger(style="width: #{100 - frac}%")
+      div.bar.bar-success(data-width=frac)
+      div.bar.bar-danger(data-width=100-frac)
     if collapse
       mixin testcollapse(category, 'yellow')
     div.alert(id="testresults-#{category}", class="alert-#{success ? 'success' : 'yellow'} #{collapse ? 'collapse' : ''}")
@@ -113,9 +113,9 @@ mixin suiteresults(suite, category)
           pre.pre-scrollable= test.error || test.failure
   div.clearfix
     if suite.sysout && (suite.sysout.length > 1 || suite.sysout[0])
-      pre.pull-left.pre-scrollable(style='width:45%')= suite.sysout.join('\n')
+      pre.pull-left.pre-scrollable.span6= suite.sysout.join('\n')
     if suite.syserr && (suite.syserr.length > 1 || suite.syserr[0])
-      pre.pull-right.pre-scrollable.text-error(style='width:45%')= suite.syserr.join('\n')
+      pre.pull-right.pre-scrollable.text-error.span6= suite.syserr.join('\n')
 
 mixin testcounts(counted)
   small #{counted.tests} test#{counted.tests == 1 ? '' : 's'},
