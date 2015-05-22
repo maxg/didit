@@ -26,12 +26,16 @@ exports.static = function(root, options) {
   var cached = function(req, res, next) {
     req.url = req.url.replace(sluggish, function() {
       // remove slug, allow caching
-      res.on('header', allowCaching);
+      res.writeHeadOriginal = res.writeHead;
+      res.writeHead = function() {
+        allowCaching.apply(this);
+        res.writeHeadOriginal.apply(this, arguments);
+      };
       return '';
     });
     return static(req, res, function() {
       // did not handle this request, cannot allow caching
-      res.removeListener('header', allowCaching);
+      res.writeHead = res.writeHeadOriginal || res.writeHead;
       next.apply(this, arguments);
     });
   };
