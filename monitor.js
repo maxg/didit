@@ -47,7 +47,7 @@ fetchStatus(function(status) {
   // ... server should have current statistics
   var latest = moment(stats.interval.latestDate, 'X');
   var unit = 'minutes', maximum = 3;
-  if (moment().subtract(unit, maximum).isAfter(latest)) {
+  if (moment().subtract(maximum, unit).isAfter(latest)) {
     return report('Stats out of date', 'Stats more than ' + maximum + ' ' + unit + ' old');
   }
   

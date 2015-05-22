@@ -15,7 +15,7 @@ module.exports.glob = {
 
 aws.config.loadFromPath('./config/aws.json');
 
-moment.lang('en', {
+moment.locale('en', {
   calendar: {
     lastDay: '[yesterday] LT',
     sameDay: '[today] LT',
