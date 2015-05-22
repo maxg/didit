@@ -4,10 +4,9 @@ Exec['apt-get update'] -> Package <| |>
 
 exec {
   'add-apt node':
-    command => 'add-apt-repository ppa:chris-lea/node.js && apt-get update',
+    command => "wget -qO- https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && echo 'deb https://deb.nodesource.com/node_0.10 trusty main' > /etc/apt/sources.list.d/nodesource.list && apt-get update",
     path => [ '/usr/bin', '/bin' ],
-    require => Package['python-software-properties'],
-    unless => '/usr/bin/test -f /etc/apt/sources.list.d/chris-lea-node_js*.list';
+    unless => '/usr/bin/test -f /etc/apt/sources.list.d/nodesource.list';
 }
 
 exec {
