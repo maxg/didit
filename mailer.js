@@ -89,7 +89,7 @@ exports.sendMail = function(recipients, subject, template, locals, callback) {
       next(null, jade.compile(data, { filename: filename })(locals));
     },
     function(html, next) {
-      juice.juiceContent(html, { url: path.join(__dirname, 'public') }, next);
+      next(null, juice(html));
     },
     function(html, next) {
       var mail = {
