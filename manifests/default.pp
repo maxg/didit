@@ -26,7 +26,7 @@ exec {
 }
 
 $eclipse_major='luna'
-$eclipse_minor='R'
+$eclipse_minor='SR2'
 $eclipse_dir="/usr/local/eclipse-$eclipse_major-$eclipse_minor"
 exec {
   'get eclipse':
