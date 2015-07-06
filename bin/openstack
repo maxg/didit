@@ -129,6 +129,10 @@ case "$cmd" in
     nova keypair-list
     ;;
     
+  instances)
+    nova list --name $app
+    ;;
+    
   cinder)
     "$@"
     ;;
