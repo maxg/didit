@@ -95,3 +95,10 @@ exec {
     require => File['/etc/timezone'],
     refreshonly => true;
 }
+
+# Security updates
+file {
+  '/etc/apt/apt.conf.d/25auto-upgrades':
+    content => 'APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";';
+}
