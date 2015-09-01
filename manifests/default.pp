@@ -25,8 +25,8 @@ exec {
     unless => '/usr/bin/test -f /etc/apt/sources.list.d/git-core-ppa*.list';
 }
 
-$eclipse_major='luna'
-$eclipse_minor='SR2'
+$eclipse_major='mars'
+$eclipse_minor='R'
 $eclipse_dir="/usr/local/eclipse-$eclipse_major-$eclipse_minor"
 exec {
   'get eclipse':
