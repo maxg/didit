@@ -33,7 +33,7 @@
     "password": "{{user `openstack_password`}}",
     "tenant_name": "{{user `openstack_tenant`}}",
     "identity_endpoint": "{{user `openstack_auth_url`}}",
-    "region": "RegionOne",
+    "region": "{{user `openstack_region`}}",
     "image_name": "{{user `app`}}-{{timestamp}}-{{user `rev`}}",
     "source_image": "{{user `openstack_source_image`}}",
     "flavor": "{{user `openstack_flavor`}}",
