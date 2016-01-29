@@ -25,6 +25,7 @@ app.set('x-powered-by', false);
 
 var static = cached.static(path.join(__dirname, 'public'));
 
+app.use(express.favicon(path.join(__dirname, 'public', 'favicon.png')));
 app.use('/static', static);
 app.use(logger.express());
 app.use(express.responseTime());
