@@ -3,6 +3,15 @@ var spawn = require('child_process').spawn;
 
 var log = require('./logger').cat('util');
 
+// find the value and index of the first element in an array satisfying a predicate
+exports.arrayFind = function arrayFind(array, predicate) {
+  for (var i = 0; i < array.length; i++) {
+    var value = array[i];
+    if (predicate(value, i, array)) { return { value: value, index: i }; }
+  }
+  return { index: -1 };
+};
+
 // return an object equality predicate that examines only the given keys
 exports.equalityModulo = function equalityModulo(/* keys */) {
   var keys = Array.prototype.slice.call(arguments);

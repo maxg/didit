@@ -136,6 +136,7 @@ describe('frontend', function() {
       mock.user('eve');
       request(root + 'milestone/projects/helloworld/hello', function(err, res, body) {
         body.should.match(/projects\/helloworld\/alice-bob\/123abc7/);
+        body.should.match(/<tr>.*\b15\b.*\b20\b.*\b10\b.*\b5\b.*<\/tr>/);
         done(err);
       });
     });
@@ -144,8 +145,26 @@ describe('frontend', function() {
       request(root + 'milestone/projects/helloworld/hello.csv', function(err, res, body) {
         var unquoted = body.replace(/"/g, '');
         unquoted.should.match(/Username,Revision,Grade,out of,greeting,salutation/);
-        unquoted.should.match(/alice,.*123abc7.*15,20,10,5/);
+        unquoted.should.match(/alice,.*123abc7.*,15,20,10,5/);
         unquoted.should.match(/bob,[^0-9]*$/m);
+        done(err);
+      });
+    });
+    it('should render HTML with graded and ungraded', function(done) {
+      mock.user('eve');
+      request(root + 'milestone/projects/helloworld/welcome', function(err, res, body) {
+        body.should.match(/projects\/helloworld\/alice-bob\/123abc7/);
+        body.should.match(/<tr>.*\b1\b.*\b2\b.*&#x2713;.*\b1\b.*<\/tr>/);
+        done(err);
+      });
+    });
+    it('should render CSV with graded and ungraded', function(done) {
+      mock.user('eve');
+      request(root + 'milestone/projects/helloworld/welcome.csv', function(err, res, body) {
+        var unquoted = body.replace(/"/g, '');
+        unquoted.should.match(/Username,Revision,Grade,out of,salutation,greeting/);
+        unquoted.should.match(/alice,[^0-9]*$/m);
+        unquoted.should.match(/bob,.*123abc7.*,1,2,true,1/);
         done(err);
       });
     });

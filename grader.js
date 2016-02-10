@@ -7,6 +7,7 @@ var path = require('path');
 
 var config = require('./config');
 var git = require('./git');
+var util = require('./util');
 var log = require('./logger').cat('grader');
 
 // parse a CSV grade sheet
@@ -25,10 +26,14 @@ exports.parseGradeSheet = function(filename, callback) {
   sheet.on('error', function(err) { callback(err); });
 };
 
+function testPassed(test) {
+  return test && ! (test.missing || test.failure || test.error);
+}
+
 // assign points given by "row" based on results of "test"
 function gradeTest(row, test) {
   var outof = +row.pts;
-  var score = ( ! test) || test.missing || test.failure || test.error ? 0 : outof;
+  var score = testPassed(test) ? outof : 0;
   return { score: score, outof: outof };
 }
 
@@ -37,11 +42,27 @@ function gradeTest(row, test) {
 exports.grade = function(spec, builddir, build, output, callback) {
   log.info({ spec: spec }, 'grade');
   
+  var suiteCompare = function(a, b) { return (a.package + a.name).localeCompare(b.package + b.name); }
+  var hidden = build.json && build.json.hidden && build.json.hidden.testsuites || [];
+  hidden.sort(suiteCompare);
+  var public = build.json && build.json.public && build.json.public.testsuites || [];
+  public.sort(suiteCompare);
+  
+  var testsuites = hidden.concat(public);
+  
+  testsuites.forEach(function(suite) {
+    suite.testcases.forEach(function(test) {
+      test.passed = testPassed(test);
+    });
+    suite.testcases.sort(function(a, b) { return a.name.localeCompare(b.name); });
+  });
+  
   var report = {
     spec: spec,
     score: 0,
     outof: 0,
-    testsuites: []
+    testsuites: [],
+    ungraded: public.concat(hidden)
   };
   
   var sheet = path.join(builddir, 'grade.csv');
@@ -56,25 +77,26 @@ exports.grade = function(spec, builddir, build, output, callback) {
       callback(null, report);
       return;
     }
-    var testsuites = (
-      build.json.hidden && build.json.hidden.testsuites || []).concat(
-      build.json.public && build.json.public.testsuites || []);
     async.eachSeries(rows, function(row, next) {
       async.auto({
         reportsuite: function(next) { // find the test suite in the report
-          async.detectSeries(report.testsuites, function(suite, found) {
-            found(suite.package == row.pkg && suite.name == row.cls);
-          }, function(suite) { next(null, suite); });
+          next(null, util.arrayFind(report.testsuites, function(suite) {
+            return suite.package == row.pkg && suite.name == row.cls;
+          }).value);
         },
         buildsuite: function(next) { // find the test suite in the build
-          async.detectSeries(testsuites, function(suite, found) {
-            found(suite.package == row.pkg && suite.name == row.cls);
-          }, function(suite) { next(null, suite); });
+          next(null, util.arrayFind(testsuites, function(suite) {
+            return suite.package == row.pkg && suite.name == row.cls;
+          }).value);
         },
         test: [ 'buildsuite', function(next, results) { // find the test
-          async.detect(results.buildsuite && results.buildsuite.testcases || [], function(test, found) {
-            found(test.name == row.test);
-          }, function(test) { next(null, test); });
+          if ( ! (results.buildsuite && results.buildsuite.testcases)) { return next(); }
+          var result = util.arrayFind(results.buildsuite.testcases, function(test) {
+            return test.name == row.test;
+          });
+          // modify the build result to remove this test!
+          if (result.index >= 0) { results.buildsuite.testcases.splice(result.index, 1); }
+          next(null, result.value);
         } ]
       }, function(err, results) { // and add this test to the grade report
         if ( ! results.reportsuite) {
@@ -102,7 +124,13 @@ exports.grade = function(spec, builddir, build, output, callback) {
         report.outof += results.test.grade.outof;
         next();
       });
-    }, function() { // write the grade report to disk
+    }, function() {
+      // clean up ungraded tests
+      report.ungraded = report.ungraded.filter(function(suite) {
+        return suite.testcases.length > 0;
+      });
+      
+      // write the grade report to disk
       fs.writeFile(output + '.json', JSON.stringify(report), function(err) {
         if (err) {
           err.dmesg = 'error writing grade report';

@@ -7,6 +7,10 @@ each _ in spacer
 | ,,,
 each reporev in reporevs
   if reporev.grade
+    each suite in reporev.grade.ungraded || []
+      | #{suite.package}#{suite.package ? '.' : ''}#{suite.name}
+      each test in suite.testcases
+        | ,
     each suite in reporev.grade.testsuites
       | #{suite.package}#{suite.package ? '.' : ''}#{suite.name}
       each test in suite.testcases
@@ -20,6 +24,9 @@ each _ in spacer
 | Revision,Grade,out of,
 each reporev in reporevs
   if reporev.grade
+    each suite in reporev.grade.ungraded || []
+      each test in suite.testcases
+        | "#{test.name}",
     each suite in reporev.grade.testsuites
       each test in suite.testcases
         | "#{test.name}",
@@ -33,6 +40,9 @@ each reporev in reporevs
   | "=""#{reporev.rev}""",
   if reporev.grade
     | #{reporev.grade.score},#{reporev.grade.outof},
+    each suite in reporev.grade.ungraded || []
+      each test in suite.testcases
+        | #{test.passed},
     each suite in reporev.grade.testsuites
       each test in suite.testcases
         | #{test.grade && test.grade.score},

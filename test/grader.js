@@ -67,7 +67,7 @@ describe('grader', function() {
       sandbox.stub(grader, 'parseGradeSheet').throws();
       grader.grade(nospec, fix.fixdir, {}, path.join(fix.fixdir, 'grade'), function(err, report) {
         grader.parseGradeSheet.called.should.be.false;
-        report.should.eql({ spec: nospec, score: 0, outof: 0, testsuites: [] });
+        report.should.eql({ spec: nospec, score: 0, outof: 0, testsuites: [], ungraded: [] });
         done(err);
       });
     });
@@ -75,7 +75,7 @@ describe('grader', function() {
       sandbox.stub(grader, 'parseGradeSheet').yields(new Error(), null);
       grader.grade(nospec, fix.fixdir, {}, path.join(fix.fixdir, 'grade'), function(err, report) {
         grader.parseGradeSheet.called.should.be.true;
-        report.should.eql({ spec: nospec, score: 0, outof: 0, testsuites: [] });
+        report.should.eql({ spec: nospec, score: 0, outof: 0, testsuites: [], ungraded: [] });
         done(err);
       });
     });
@@ -89,16 +89,19 @@ describe('grader', function() {
       }, path.join(fix.fixdir, 'grade'), function(err, report) {
         report.score.should.equal(10);
         report.outof.should.equal(20);
-        report.testsuites.should.includeEql({
-          package: 'pkg', name: 'FirstTest', missing: true, testcases: [
+        report.testsuites.should.eql([
+          { package: 'pkg', name: 'FirstTest', missing: true, testcases: [
             { name: 'testOne', missing: true, grade: { score: 0, outof: 10 } }
-          ]
-        });
-        report.testsuites.should.includeEql({
-          package: 'pkg', name: 'SecondTest', properties: {}, testcases: [
-            { name: 'testTwo', grade: { score: 10, outof: 10 } }
-          ]
-        });
+          ] },
+          { package: 'pkg', name: 'SecondTest', properties: {}, testcases: [
+            { name: 'testTwo', passed: true, grade: { score: 10, outof: 10 } }
+          ] }
+        ]);
+        report.ungraded.should.eql([
+          { package: 'pkg', name: 'SecondTest', properties: {}, testcases: [
+            { name: 'testThree', passed: true }
+          ] }
+        ]);
         done(err);
       });
     });
