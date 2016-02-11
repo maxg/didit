@@ -42,7 +42,7 @@ each reporev in reporevs
     | #{reporev.grade.score},#{reporev.grade.outof},
     each suite in reporev.grade.ungraded || []
       each test in suite.testcases
-        | #{test.passed},
+        | #{test.grade && test.grade.pass},
     each suite in reporev.grade.testsuites
       each test in suite.testcases
         | #{test.grade && test.grade.score},

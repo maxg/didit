@@ -16,7 +16,7 @@
       {
         "name": "Goodbye",
         "testcases": [
-          { "name": "salutation", "passed": true }
+          { "name": "salutation", "grade": { "pass": true } }
         ]
       }
     ]

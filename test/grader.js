@@ -91,15 +91,15 @@ describe('grader', function() {
         report.outof.should.equal(20);
         report.testsuites.should.eql([
           { package: 'pkg', name: 'FirstTest', missing: true, testcases: [
-            { name: 'testOne', missing: true, grade: { score: 0, outof: 10 } }
+            { name: 'testOne', missing: true, grade: { pass: false, score: 0, outof: 10 } }
           ] },
           { package: 'pkg', name: 'SecondTest', properties: {}, testcases: [
-            { name: 'testTwo', passed: true, grade: { score: 10, outof: 10 } }
+            { name: 'testTwo', grade: { pass: true, score: 10, outof: 10 } }
           ] }
         ]);
         report.ungraded.should.eql([
           { package: 'pkg', name: 'SecondTest', properties: {}, testcases: [
-            { name: 'testThree', passed: true }
+            { name: 'testThree', grade: { pass: true, score: 0, outof: 0 } }
           ] }
         ]);
         done(err);
