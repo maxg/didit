@@ -15,7 +15,7 @@ exports.parseGradeSheet = function(filename, callback) {
   var sheet = csv().from.path(filename);
   sheet.transform(function(row) {
     if (row[0] == 'junit') { // "junit" rows define graded tests
-      return { pkg: row[1], cls: row[2], test: row[3], pts: row[4] };
+      return { pkg: row[1], cls: row[2], test: row[3], pts: row[4] || '' };
     } else {                 // skip other rows
       return null;
     }
