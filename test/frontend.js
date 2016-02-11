@@ -40,7 +40,10 @@ describe('frontend', function() {
   });
   
   after(function(done) {
-    server.close(done);
+    async.series([
+      server.close.bind(server),
+      fix.remove.bind(fix)
+    ], done);
   });
   
   describe('GET 404', function() {
