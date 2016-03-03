@@ -167,7 +167,7 @@ describe('sweeper', function() {
     var when = [ moment().subtract(1, 'day'), moment(), moment().add(1, 'day') ];
     
     it('should return sweep specifications', function(done) {
-      sandbox.stub(sweeper, 'startSweep');
+      sandbox.useFakeTimers('setTimeout');
       sweeper.scheduleSweep({ kind: 'labs', proj: 'hello' }, when[0], function() {});
       sweeper.scheduleSweep({ kind: 'labs', proj: 'goodbye' }, when[1], function() {});
       sweeper.scheduleSweep({ kind: 'projects', proj: 'goodbye' }, when[2], function() {});
@@ -206,6 +206,7 @@ describe('sweeper', function() {
     
     it('should return repositories to sweep', function(done) {
       sweeper.startSweep(specs.sweep, moment(), function(err, repos) {
+        should.not.exist(err);
         repos.should.eql(specs.repos());
       }, done);
     });
