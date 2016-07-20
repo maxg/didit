@@ -1,11 +1,11 @@
-var request = require('request');
+const request = require('request');
 
 describe('whoops', function() {
   
-  var config = require('../config');
-  var whoops = require('../whoops');
+  let config = require('../src/config');
+  let whoops = require('../src/whoops');
   
-  var host = 'localhost';
+  let host = 'localhost';
   
   before(function() {
     whoops.start();

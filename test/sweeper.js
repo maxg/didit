@@ -1,23 +1,23 @@
-var async = require('async');
-var events = require('events');
-var fs = require('fs');
-var moment = require('moment');
-var path = require('path');
-var rimraf = require('rimraf');
-var should = require('should');
-var sinon = require('sinon');
+const async = require('async');
+const events = require('events');
+const fs = require('fs');
+const moment = require('moment');
+const path = require('path');
+const rimraf = require('rimraf');
+const should = require('should');
+const sinon = require('sinon');
 
-var fixtures = require('./fixtures');
+const fixtures = require('./fixtures');
 
 describe('sweeper', function() {
   
-  var config = require('../config');
-  var builder = require('../builder');
-  var git = require('../git');
-  var sweeper = require('../sweeper');
+  let config = require('../src/config');
+  let builder = require('../src/builder');
+  let git = require('../src/git');
+  let sweeper = require('../src/sweeper');
   
-  var fix = fixtures();
-  var fixed = {
+  let fix = fixtures();
+  let fixed = {
     proj: [
       { kind: 'projects', proj: 'helloworld', when: moment('20130420T235959', moment.compactFormat) },
     ],
@@ -28,7 +28,7 @@ describe('sweeper', function() {
       { kind: 'labs', proj: 'lab2', when: moment('20130321T171500', moment.compactFormat) },
     ]
   };
-  var sandbox = sinon.sandbox.create();
+  let sandbox = sinon.sandbox.create();
   
   before(function(done) {
     fix.files(this.test, done);
@@ -69,7 +69,7 @@ describe('sweeper', function() {
   
   describe('findSweep', function() {
     
-    var specs = [
+    let specs = [
       { "kind": "labs", "proj": "lab2", "users": [ "alice" ], "rev": "abcd123" },
       { "kind": "labs", "proj": "lab2", "users": [ "alice" ], "rev": "abcd456" }
     ];
@@ -77,7 +77,7 @@ describe('sweeper', function() {
     it('should return a sweep', function(done) {
       sweeper.findSweep({ kind: 'labs', proj: 'lab2', datetime: fixed.lab[2].when }, function(err, sweep) {
         sweep.reporevs.should.have.length(1);
-        sweep.reporevs[0].should.include(specs[0]);
+        sweep.reporevs[0].should.containEql(specs[0]);
         sweep.reporevs[0].grade.score.should.eql(50);
         done(err);
       });
@@ -85,7 +85,7 @@ describe('sweeper', function() {
     it('should return a sweep with no grades', function(done) {
       sweeper.findSweep({ kind: 'labs', proj: 'lab2', datetime: fixed.lab[3].when }, function(err, sweep) {
         sweep.reporevs.should.have.length(1);
-        sweep.reporevs[0].should.include(specs[1]);
+        sweep.reporevs[0].should.containEql(specs[1]);
         should.not.exist(sweep.reporevs[0].grade);
         done(err);
       });
@@ -115,36 +115,36 @@ describe('sweeper', function() {
   
   describe('scheduleSweep', function() {
     
-    var spec = { kind: 'labs' };
+    let spec = { kind: 'labs' };
     
     it('should sweep at a past time', function(done) {
-      var when = moment().subtract(1, 'hour');
+      let when = moment().subtract(1, 'hour');
       sandbox.stub(sweeper, 'startSweep', function(spec, when, startCallback, finishCallback) {
         startCallback(null, 'repos');
         process.nextTick(async.apply(finishCallback, null, 'grades'));
       });
-      var spy = sinon.spy();
+      let spy = sinon.spy();
       sweeper.scheduleSweep(spec, when, spy, spy, function(err, grades) {
-        sweeper.startSweep.calledWith(spec, when).should.be.true;
+        sweeper.startSweep.calledWith(spec, when).should.be.true();
         spy.args.should.eql([ [], [ null, 'repos' ] ]);
         grades.should.eql('grades');
         done(err);
       });
     });
     it('should sweep at a future time', function(done) {
-      var when = moment().add(1, 'hour');
+      let when = moment().add(1, 'hour');
       sandbox.useFakeTimers('setTimeout');
       sandbox.stub(sweeper, 'startSweep', function(spec, when, startCallback, finishCallback) {
         startCallback(null, 'repos');
         process.nextTick(async.apply(finishCallback, null, 'grades'));
       });
-      var spy = sinon.spy();
+      let spy = sinon.spy();
       sweeper.scheduleSweep(spec, when, function() {
         sandbox.clock.tick(1000 * 60 * 30);
-        sweeper.startSweep.called.should.be.false;
+        sweeper.startSweep.called.should.be.false();
         sandbox.clock.tick(1000 * 60 * 30);
       }, spy, function(err, grades) {
-        sweeper.startSweep.calledWith(spec, when).should.be.true;
+        sweeper.startSweep.calledWith(spec, when).should.be.true();
         spy.args.should.eql([ [ null, 'repos' ] ]);
         grades.should.eql('grades');
         done(err);
@@ -164,7 +164,7 @@ describe('sweeper', function() {
   
   describe('scheduledSweeps', function() {
     
-    var when = [ moment().subtract(1, 'day'), moment(), moment().add(1, 'day') ];
+    let when = [ moment().subtract(1, 'day'), moment(), moment().add(1, 'day') ];
     
     it('should return sweep specifications', function(done) {
       sandbox.useFakeTimers('setTimeout');
@@ -180,16 +180,16 @@ describe('sweeper', function() {
   
   describe('startSweep', function() {
     
-    var specs = {
+    let specs = {
       sweep: { kind: 'labs', proj: 'lab0' },
-      repos: function() { return [
+      repos() { return [
         { kind: 'labs', proj: 'lab0', users: [ 'alice' ] },
         { kind: 'labs', proj: 'lab0', users: [ 'bob' ] },
         { kind: 'labs', proj: 'lab0', users: [ 'charlie' ] }
       ]; }
     };
-    var revs = { alice: 'abcd123' };
-    var resultdir = path.join(
+    let revs = { alice: 'abcd123' };
+    let resultdir = path.join(
       config.build.results, 'sweeps', config.student.semester,
       specs.sweep.kind, specs.sweep.proj
     );
@@ -213,29 +213,29 @@ describe('sweeper', function() {
     it('should return grade reports from sweep', function(done) {
       sandbox.stub(git, 'studentSourceRevAt').yields(null, '0000000');
       sandbox.stub(builder, 'findBuild', function(spec, callback) {
-        callback(null, { json: { grade: { spec: spec, score: 75 } } });
+        callback(null, { json: { grade: { spec, score: 75 } } });
       });
       sweeper.startSweep(specs.sweep, moment(), function() {}, function(err, grades) {
         grades.should.eql(specs.repos().map(function(spec) {
           spec.rev = '0000000';
-          return { spec: spec, score: 75 };
+          return { spec, score: 75 };
         }));
         done(err);
       });
     });
     it('should record revisions', function(done) {
-      var now = moment();
+      let now = moment();
       sandbox.stub(git, 'studentSourceRevAt', function(spec, when, callback) {
         when.should.equal(now);
-        var rev = revs[spec.users[0]];
+        let rev = revs[spec.users[0]];
         callback(rev ? null : new Error(), rev);
       });
       sandbox.stub(builder, 'findBuild').yields(new Error());
       sandbox.stub(builder, 'startBuild').yields(new Error());
       sweeper.startSweep(specs.sweep, now, function() {}, function(err) {
-        var result = JSON.parse(fs.readFileSync(path.join(resultdir, now.format(moment.compactFormat), 'sweep.json')));
-        result.reporevs.should.includeEql({ kind: 'labs', proj: 'lab0', users: [ 'alice' ], rev: 'abcd123' });
-        result.reporevs.should.includeEql({ kind: 'labs', proj: 'lab0', users: [ 'bob' ], rev: null });
+        let result = JSON.parse(fs.readFileSync(path.join(resultdir, now.format(moment.compactFormat), 'sweep.json')));
+        result.reporevs.should.containEql({ kind: 'labs', proj: 'lab0', users: [ 'alice' ], rev: 'abcd123' });
+        result.reporevs.should.containEql({ kind: 'labs', proj: 'lab0', users: [ 'bob' ], rev: null });
         done();
       });
     });
@@ -249,24 +249,24 @@ describe('sweeper', function() {
       });
       sandbox.stub(builder, 'startBuild').yields(null, 'fake');
       sandbox.stub(builder, 'monitor', function() {
-        var emitter = new events.EventEmitter();
+        let emitter = new events.EventEmitter();
         process.nextTick(function() { emitter.emit('done'); });
         return emitter;
       });
       sweeper.startSweep(specs.sweep, moment(), function() {}, function(err) {
-        builder.startBuild.calledWithMatch({ users: [ 'alice' ] }).should.be.false;
-        builder.startBuild.calledWithMatch({ users: [ 'bob' ] }).should.be.true;
-        builder.startBuild.calledWithMatch({ users: [ 'charlie' ] }).should.be.true;
+        builder.startBuild.calledWithMatch({ users: [ 'alice' ] }).should.be.false();
+        builder.startBuild.calledWithMatch({ users: [ 'bob' ] }).should.be.true();
+        builder.startBuild.calledWithMatch({ users: [ 'charlie' ] }).should.be.true();
         done(err);
       });
     });
     it('should sort repositories', function(done) {
       git.findStudentRepos.yields(null, [
         [ 'bob' ], [ 'alice', 'zach' ], [ 'eve' ], [ 'yolanda' ]
-      ].map(function(users) { return { users: users }; }));
+      ].map(function(users) { return { users }; }));
       sandbox.stub(git, 'studentSourceRevAt').yields(null, '0000000');
       sandbox.stub(builder, 'findBuild', function(spec, callback) {
-        callback(null, { json: { grade: { spec: spec } } });
+        callback(null, { json: { grade: { spec } } });
       });
       sweeper.startSweep(specs.sweep, moment(), function() {}, function(err, grades) {
         grades.map(function(grade) { return grade.spec.users; }).should.eql([

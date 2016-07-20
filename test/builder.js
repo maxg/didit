@@ -1,18 +1,18 @@
-var async = require('async');
-var fs = require('fs');
-var path = require('path');
-var should = require('should');
-var sinon = require('sinon');
+const async = require('async');
+const fs = require('fs');
+const path = require('path');
+const should = require('should');
+const sinon = require('sinon');
 
-var fixtures = require('./fixtures');
+const fixtures = require('./fixtures');
 
 describe('builder', function() {
   
-  var config = require('../config');
-  var builder = require('../builder');
+  let config = require('../src/config');
+  let builder = require('../src/builder');
   
-  var fix = fixtures();
-  var fixed = {
+  let fix = fixtures();
+  let fixed = {
     repo: {
       proj: [
         { kind: 'projects', proj: 'helloworld', users: [ 'glittle', 'kp' ] },
@@ -33,7 +33,7 @@ describe('builder', function() {
       ]
     }
   };
-  var sandbox = sinon.sandbox.create();
+  let sandbox = sinon.sandbox.create();
   
   before(function(done) {
     fix.files(this.test, done);
@@ -165,7 +165,7 @@ describe('builder', function() {
   
   describe('startBuild', function() {
     
-    var decider = require('../decider');
+    let decider = require('../src/decider');
     
     beforeEach(function() {
       sandbox.stub(decider, 'startWorkflow');
@@ -173,17 +173,17 @@ describe('builder', function() {
     
     it('should start a build workflow', function(done) {
       decider.startWorkflow.callsArg(2);
-      var spec = fixed.rev.lab[0];
+      let spec = fixed.rev.lab[0];
       builder.startBuild(spec, function(err, id) {
         id.should.equal([ 'build', config.student.semester, spec.kind, spec.proj, spec.users[0], spec.rev ].join('-'));
-        decider.startWorkflow.calledWith(id, spec).should.be.true;
+        decider.startWorkflow.calledWith(id, spec).should.be.true();
         done(err);
       });
     });
     it('should fail with no repository', function(done) {
       builder.startBuild(fixed.rev.lab[2], function(err, id) {
-        err.should.exist;
-        decider.startWorkflow.called.should.be.false;
+        should.exist(err);
+        decider.startWorkflow.called.should.be.false();
         done(id);
       });
     });
@@ -191,17 +191,17 @@ describe('builder', function() {
   
   describe('build', function() {
     
-    var ant = require('../ant');
-    var git = require('../git');
+    let ant = require('../src/ant');
+    let git = require('../src/git');
     
-    var spec = fixed.rev.lab[0];
-    var resultdir = path.join(
+    let spec = fixed.rev.lab[0];
+    let resultdir = path.join(
       config.build.results, config.student.semester,
       spec.kind, spec.proj, spec.users[0], spec.rev
     );
     
     beforeEach(function() {
-      var test = this.currentTest;
+      let test = this.currentTest;
       sandbox.stub(git, 'cloneStudentSource', function(spec, dest, callback) {
         fix.filesTo(test, 'build', dest, function() {
           callback(null, { rev: spec.rev });
@@ -218,16 +218,16 @@ describe('builder', function() {
       });
     });
     it('should report when compilation fails', function(done) {
-      var spy = sinon.spy();
+      let spy = sinon.spy();
       builder.build(spec, spy, function(err) {
-        spy.withArgs('Compilation error').calledOnce.should.be.true;
+        spy.withArgs('Compilation error').calledOnce.should.be.true();
         done(err);
       });
     });
     it('should return build results', function(done) {
-      var start = +new Date();
+      let start = +new Date();
       builder.build(spec, function() { }, function(err, results) {
-        var finish = +new Date();
+        let finish = +new Date();
         results.source.rev.should.equal('aaaa123');
         results.builder.should.equal('f0f0f0f');
         results.compile.should.be.type('boolean');
@@ -241,7 +241,7 @@ describe('builder', function() {
     });
     it('should record build results', function(done) {
       builder.build(spec, function() { }, function(err, results) {
-        results.compile.should.be.true;
+        results.compile.should.be.true();
         fs.readFile(path.join(resultdir, 'result.json'), { encoding: 'utf8' }, function(fserr, data) {
           delete results.builderProgress;
           delete results.compileProgress;
@@ -252,7 +252,7 @@ describe('builder', function() {
     });
     it('should run public tests', function(done) {
       builder.build(spec, function() { }, function(err, results) {
-        results.public.should.be.true;
+        results.public.should.be.true();
         fs.readFile(path.join(resultdir, results.builder, 'public.json'), { encoding: 'utf8' }, function(fserr, data) {
           JSON.parse(data).testsuites[0].testcases[0].name.should.eql('totallyFake');
           done(err || fserr);
@@ -261,7 +261,7 @@ describe('builder', function() {
     });
     it('should run hidden tests', function(done) {
       builder.build(spec, function() { }, function(err, results) {
-        results.hidden.should.be.true;
+        results.hidden.should.be.true();
         fs.readFile(path.join(resultdir, results.builder, 'hidden.json'), { encoding: 'utf8' }, function(fserr, data) {
           JSON.parse(data).testsuites[0].testcases[0].name.should.eql('entirelyFake');
           done(err || fserr);
@@ -272,7 +272,7 @@ describe('builder', function() {
       builder.build(spec, function() { }, function(err, results) {
         results.grade.should.eql([ 5, 31 ]);
         fs.readFile(path.join(resultdir, results.builder, 'grade.json'), { encoding: 'utf8' }, function(fserr, data) {
-          var json = JSON.parse(data);
+          let json = JSON.parse(data);
           json.testsuites[0].name.should.eql('FakePublic');
           json.testsuites[0].testcases.map(function(test) {
             return test.name;
@@ -291,7 +291,7 @@ describe('builder', function() {
         fs.readdirSync(results.builddir).should.eql([ 'hello.txt' ]);
         process.nextTick(function() {
           fs.watch(results.builddir).once('change', function() {
-            fs.existsSync(results.builddir).should.be.false;
+            fs.existsSync(results.builddir).should.be.false();
             done();
           });
           sandbox.clock.tick(1000 * 60 * 60);

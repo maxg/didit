@@ -9,7 +9,6 @@ config/ssl-*.pem
 coverage
 devel
 log/*.log
-manifests/*.conf.json
 node_modules
 prod
-public/bootstrap
+setup/*.conf.json

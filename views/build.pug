@@ -1,0 +1,125 @@
+extends layout-sidebar
+
+append head
+  title #{kind}/#{proj} - #{users.join('-')}@#{rev} - Didit
+
+block primary
+  div.page-header
+    h1
+      tt #{kind}/#{proj}
+      |  by&nbsp;
+      tt= users.join('-')
+      |  rev&nbsp;
+      tt= rev
+    if gitweb
+      p: a(href=gitweb(locals)) view revision on gitweb
+    if authstaff && staffmode
+      div.btn-toolbar.pull-right
+        button.btn.btn-default.btn-xs(href='#rebuild', data-toggle='modal') rebuild
+    p.text-muted builder&nbsp;
+      if build.builder
+        tt= build.builder
+      else
+        span.label.label-warning unknown
+      |  started #{locals.moment(build.started).calendar()}
+      |  took #{moment.duration(build.finished - build.started).humanize()}
+
+  if authstaff && staffmode
+    form#rebuild.modal(action=`/${kind}/${proj}/${users.join('-')}/${rev}/rebuild`, method='post', tabindex='-1')
+      div.modal-dialog: div.modal-content
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3.modal-title Confirm rebuild
+        div.modal-body
+          p Existing results will be discarded during the rebuild,
+            br
+            | even if the project was built with the current builder.
+          p The build page will update after the new build is complete.
+        div.modal-footer
+          a.btn.btn-default(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Discard results and force rebuild
+
+  if build.err
+    div.alert.alert-danger
+      h2 Build error&nbsp;
+        small= build.err.dmesg
+
+  if authstaff && staffmode && build.json.hidden
+    +testresults('Hidden tests', build, 'hidden', ! build.compile)
+
+  +testresults('Public tests', build, 'public', ! build.compile)
+
+  div.progress
+    div.progress-bar.progress-bar-striped(class=`progress-bar-${build.compile ? 'success' : 'danger'}`, data-width=100)
+  div.alert(class=`alert-${build.compile ? 'success' : 'danger'}`)
+    h2 Compilation #{build.compile ? 'succeeded' : 'FAILED'}
+    if build.txt.compile
+      pre.pre-scrollable= build.txt.compile
+    else
+      h3 No output
+
+mixin testresults(title, build, category, collapse)
+  - let success = build[category];
+  - let output = build.txt[category];
+  - let results = build.json[category];
+  if ( ! results) || (results.tests == 0)
+    div.progress
+      div.progress-bar.progress-bar-striped.progress-bar-danger(data-width=100)
+    if collapse
+      +testcollapse(category, 'danger')
+    div.alert.alert-danger(id=`testresults-${category}`, class=`${collapse ? 'collapse' : ''}`)
+      h2 #{title} FAILED TO RUN
+      if output
+        pre.pre-scrollable= output
+  else
+    div.progress
+      - let ok = results.tests - results.failures - results.errors
+      - let frac = results.tests == 0 ? 0 : Math.floor(ok / results.tests * 100);
+      div.progress-bar.progress-bar-striped.progress-bar-success(data-width=frac)
+      div.progress-bar.progress-bar-striped.progress-bar-danger(data-width=100-frac)
+    if collapse
+      +testcollapse(category, 'warning')
+    div.alert(id=`testresults-${category}`, class=`alert-${success ? 'success' : 'warning'} ${collapse ? 'collapse' : ''}`)
+      h2 #{title} #{success ? 'passed' : 'FAILED'}&nbsp;
+        +testcounts(results)
+      pre.pre-scrollable= output
+      ul.testresults
+        each suite in results.testsuites
+          li
+            +suiteresults(suite, category)
+
+mixin suiteresults(suite, category)
+  h3 #{suite.package}#{suite.package ? '.' : ''}#{suite.name}&nbsp;
+    +testcounts(suite)
+  p= suite.properties.desc
+  ul
+    each test in suite.testcases
+      li
+        if test.error
+          span.label.label-info X
+        else if test.failure
+          span.label.label-danger X
+        else
+          span.label.label-success &#x2713;
+        h4 #{test.name} #{test.error ? 'ERROR' : ''}#{test.failure ? 'FAILED' : ''}
+          if test.payload
+            small
+              a(href=`/${kind}/${proj}/${users.join('-')}/${rev}/payload/${category}/${suite.name}/${test.name}.${test.payload.type}`)
+                |  + attachment
+        p
+        if test.error || test.failure
+          pre.pre-scrollable= test.error || test.failure
+  div.clearfix
+    if suite.sysout && (suite.sysout.length > 1 || suite.sysout[0])
+      pre.pull-left.pre-scrollable.col-xs-6= suite.sysout.join('\n')
+    if suite.syserr && (suite.syserr.length > 1 || suite.syserr[0])
+      pre.pull-right.pre-scrollable.text-danger.col-xs-6= suite.syserr.join('\n')
+
+mixin testcounts(counted)
+  small #{counted.tests} test#{counted.tests == 1 ? '' : 's'},
+    |  #{counted.failures} failure#{counted.failures == 1 ? '' : 's'},
+    |  #{counted.errors} error#{counted.errors == 1 ? '' : 's'}
+
+mixin testcollapse(category, style)
+  a.alert.collapse-oneshot.collapsed(class=`alert-${style}`, href=`#testresults-${category}`, data-toggle='collapse')
+    | compilation failed

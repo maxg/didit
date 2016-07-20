@@ -18,7 +18,7 @@ if [[ -z "$@" ]]; then
   exit 1
 fi
 
-dir=$(cd `dirname "$script"` && pwd)
+dir=$(cd `dirname "$0"`/.. && pwd)
 
 afspath=`node -pe "require('$dir/config/production.js').staff.repo"`
 export KINIT_PROG="aklog -path '$afspath'"

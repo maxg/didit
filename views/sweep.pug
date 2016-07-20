@@ -1,0 +1,29 @@
+extends layout-fullpage
+
+append head
+  title Sweep #{kind}/#{proj} #{datetime.format('llll')} - Didit
+
+block primary
+  div.page-header
+    h1 Sweep&nbsp;
+      a(href=`/${kind}/${proj}`): tt #{kind}/#{proj}
+      |  #{datetime.format('llll')}&nbsp;
+      small: a(href=`/sweep/${kind}/${proj}/${datetime.format(moment.compactFormat)}.csv`) .csv
+    if sweep.finished
+      p: button.btn.btn-default.btn-baseline(href='#rebuild', data-toggle='modal') rebuild
+    else
+      p Started #{moment(sweep.started).fromNow()}...
+  
+  form#rebuild.modal(action=`/sweep/${kind}/${proj}/${datetime.format(moment.compactFormat)}/rebuild`, method='post', tabindex='-1')
+    div.modal-dialog: div.modal-content
+      div.modal-header
+        a.close(data-dismiss='modal') &times;
+        h3.modal-title Confirm rebuild
+      div.modal-body
+        p Sweep will update after all new builds have completed.
+      div.modal-footer
+        a.btn.btn-default(href='#', data-dismiss='modal') Cancel
+        button.btn.btn-info Rebuild sweep with current builder
+  
+  include grades
+  +grades(sweep.reporevs)

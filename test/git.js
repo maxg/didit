@@ -1,31 +1,30 @@
-var async = require('async');
-var byline = require('byline');
-var fs = require('fs');
-var mkdirp = require('mkdirp');
-var moment = require('moment');
-var path = require('path');
-var rimraf = require('rimraf');
-var should = require('should');
-var sinon = require('sinon');
-var spawn = require('child_process').spawn;
+const async = require('async');
+const byline = require('byline');
+const fs = require('fs');
+const fsextra = require('fs-extra');
+const moment = require('moment');
+const path = require('path');
+const should = require('should');
+const sinon = require('sinon');
+const spawn = require('child_process').spawn;
 
-var fixtures = require('./fixtures');
+const fixtures = require('./fixtures');
 
 describe('git', function() {
   
-  var config = require('../config');
-  var acl = require('../acl');
-  var git = require('../git');
+  let config = require('../src/config');
+  let acl = require('../src/acl');
+  let git = require('../src/git');
   
-  var fix = fixtures();
-  var repos = [
+  let fix = fixtures();
+  let repos = [
     { kind: 'labs', proj: 'lab1', users: [ 'alice' ] },
     { kind: 'labs', proj: 'lab1', users: [ 'bob' ] },
     { kind: 'labs', proj: 'lab2', users: [ 'alice' ] },
     { kind: 'projects', proj: 'helloworld', users: [ 'alice', 'bob' ] }
   ];
-  var repo = repos[0];
-  var sandbox = sinon.sandbox.create();
+  let repo = repos[0];
+  let sandbox = sinon.sandbox.create();
   
   before(function(done) {
     fix.files(this.test, done);
@@ -252,13 +251,13 @@ describe('git', function() {
     
     it('should return true for project with starting repo', function(done) {
       git.hasStartingRepo({ kind: 'labs', proj: 'lab4' }, function(err, starting) {
-        starting.should.be.true;
+        starting.should.be.true();
         done(err);
       });
     });
     it('should return false for project without starting repo', function(done) {
       git.hasStartingRepo({ kind: 'labs', proj: 'lab2' }, function(err, starting) {
-        starting.should.be.false;
+        starting.should.be.false();
         done(err);
       });
     });
@@ -266,11 +265,11 @@ describe('git', function() {
   
   describe('createStartingRepo', function() {
     
-    var specs = {
+    let specs = {
       startable: { kind: 'labs', proj: 'lab3' },
       missing: { kind: 'labs', proj: 'lab1' }
     };
-    var resultdirs = {};
+    let resultdirs = {};
     Object.keys(specs).forEach(function(key) {
       resultdirs[key] = path.join(
         config.student.repos, config.student.semester,
@@ -285,23 +284,23 @@ describe('git', function() {
     afterEach(function(done) {
       async.each(Object.keys(resultdirs).map(function(key) {
         return resultdirs[key];
-      }), rimraf, done);
+      }), fsextra.remove, done);
     });
     
     it('should create a starting repo', function(done) {
-      fs.existsSync(resultdirs.startable).should.be.false;
+      fs.existsSync(resultdirs.startable).should.be.false();
       git.createStartingRepo(specs.startable, 'nobody', function(err) {
-        fs.existsSync(resultdirs.startable).should.be.true;
+        fs.existsSync(resultdirs.startable).should.be.true();
         done(err);
       });
     });
     it('should create a starting commit', function(done) {
       git.createStartingRepo(specs.startable, 'nobody', function(err) {
-        var log = byline(spawn('git', [ 'log', '--all', '--patch' ], {
+        let log = byline(spawn('git', [ 'log', '--all', '--patch' ], {
           cwd: resultdirs.startable,
           stdio: 'pipe'
         }).stdout, { encoding: 'utf8' });
-        var expected = [
+        let expected = [
           /commit/,
           'Author: nobody via Didit <nobody@example.com>',
           /Date:/,
@@ -317,7 +316,7 @@ describe('git', function() {
           '+3. Implement',
         ];
         log.on('data', function(line) {
-          var expect = expected.shift();
+          let expect = expected.shift();
           if (expect instanceof RegExp) {
             line.should.match(expect);
           } else {
@@ -345,7 +344,7 @@ describe('git', function() {
       });
     });
     it('should fail with existing starting repo', function(done) {
-      mkdirp(resultdirs.startable, function(fserr) {
+      fsextra.mkdirs(resultdirs.startable, function(fserr) {
         git.createStartingRepo(specs.startable, 'nobody', function(err) {
           should.exist(err);
           fs.readdirSync(resultdirs.startable).should.eql([]);
@@ -356,7 +355,7 @@ describe('git', function() {
     it('should fail with missing starting materials', function(done) {
       git.createStartingRepo(specs.missing, 'nobody', function(err) {
         should.exist(err);
-        fs.existsSync(resultdirs.missing).should.be.false;
+        fs.existsSync(resultdirs.missing).should.be.false();
         done();
       });
     });
@@ -364,11 +363,11 @@ describe('git', function() {
   
   describe('createStudentRepo', function() {
     
-    var specs = {
+    let specs = {
       startable: { kind: 'labs', proj: 'lab4', users: [ 'eve' ] },
       missing: { kind: 'labs', proj: 'lab1', users: [ 'eve' ] }
     };
-    var resultdirs = {};
+    let resultdirs = {};
     Object.keys(specs).forEach(function(key) {
       resultdirs[key] = path.join(
         config.student.repos, config.student.semester,
@@ -383,13 +382,13 @@ describe('git', function() {
     afterEach(function(done) {
       async.each(Object.keys(resultdirs).map(function(key) {
         return resultdirs[key];
-      }), rimraf, done);
+      }), fsextra.remove, done);
     });
     
     it('should create a student repo', function(done) {
       fs.existsSync(resultdirs.startable).should.be.false;
       git.createStudentRepo(specs.startable, 'nobody', function(err) {
-        var head = fs.readFileSync(path.join(resultdirs.startable, 'HEAD'), { encoding: 'utf8' });
+        let head = fs.readFileSync(path.join(resultdirs.startable, 'HEAD'), { encoding: 'utf8' });
         head.should.eql('not: a/valid/head\n');
         done(err);
       });
@@ -410,7 +409,7 @@ describe('git', function() {
       });
     });
     it('should fail with existing student repo', function(done) {
-      mkdirp(resultdirs.startable, function(fserr) {
+      fsextra.mkdirs(resultdirs.startable, function(fserr) {
         git.createStudentRepo(specs.startable, 'nobody', function(err) {
           should.exist(err);
           fs.readdirSync(resultdirs.startable).should.eql([]);

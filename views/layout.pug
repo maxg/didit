@@ -1,0 +1,29 @@
+doctype
+html
+  head
+    block head
+      meta(name='viewport' content='width=device-width, initial-scale=1')
+      link(rel='stylesheet', href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css', integrity='sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7', crossorigin='anonymous')
+      link(rel='stylesheet', href=static('/style.css'))
+  body
+    nav.navbar.navbar-default.navbar-fixed-top
+      div.container-fluid
+        ul.nav.navbar-nav
+          li: a(href='/') #[span.hidden-xs The Classroom Continuous Build Butler -] Didit
+        p.navbar-text.pull-right
+          if locals.authstaff
+            button#stafftoggle.btn.btn-xs(class=locals.staffmode ? 'btn-warning' : 'btn-default') staff
+          a(href=`/u/${locals.authuser}`)= locals.authuser
+    div.container-fluid
+      div.row
+        block content
+      hr
+      footer
+        p.pull-right: small MIT EECS
+        - function a(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+        p.text-muted
+          small #{a(config.footer.who)} in the #{a(config.footer.where)} with the #{a(config.footer.what)}?
+    block scripts
+      script(src='//ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js')
+      script(src='//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js' integrity='sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS' crossorigin='anonymous')
+      script(src=static('/main.js'))

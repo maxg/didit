@@ -1,18 +1,18 @@
-var fs = require('fs');
-var moment = require('moment');
-var sinon = require('sinon');
+const fs = require('fs');
+const moment = require('moment');
+const sinon = require('sinon');
 
 describe('outofband', function() {
   
-  var config = require('../config');
-  var builder = require('../builder');
-  var git = require('../git');
-  var mailer = require('../mailer');
-  var outofband = require('../outofband');
+  let config = require('../src/config');
+  let builder = require('../src/builder');
+  let git = require('../src/git');
+  let mailer = require('../src/mailer');
+  let outofband = require('../src/outofband');
   
-  var sandbox = sinon.sandbox.create();
+  let sandbox = sinon.sandbox.create();
   
-  var spec = { kind: 'projects', proj: 'helloworld', users: [ 'alice', 'bob' ], rev: 'abc1234' };
+  let spec = { kind: 'projects', proj: 'helloworld', users: [ 'alice', 'bob' ], rev: 'abc1234' };
   
   afterEach(function() {
     sandbox.restore();
@@ -60,11 +60,11 @@ describe('outofband', function() {
       sandbox.useFakeTimers('setTimeout');
       outofband.notifyBuild(spec, 'fake', [], {});
       sandbox.stub(mailer, 'sendMail', function() {
-        builder.findBuild.calledOnce.should.be.true;
+        builder.findBuild.calledOnce.should.be.true();
         done();
       });
       sandbox.clock.tick(1000 * 60);
-      builder.findBuild.called.should.be.false;
+      builder.findBuild.called.should.be.false();
       sandbox.clock.tick(1000 * 60 * 60);
     });
   });

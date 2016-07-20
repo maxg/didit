@@ -1,16 +1,25 @@
 @import url(https://fonts.googleapis.com/css?family=Lato:400,700);
 
 body {
-  padding-top: 60px;
+  padding-top: 65px;
 }
 
 body, input, button {
   font-family: Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+}
+
+.navbar .navbar-nav {
+  float: left;
+}
 .navbar .btn {
-  margin-top: -5px;
   margin-right: 5px;
+}
+.navbar .navbar-text {
+  margin-bottom: 0;
 }
 
 tt, .teletype {
@@ -23,6 +32,28 @@ pre {
   line-height: 16px;
   tab-size: 4;
   -moz-tab-size: 4;
+}
+
+label {
+  font-weight: 400;
+}
+
+#sidebar {
+  padding: 0;
+}
+#sidebar li {
+  border-left: none;
+  border-right: none;
+  background: none;
+}
+#sidebar li:first-child {
+  border-top: none;
+}
+#sidebar li:last-child {
+  border-bottom: none;
+}
+#sidebar .list-group-item-text {
+  line-height: 1.4;
 }
 
 .page-header,
@@ -39,19 +70,13 @@ pre {
   display: inline-block;
   margin: 0;
 }
-.inline-header .muted,
-.inline-header .muted,
-.inline-header .muted {
+.inline-header .text-muted {
   white-space: nowrap;
 }
 
-.well .nav-list {
-  padding: 0 5px 5px 5px;
-}
-
-.well h2:first-child,
-.well h3:first-child,
-.well h4:first-child {
+.well > h2:first-child,
+.well > h3:first-child,
+.well > h4:first-child {
   margin-top: 0;
 }
 .well h2 small,
@@ -59,14 +84,28 @@ pre {
 .well h4 small {
   white-space: nowrap;
 }
-.well h2:last-child,
-.well h3:last-child,
-.well h4:last-child,
-.well p:last-child,
-.well div:last-child {
+.well > h2:last-child,
+.well > h3:last-child,
+.well > h4:last-child,
+.well > p:last-child,
+.well > div:last-child {
   margin-bottom: 0;
 }
+.well.pull-right {
+  clear: both;
+}
 
+.alert > h2:first-child,
+.alert > h3:first-child,
+.alert > h4:first-child {
+  margin-top: 0;
+}
+.alert > h2:last-child,
+.alert > h3:last-child,
+.alert > h4:last-child,
+.alert > p:last-child {
+  margin-bottom: 0;
+}
 .alert.collapse-oneshot {
   display: block;
 }
@@ -78,12 +117,12 @@ pre {
 }
 
 ul.testresults {
-  margin-left: 0;
+  padding-left: 0;
   list-style: none;
 }
 
 ul.testresults ul {
-  margin-left: 30px;
+  padding-left: 30px;
   list-style: none;
 }
 
@@ -94,12 +133,15 @@ ul.testresults h3 {
 ul.testresults ul .label {
   position: absolute;
   margin-left: -30px;
-  width: 10px;
+  padding: .2em 0;
+  font-size: 13px;
+  width: 18px;
   text-align: center;
 }
 
 .well.graderesult,
-.well.graderesult h3:not(.label) {
+.well.graderesult h3,
+.well.graderesult h4 {
   margin: 0;
 }
 
@@ -112,9 +154,8 @@ table.testresults tr.testsuite td {
   vertical-align: bottom;
 }
 
-table.testresults td:first-child,
-table.testresults td:last-child {
-  max-width: 1em;
+table.testresults td:first-child {
+  width: 28px;
 }
 
 table.testresults h3 {
@@ -122,16 +163,24 @@ table.testresults h3 {
 }
 
 table.testresults .label-square {
-  width: 10px;
+  display: block;
+  padding: .2em 0;
+  font-size: 13px;
+  width: 18px;
   text-align: center;
 }
 
 table.testresults pre {
   margin: 4px 0 0 0;
+  white-space: pre-wrap;
 }
 
 div.grades {
   overflow: auto;
+}
+
+table.grades thead > tr > th {
+  border-bottom: none;
 }
 
 table.grades td:nth-child(n+7) {
@@ -148,10 +197,6 @@ table.grades td.splitter + td.splitter {
 
 .btn-baseline {
   vertical-align: baseline;
-}
-
-.btn-toolbar.pull-right {
-  margin-top: 0;
 }
 
 .modal-bottom {

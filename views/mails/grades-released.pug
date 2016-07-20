@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  p
+    strong
+      tt #{params.kind}/#{params.proj}
+      |  #{params.name}
+  div.alert.alert-success
+    h2 Grades released
+    p: strong by #[tt= user]

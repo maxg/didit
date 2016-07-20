@@ -27,9 +27,9 @@ fi
 
 shift
 
-cmd="packer build -var-file=manifests/packer.conf.json \\
+cmd="packer build -var-file=setup/packer.conf.json \\
              -var rev=$revision -var tar=<(eval $tar) \\
              ""$@"" \\
-             manifests/packer.json"
+             setup/packer.json"
 echo "$cmd"
 eval "$cmd"

@@ -1,19 +1,19 @@
-var async = require('async');
-var fs = require('fs');
-var path = require('path');
-var should = require('should');
-var sinon = require('sinon');
+const async = require('async');
+const fs = require('fs');
+const path = require('path');
+const should = require('should');
+const sinon = require('sinon');
 
-var fixtures = require('./fixtures');
+const fixtures = require('./fixtures');
 
 describe('grader', function() {
   
-  var git = require('../git');
-  var grader = require('../grader');
+  let git = require('../src/git');
+  let grader = require('../src/grader');
   
-  var fix = fixtures();
-  var sandbox = sinon.sandbox.create();
-  var nospec = { ignored: true };
+  let fix = fixtures();
+  let sandbox = sinon.sandbox.create();
+  let nospec = { ignored: true };
   
   before(function(done) {
     fix.files(this.test, done);
@@ -40,6 +40,14 @@ describe('grader', function() {
         done(err);
       });
     });
+    it('should handle whitespace', function(done) {
+      grader.parseGradeSheet(path.join(fix.fixdir, 'gradesheet.csv'), function(err, rows) {
+        rows.should.eql([
+          { pkg: 'pkg', cls: 'FirstTest', test: ' testOne Two Three ', pts: '5' },
+        ]);
+        done(err);
+      });
+    });
     it('should ignore non-JUnit rows', function(done) {
       grader.parseGradeSheet(path.join(fix.fixdir, 'gradesheet.csv'), function(err, rows) {
         rows.should.eql([
@@ -56,7 +64,7 @@ describe('grader', function() {
     });
     it('should fail with invalid grade sheet', function(done) {
       grader.parseGradeSheet(path.join(fix.fixdir, 'gradesheet.csv'), function(err, rows) {
-        err.should.exist;
+        should.exist(err);
         done();
       });
     });
@@ -66,7 +74,7 @@ describe('grader', function() {
     it('should ignore missing grade sheet', function(done) {
       sandbox.stub(grader, 'parseGradeSheet').throws();
       grader.grade(nospec, fix.fixdir, {}, path.join(fix.fixdir, 'grade'), function(err, report) {
-        grader.parseGradeSheet.called.should.be.false;
+        grader.parseGradeSheet.called.should.be.false();
         report.should.eql({ spec: nospec, score: 0, outof: 0, testsuites: [], ungraded: [] });
         done(err);
       });
@@ -74,7 +82,7 @@ describe('grader', function() {
     it('should ignore invalid grade sheet', function(done) {
       sandbox.stub(grader, 'parseGradeSheet').yields(new Error(), null);
       grader.grade(nospec, fix.fixdir, {}, path.join(fix.fixdir, 'grade'), function(err, report) {
-        grader.parseGradeSheet.called.should.be.true;
+        grader.parseGradeSheet.called.should.be.true();
         report.should.eql({ spec: nospec, score: 0, outof: 0, testsuites: [], ungraded: [] });
         done(err);
       });
@@ -125,7 +133,7 @@ describe('grader', function() {
   describe('findTest', function() {
     it('should return a test result', function(done) {
       fix.readFile('build.json', function(err, data) {
-        var build = JSON.parse(data);
+        let build = JSON.parse(data);
         async.map([
           [ 'public', 'SuiteGood', 'testTwo' ],
           [ 'public', 'SuiteEvil', 'testTwo' ],
@@ -173,13 +181,13 @@ describe('grader', function() {
   
   describe('isMilestoneReleasedSync', function() {
     it('should return true for released milestone', function() {
-      grader.isMilestoneReleasedSync({ kind: 'labs', proj: 'lab3' }, 'beta').should.be.true;
+      grader.isMilestoneReleasedSync({ kind: 'labs', proj: 'lab3' }, 'beta').should.be.true();
     });
     it('should return false for un-released milestone', function() {
-      grader.isMilestoneReleasedSync({ kind: 'labs', proj: 'lab3' }, 'final').should.be.false;
+      grader.isMilestoneReleasedSync({ kind: 'labs', proj: 'lab3' }, 'final').should.be.false();
     });
     it('should return false for missing milestone', function() {
-      grader.isMilestoneReleasedSync({ kind: 'labs', proj: 'lab3' }, 'alpha').should.be.false;
+      grader.isMilestoneReleasedSync({ kind: 'labs', proj: 'lab3' }, 'alpha').should.be.false();
     });
   });
   
@@ -226,14 +234,14 @@ describe('grader', function() {
   
   describe('findMilestone', function() {
     it('return should include graded projects', function(done) {
-      var spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
+      let spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
       sandbox.stub(git, 'findStudentRepos').yields(null, [ spec ]);
       grader.findMilestone({ kind: 'labs', proj: 'lab3' }, 'beta', function(err, milestone) {
-        milestone.should.include({ kind: 'labs', proj: 'lab3', name: 'beta' });
-        milestone.released.should.be.true;
+        milestone.should.containEql({ kind: 'labs', proj: 'lab3', name: 'beta' });
+        milestone.released.should.be.true();
         milestone.reporevs.should.have.length(1);
-        milestone.reporevs[0].should.include(spec);
-        var grade = milestone.reporevs[0].grade;
+        milestone.reporevs[0].should.containEql(spec);
+        let grade = milestone.reporevs[0].grade;
         grade.spec.should.eql({ kind: 'labs', proj: 'lab3', users: [ 'alice' ], rev: 'abcd789' });
         grade.score.should.equal(5);
         grade.outof.should.equal(15);
@@ -242,11 +250,11 @@ describe('grader', function() {
       });
     });
     it('return should include ungraded projects', function(done) {
-      var spec = { kind: 'labs', proj: 'lab3', users: [ 'mystery' ] };
+      let spec = { kind: 'labs', proj: 'lab3', users: [ 'mystery' ] };
       sandbox.stub(git, 'findStudentRepos').yields(null, [ spec ]);
       grader.findMilestone({ kind: 'labs', proj: 'lab3' }, 'final', function(err, milestone) {
-        milestone.should.include({ kind: 'labs', proj: 'lab3', name: 'final' });
-        milestone.released.should.be.false;
+        milestone.should.containEql({ kind: 'labs', proj: 'lab3', name: 'final' });
+        milestone.released.should.be.false();
         milestone.reporevs.should.have.length(1);
         milestone.reporevs[0].should.eql(spec);
         done(err);
@@ -255,7 +263,7 @@ describe('grader', function() {
     it('should sort repositories', function(done) {
       sandbox.stub(git, 'findStudentRepos').yields(null, [
         [ 'bob' ], [ 'alice', 'zach' ], [ 'eve' ], [ 'yolanda' ]
-      ].map(function(users) { return { users: users }; }));
+      ].map(function(users) { return { users }; }));
       grader.findMilestone({ kind: 'labs', proj: 'lab3' }, 'beta', function(err, milestone) {
         milestone.reporevs.map(function(reporev) { return reporev.users; }).should.eql([
           [ 'alice' ], [ 'bob' ], [ 'yolanda' ], [ 'zach' ], [ 'eve' ]
@@ -264,7 +272,7 @@ describe('grader', function() {
       });
     });
     it('should fail with invalid grade file', function(done) {
-      var spec = { kind: 'labs', proj: 'lab3', users: [ 'charlie' ] };
+      let spec = { kind: 'labs', proj: 'lab3', users: [ 'charlie' ] };
       sandbox.stub(git, 'findStudentRepos').yields(null, [ spec ]);
       grader.findMilestone({ kind: 'labs', proj: 'lab3' }, 'beta', function(err, milestone) {
         err.should.be.an.instanceof(Error);
@@ -302,7 +310,7 @@ describe('grader', function() {
     it('should create a new milestone', function(done) {
       grader.createMilestone({ kind: 'tests', proj: 'valid' }, 'test', function(err) {
         grader.findMilestones({}, function(finderr, milestones) {
-          milestones.should.includeEql({
+          milestones.should.containEql({
             kind: 'tests', proj: 'valid', name: 'test', released: false
           });
           done(err || finderr);
@@ -318,7 +326,7 @@ describe('grader', function() {
       }, function() {
         grader.findMilestones({}, function(err, milestones) {
           milestones.forEach(function(milestone) {
-            milestone.should.not.include({ proj: 'invalid' });
+            milestone.should.not.containEql({ proj: 'invalid' });
           });
           done(err);
         });

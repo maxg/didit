@@ -1,0 +1,17 @@
+extends layout-sidebar
+
+append head
+  title Not Found - Didit
+
+block primary
+  div.page-header
+    h1
+      tt= proj
+      |  by&nbsp;
+      tt= users.join('-')
+      if name
+        |  #{name}
+      else
+        |  rev&nbsp;
+        tt= rev
+  h2 Not found

@@ -1,0 +1,38 @@
+ul#sidebar.well.list-group.text-muted
+  if locals.proj && locals.users
+    if locals.rev
+      li.list-group-item
+        p.list-group-item-heading.text-uppercase Repository
+        p.list-group-item-text: a(href=`/${kind}/${proj}/${users.join('-')}`) #{kind}/#{proj} #{users.join('-')}
+    li.list-group-item
+      p.list-group-item-heading.text-uppercase Project
+      p.list-group-item-text: a(href=`/${kind}/${proj}`) #{kind}/#{proj}
+    li.list-group-item
+      p.list-group-item-heading.text-uppercase User#{users.length == 1 ? '' : 's'}
+      each user in users
+        p.list-group-item-text: a(href='/u/' + user)= user
+  li.list-group-item
+    p.list-group-item-heading.text-uppercase System Status
+    if ! stats.interval
+      p.list-group-item-text waiting for statistics...
+    else
+      p.list-group-item-text
+        span.label(class=`label-${stats.open > stats.completed ? 'warning' : 'info'}`).
+          #{stats.open}
+        |  build#{stats.open == 1 ? '' : 's'} pending
+      p.list-group-item-text
+        span.label.invisible #{stats.open}
+        | &nbsp;
+        small #{stats.decisions} routing &nbsp; #{stats.activities} queued
+      p.list-group-item-text
+        span.label.label-default #{stats.completed}
+        |  completed
+      p.list-group-item-text
+        span.label(class=`label-${stats.failed > 0 ? 'danger' : 'default' }`) #{stats.failed}
+        |  failed
+      p.list-group-item-text
+        span.label.invisible #{stats.failed}
+        | &nbsp;
+        small in #{moment.duration(stats.interval.latestDate - stats.interval.oldestDate, 'seconds').humanize()}
+      p.list-group-item-text: small.
+        updated #{moment.unix(stats.interval.latestDate).calendar()}

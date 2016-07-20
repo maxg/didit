@@ -1,12 +1,10 @@
-var async = require('async');
-var fs = require('fs');
-var mkdirp = require('mkdirp');
-var ncp = require('ncp');
-var path = require('path');
-var rimraf = require('rimraf');
-var temp = require('temp');
+const async = require('async');
+const fs = require('fs');
+const fsextra = require('fs-extra');
+const path = require('path');
+const temp = require('temp').track();
 
-var config = require('../config');
+const config = require('../src/config');
 
 module.exports = function() {
   return new Fixture();
@@ -17,18 +15,18 @@ function Fixture() {
 }
 
 Fixture.prototype.files = function(test, callback) {
-  var srcdir = fixturePath(testTitle(test));
+  let srcdir = fixturePath(testTitle(test));
   this.mktemp();
-  fs.readdir(srcdir, (function(err, files) {
+  fs.readdir(srcdir, (err, files) => {
     if (err) { return callback(); }
-    async.eachSeries(files, (function(file, next) {
+    async.eachSeries(files, (file, next) => {
       if (this.special[file]) {
         recursiveCopier(this.special[file])(path.join(srcdir, file), next);
       } else {
-        ncp(path.join(srcdir, file), path.join(this.fixdir, file), next);
+        fsextra.copy(path.join(srcdir, file), path.join(this.fixdir, file), next);
       }
-    }).bind(this), callback);
-  }).bind(this));
+    }, callback);
+  });
 };
 
 Fixture.prototype.filesTo = function(test, source, destination, callback) {
@@ -47,11 +45,11 @@ Fixture.prototype.special = {
 function recursiveCopier(destination) {
   return function(dirname, callback) {
     async.waterfall([
-      async.apply(mkdirp, destination),
+      async.apply(fsextra.mkdirs, destination),
       function(_, next) { fs.readdir(dirname, next); },
       function(files, done) {
         async.each(files, function(file, next) {
-          ncp(path.join(dirname, file), path.join(destination, file), next);
+          fsextra.copy(path.join(dirname, file), path.join(destination, file), next);
         }, done);
       }
     ], callback);
@@ -73,9 +71,9 @@ Fixture.prototype.forget = function() {
 };
 
 Fixture.prototype.remove = function(callback) {
-  var special = this.special;
+  let special = this.special;
   async.parallel(Object.keys(special).map(function(name) {
-    return async.apply(rimraf, special[name]);
+    return async.apply(fsextra.remove, special[name]);
   }), callback);
 };
 

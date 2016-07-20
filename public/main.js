@@ -1,5 +1,5 @@
 // set up progress bars
-$('.progress .bar[data-width]').each(function() {
+$('.progress .progress-bar[data-width]').each(function() {
   this.style.width = $(this).data('width') + '%';
 });
 
@@ -30,11 +30,11 @@ $('#build-repo').on('click', function() {
 
 // initialize repo creation dialog
 $('#create-repo').on('show.bs.modal', function(event) {
-  var spec = $(this).data('modal').options;
+  var spec = $(this).data('bs.modal').options;
   $('#create-repo').prop('action', '/start/'+spec.kind+'/'+spec.proj+'/'+spec.users);
   $('.create-repo-users-text').text(spec.users);
   $('#create-repo button').prop('disabled', false);
 });
 $('#create-repo').on('hidden.bs.modal', function(event) {
-  $(this).removeData('modal'); // otherwise future data attributes are ignored
+  $(this).removeData('bs.modal'); // otherwise future data attributes are ignored
 });

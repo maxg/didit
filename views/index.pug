@@ -1,0 +1,26 @@
+extends layout-sidebar
+
+append head
+  title Didit
+
+block primary
+  div.page-header
+    h1 Didit
+
+  if authstaff
+    h2= built.length + releasable.length > 0 ? 'All projects' : 'No projects'
+    each project in built
+      h3: a(href=`/${project.kind}/${project.proj}`) #{project.kind}/#{project.proj}
+    each project in releasable
+      h3: a.text-warning(href=`/${project.kind}/${project.proj}`) #{project.kind}/#{project.proj}
+    br
+
+  h2= repos.length > 0 ? 'My repositories' : 'No repositories'
+  each repo in repos
+    h3: a(href=`/${repo.kind}/${repo.proj}/${repo.users.join('-')}`) #{repo.kind}/#{repo.proj} #{repo.users.join('-')}
+  br
+  
+  if released.length > 0
+    h2 New assignments
+    each proj in released
+      h3: a(href=`/${proj.kind}/${proj.proj}`) #{proj.kind}/#{proj.proj}

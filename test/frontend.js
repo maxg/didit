@@ -1,31 +1,31 @@
-var async = require('async');
-var byline = require('byline');
-var events = require('events');
-var http = require('http');
-var path = require('path');
-var request = require('request');
-var rimraf = require('rimraf');
-var should = require('should');
-var sinon = require('sinon');
-var zlib = require('zlib');
+const async = require('async');
+const byline = require('byline');
+const events = require('events');
+const fsextra = require('fs-extra');
+const http = require('http');
+const path = require('path');
+const request = require('request');
+const should = require('should');
+const sinon = require('sinon');
+const zlib = require('zlib');
 
-var fixtures = require('./fixtures');
-var mocks = require('./mocks');
+const fixtures = require('./fixtures');
+const mocks = require('./mocks');
 
 describe('frontend', function() {
   
-  var config = require('../config');
-  var builder = require('../builder');
-  var frontend = require('../frontend');
-  var git = require('../git');
-  var grader = require('../grader');
-  var rolodex = require('../rolodex');
+  let config = require('../src/config');
+  let builder = require('../src/builder');
+  let frontend = require('../src/frontend');
+  let git = require('../src/git');
+  let grader = require('../src/grader');
+  let rolodex = require('../src/rolodex');
   
-  var fix = fixtures();
-  var mock = mocks.HTTPS();
-  var sandbox = sinon.sandbox.create();
-  var root = 'http://localhost:' + config.web.port + '/';
-  var server = http.createServer().on('request', mock.listener).on('request', frontend);
+  let fix = fixtures();
+  let mock = mocks.HTTPS();
+  let sandbox = sinon.sandbox.create();
+  let root = 'http://localhost:' + config.web.port + '/';
+  let server = http.createServer().on('request', mock.listener).on('request', frontend);
   
   before(function(done){
     async.series([
@@ -146,7 +146,7 @@ describe('frontend', function() {
     it('should render CSV', function(done) {
       mock.user('eve');
       request(root + 'milestone/projects/helloworld/hello.csv', function(err, res, body) {
-        var unquoted = body.replace(/"/g, '');
+        let unquoted = body.replace(/"/g, '');
         unquoted.should.match(/Username,Revision,Grade,out of,greeting,salutation/);
         unquoted.should.match(/alice,.*123abc7.*,15,20,10,5/);
         unquoted.should.match(/bob,[^0-9]*$/m);
@@ -164,7 +164,7 @@ describe('frontend', function() {
     it('should render CSV with graded and ungraded', function(done) {
       mock.user('eve');
       request(root + 'milestone/projects/helloworld/welcome.csv', function(err, res, body) {
-        var unquoted = body.replace(/"/g, '');
+        let unquoted = body.replace(/"/g, '');
         unquoted.should.match(/Username,Revision,Grade,out of,salutation,greeting/);
         unquoted.should.match(/alice,[^0-9]*$/m);
         unquoted.should.match(/bob,.*123abc7.*,1,2,true,1/);
@@ -175,7 +175,7 @@ describe('frontend', function() {
       mock.user('alice');
       request(root + 'milestone/projects/helloworld/hello', function(err, res, body) {
         body.should.match(/alice/).and.match(/You are not staff/);
-        body.should.not.match(/grade|grading|15/i);
+        body.should.not.match(/grade|grading|\b15\b/i);
         done(err);
       });
     });
@@ -280,7 +280,7 @@ describe('frontend', function() {
     });
     it('should skip full names with errors', function(done) {
       mock.user('bob');
-      var lookup = sandbox.stub(rolodex, 'lookup');
+      let lookup = sandbox.stub(rolodex, 'lookup');
       lookup.withArgs('alice').yields(null, 'Alissa P. Hacker');
       lookup.withArgs('bob').yields(new Error());
       request(root + 'projects/helloworld', function(err, res, body) {
@@ -437,7 +437,7 @@ describe('frontend', function() {
     it('should deliver text data', function(done) {
       mock.user('f_tony');
       request(root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/quotation.txt', function(err, res, body) {
-        res.headers['content-type'].should.eql('text/plain');
+        res.headers['content-type'].should.startWith('text/plain');
         body.should.eql("What's a truck?\n");
         done(err);
       });
@@ -448,7 +448,7 @@ describe('frontend', function() {
         url: root + 'projects/truck/f_tony/ab34ef7/payload/public/Visible/ziptation.txt.gz',
         encoding: null
       }, function(err, res, body) {
-        res.headers['content-type'].should.eql('text/plain');
+        res.headers['content-type'].should.startWith('text/plain');
         res.headers['content-encoding'].should.eql('gzip');
         zlib.gunzip(body, function(zerr, result) {
           result.toString().should.eql("What's a truck?\n");
@@ -586,7 +586,7 @@ describe('frontend', function() {
       sandbox.stub(builder, 'findBuild').yields();
       sandbox.stub(builder, 'startBuild').yields(null, 'fake');
       sandbox.stub(builder, 'monitor', function() {
-        var emitter = new events.EventEmitter();
+        let emitter = new events.EventEmitter();
         process.nextTick(emitter.emit.bind(emitter, 'start'));
         process.nextTick(emitter.emit.bind(emitter, 'progress', {
           message: 'Forward, not backward!'
@@ -596,14 +596,14 @@ describe('frontend', function() {
         }));
         return emitter;
       });
-      var expected = [
+      let expected = [
         /started/i,
         /Forward/,
         /compilation succeeded/i,
         /public tests failed/i,
         /details.*labs\/lab2\/alice/i
       ];
-      var req = request.post(root + 'build/labs/lab2/alice/abcd123');
+      let req = request.post(root + 'build/labs/lab2/alice/abcd123');
       byline(req, { encoding: 'utf8' }).on('data', function(line) {
         line.should.match(expected.shift());
         if (expected.length == 0) { done(); }
@@ -636,8 +636,8 @@ describe('frontend', function() {
     
     afterEach(function(done) {
       async.parallel([
-        async.apply(rimraf, path.join(config.student.repos, config.student.semester, 'labs', 'lab4')),
-        async.apply(rimraf, path.join(config.build.results, 'tickets', config.student.semester, 'labs', 'lab4'))
+        async.apply(fsextra.remove, path.join(config.student.repos, config.student.semester, 'labs', 'lab4')),
+        async.apply(fsextra.remove, path.join(config.build.results, 'tickets', config.student.semester, 'labs', 'lab4'))
       ], done);
     });
     
@@ -646,7 +646,7 @@ describe('frontend', function() {
       request.post(root + 'start/labs/lab4/alice', function(err, res, body) {
         res.statusCode.should.equal(302);
         git.findStudentRepos({}, function(finderr, found) {
-          found.should.includeEql({
+          found.should.containEql({
             kind: 'labs', proj: 'lab4', users: [ 'alice' ]
           });
           done(err || finderr);
@@ -674,7 +674,7 @@ describe('frontend', function() {
       request.post(root + 'start/labs/lab4/alice-eve', function(err, res, body) {
         res.statusCode.should.equal(302);
         git.findStudentRepos({}, function(finderr, found) {
-          found.should.includeEql({
+          found.should.containEql({
             kind: 'labs', proj: 'lab4', users: [ 'alice', 'eve' ]
           });
           done(err || finderr);
@@ -709,9 +709,9 @@ describe('frontend', function() {
   
   describe('POST /grade/:kind/:proj/:name/revs', function() {
     
-    var spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
-    var rev = 'abcd789';
-    var resultdir = path.join(
+    let spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
+    let rev = 'abcd789';
+    let resultdir = path.join(
       config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', 'alpha'
     );
     
@@ -720,19 +720,19 @@ describe('frontend', function() {
     });
     
     afterEach(function(done) {
-      rimraf(resultdir, done);
+      fsextra.remove(resultdir, done);
     });
     
     it('should assign grades', function(done) {
       mock.user('eve');
       request.post(root + 'grade/labs/lab3/alpha/revs', { form: {
-        revision: { alice: rev, bob: '1234abc' }
+        'revision.alice': rev, 'revision.bob': '1234abc'
       } }, function(err, res, body) {
         body.should.match(/error.*bob/i).and.not.match(/lab3\/bob/);
         body.should.match(/assigned.*alice/i).and.match(/lab3\/alice\/abcd789/);
         grader.findMilestoneGrade(spec, 'alpha', function(finderr, graded) {
           graded.rev.should.eql(rev);
-          graded.grade.should.include({ score: 5, outof: 15 });
+          graded.grade.should.containEql({ score: 5, outof: 15 });
           done(err || finderr);
         });
       });
@@ -742,7 +742,7 @@ describe('frontend', function() {
       sandbox.stub(builder, 'findRepos').throws();
       sandbox.stub(grader, 'gradeFromBuilds').throws();
       request.post(root + 'grade/labs/lab3/alpha/revs', { form: {
-        revision: { alice: rev }
+        'revision.alice': rev
       } }, function(err, res, body) {
         body.should.match(/alice/).and.match(/You are not staff/);
         grader.findMilestoneGrade(spec, 'alpha', function(finderr, graded) {
@@ -755,9 +755,9 @@ describe('frontend', function() {
   
   describe('POST /grade/:kind/:proj/:name/sweep', function() {
     
-    var spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
-    var when = '20130101T221500';
-    var resultdir = path.join(
+    let spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
+    let when = '20130101T221500';
+    let resultdir = path.join(
       config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', 'alpha'
     );
     
@@ -766,7 +766,7 @@ describe('frontend', function() {
     });
     
     afterEach(function(done) {
-      rimraf(resultdir, done);
+      fsextra.remove(resultdir, done);
     });
     
     it('should assign grades', function(done) {
@@ -779,7 +779,7 @@ describe('frontend', function() {
         body.should.match(/assigned.*alice/i).and.match(/lab3\/alice\/abcd789/);
         grader.findMilestoneGrade(spec, 'alpha', function(finderr, graded) {
           graded.rev.should.eql('abcd789');
-          graded.grade.should.include({ score: 90, outof: 100 });
+          graded.grade.should.containEql({ score: 90, outof: 100 });
           done(err || finderr);
         });
       });
@@ -801,13 +801,13 @@ describe('frontend', function() {
   
   describe('POST /milestone/:kind/:proj', function() {
     
-    var milestone = 'alpha' + +new Date();
-    var resultdir = path.join(
+    let milestone = 'alpha' + +new Date();
+    let resultdir = path.join(
       config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', milestone
     );
     
     afterEach(function(done) {
-      rimraf(resultdir, done);
+      fsextra.remove(resultdir, done);
     });
     
     it('should create a new milestone', function(done) {
@@ -817,7 +817,7 @@ describe('frontend', function() {
       } }, function(err, res, body) {
         res.statusCode.should.equal(302);
         grader.findMilestones({}, function(finderr, milestones) {
-          milestones.should.includeEql({
+          milestones.should.containEql({
             kind: 'labs', proj: 'lab3', name: milestone, released: false
           });
           done(err || finderr);
@@ -838,9 +838,9 @@ describe('frontend', function() {
   
   describe('POST /milestone/:kind/:proj/:name/release', function() {
     
-    var spec = { kind: 'labs', proj: 'lab3' };
-    var milestone = 'alpha';
-    var resultdir = path.join(
+    let spec = { kind: 'labs', proj: 'lab3' };
+    let milestone = 'alpha';
+    let resultdir = path.join(
       config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', milestone
     );
     
@@ -849,7 +849,7 @@ describe('frontend', function() {
     });
     
     afterEach(function(done) {
-      rimraf(resultdir, done);
+      fsextra.remove(resultdir, done);
     });
     
     it('should release a milestone', function(done) {

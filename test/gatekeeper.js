@@ -1,21 +1,21 @@
-var async = require('async');
-var fs = require('fs');
-var should = require('should');
-var sinon = require('sinon');
+const async = require('async');
+const fs = require('fs');
+const should = require('should');
+const sinon = require('sinon');
 
-var fixtures = require('./fixtures');
+const fixtures = require('./fixtures');
 
 describe('gatekeeper', function() {
   
-  var gatekeeper = require('../gatekeeper');
+  let gatekeeper = require('../src/gatekeeper');
   
-  var fix = fixtures();
-  var tickets = [
+  let fix = fixtures();
+  let tickets = [
     { kind: 'inclass', proj: 'ic1-hello', users: [ 'hyperion' ] },
     { kind: 'inclass', proj: 'ic1-hello', users: [ 'theia' ] },
     { kind: 'inclass', proj: 'ic2-goodbye', users: [ 'atlas', 'prometheus' ] },
   ];
-  var sandbox = sinon.sandbox.create();
+  let sandbox = sinon.sandbox.create();
   
   before(function(done) {
     fix.files(this.test, done);
@@ -62,15 +62,15 @@ describe('gatekeeper', function() {
   
   describe('createTickets', function() {
     it('should create new tickets', function(done) {
-      var usernames = [
+      let usernames = [
         [ 'eos' ],
         [ 'helios', 'selene' ],
       ];
       gatekeeper.createTickets({ kind: 'inclass', proj: 'ic3-world' }, usernames, function(err) {
         gatekeeper.findTickets({}, function(finderr, specs) {
           usernames.forEach(function(users) {
-            specs.should.includeEql({
-              kind: 'inclass', proj: 'ic3-world', users: users
+            specs.should.containEql({
+              kind: 'inclass', proj: 'ic3-world', users
             });
           });
           done(err || finderr);
@@ -86,7 +86,7 @@ describe('gatekeeper', function() {
       }, function() {
         gatekeeper.findTickets({}, function(err, specs) {
           specs.forEach(function(spec) {
-            spec.should.not.include({ proj: 'ic4-invalid' });
+            spec.should.not.containEql({ proj: 'ic4-invalid' });
           });
           done(err);
         });
@@ -97,13 +97,13 @@ describe('gatekeeper', function() {
   describe('isProjectReleased', function() {
     it('should return true for released project', function(done) {
       gatekeeper.isProjectReleased({ kind: 'inclass', proj: 'ic1-hello' }, function(err, released) {
-        released.should.be.true;
+        released.should.be.true();
         done(err);
       });
     });
     it('should return false for released project', function(done) {
       gatekeeper.isProjectReleased({ kind: 'inclass', proj: 'ic2-goodbye' }, function(err, released) {
-        released.should.be.false;
+        released.should.be.false();
         done(err);
       });
     });
@@ -132,14 +132,14 @@ describe('gatekeeper', function() {
   
   describe('releaseProject', function() {
     it('should release a project', function(done) {
-      var spec = { kind: 'inclass', proj: 'ic3-world' };
+      let spec = { kind: 'inclass', proj: 'ic3-world' };
       async.auto({
         pre: async.apply(gatekeeper.isProjectReleased, spec),
-        release: [ 'pre', async.apply(gatekeeper.releaseProject, spec) ],
-        post: [ 'release', async.apply(gatekeeper.isProjectReleased, spec) ]
+        release: [ 'pre', (results, next) => gatekeeper.releaseProject(spec, next) ],
+        post: [ 'release', (results, next) => gatekeeper.isProjectReleased(spec, next) ]
       }, function(err, results) {
-        results.pre.should.be.false;
-        results.post.should.be.true;
+        results.pre.should.be.false();
+        results.post.should.be.true();
         done(err);
       });
     });

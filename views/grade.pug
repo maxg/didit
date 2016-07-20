@@ -1,0 +1,92 @@
+extends layout-sidebar
+
+append head
+  title #{kind}/#{proj} #{name} - #{users.join('-')} - Didit
+
+block primary
+  div.page-header
+    h1
+      tt #{kind}/#{proj}
+      |  by&nbsp;
+      tt= users.join('-')
+      if name
+        |  #{name}
+      else
+        |  rev&nbsp;
+        tt= rev
+    
+    if authstaff
+      p.text-muted
+        if ! name
+          span.label.label-info not linked to milestone
+        else if released
+          span.label.label-default released to student
+        else
+          span.label.label-warning not released to student
+  
+  div.pull-right.well.graderesult
+    p.text-muted Auto-grading result:
+    if grade
+      h3.pull-right #{grade.score}&nbsp;
+        small / #{grade.outof}
+    else
+      h4.pull-right: span.label.label-danger NO GRADE
+  
+  h2 Auto-graded rev&nbsp;
+    a(href=`/${build.spec.kind}/${build.spec.proj}/${build.spec.users.join('-')}/${build.spec.rev}`)
+      tt= build.spec.rev
+  p.text-muted(title=`${build.source && build.source.subject}`) author&nbsp;
+    if build.source && build.source.author
+      | #{build.source.author} committed #{locals.moment(parseInt(build.source.committertime)*1000).calendar()}
+    else
+      span.label.label-warning unknown
+    if gitweb
+      |  &mdash;&nbsp;
+      a(href=gitweb(build.spec)) view revision on gitweb
+  p.text-muted builder&nbsp;
+    if build.builder
+      tt= build.builder
+    else
+      span.label.label-warning unknown
+    |  started #{locals.moment(build.started).calendar()}
+    |  took #{moment.duration(build.finished - build.started).humanize()}
+  
+  if grade
+    table.table.table-condensed.testresults
+      tbody
+        each suite in grade.testsuites
+          tr.testsuite
+            td(colspan=2)
+              div: h3 #{suite.package}#{suite.package ? '.' : ''}#{suite.name}
+              if suite.properties
+                div= suite.properties.desc
+              if suite.missing
+                div Test suite did not run
+          +suiteresults(suite)
+  else
+    h3.pull-left Grader did not run
+
+mixin suiteresults(suite)
+  each test in suite.testcases
+    tr.testcase
+      td
+        if ! test.grade
+          span.label.label-square.label-default &middot;
+        else if test.error
+          span.label.label-square.label-info X
+        else if test.failure
+          span.label.label-square.label-danger X
+        else if test.grade.outof == 0
+          span.label.label-square.label-success &middot;
+        else if test.grade.score < test.grade.outof
+          span.label.label-square.label-warning X
+        else
+          span.label.label-square.label-success &#x2713;
+      td
+        div #{test.name}&nbsp;
+          if test.missing
+            span.label.label-warning did not run
+        if test.error || test.failure
+          pre.pre-scrollable= test.error || test.failure
+      td: .text-right= test.grade && test.grade.score
+      td.text-muted /&nbsp;#{test.grade && test.grade.outof}

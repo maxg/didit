@@ -1,17 +1,17 @@
-var async = require('async');
-var aws = require('aws-sdk');
-var events = require('events');
-var sinon = require('sinon');
+const async = require('async');
+const aws = require('aws-sdk');
+const events = require('events');
+const sinon = require('sinon');
 
-var fixtures = require('./fixtures');
-var mocks = require('./mocks');
+const fixtures = require('./fixtures');
+const mocks = require('./mocks');
 
 describe('decider', function() {
   
-  var decider = require('../decider');
+  let decider = require('../src/decider');
   
-  var sandbox = sinon.sandbox.create();
-  var mock;
+  let sandbox = sinon.sandbox.create();
+  let mock;
   
   beforeEach(function() {
     mock = mocks.AWSHTTP();
@@ -24,13 +24,14 @@ describe('decider', function() {
   
   describe('decide', function() {
     
-    var task = 'no-such-task';
-    var exec = {
+    let task = 'no-such-task';
+    let exec = {
       workflowId: 'no-such-workflow',
       runId: 'no-such-run'
     };
     
     function testDecide(history, eventCallback, decideCallback, doneCallback) {
+      mock.events.once('request', request => request.success());
       async.parallel([
         function(next) {
           decider.once(exec.workflowId, function(event, data) {
@@ -46,10 +47,6 @@ describe('decider', function() {
             decideCallback(mock.requests[0].body.decisions);
             next();
           });
-        },
-        function(next) {
-          mock.requests[0].success();
-          next();
         }
       ], doneCallback);
     }
@@ -100,10 +97,10 @@ describe('decider', function() {
       }, done);
     });
     it('started should decide schedule and emit start', function(done) {
-      var input = JSON.stringify({ work: true });
+      let input = JSON.stringify({ work: true });
       testDecide([
         { eventType: 'WorkflowExecutionStarted', workflowExecutionStartedEventAttributes: {
-          input: input
+          input
         } }
       ], function(event, data) {
         event.should.eql('start');
@@ -147,38 +144,38 @@ describe('decider', function() {
   
   describe('createServer', function() {
     
-    var swf = aws.SimpleWorkflow.prototype.getLatestServiceClass().prototype;
+    let swf = aws.SimpleWorkflow.prototype.getLatestServiceClass().prototype;
     
     it('should register types', function(done) {
       sandbox.stub(swf, 'registerWorkflowType').yields(null, {});
       sandbox.stub(swf, 'registerActivityType').yields(null, {});
       decider.createServer(function() {
-        swf.registerWorkflowType.calledOnce.should.be.true;
-        swf.registerActivityType.calledOnce.should.be.true;
+        swf.registerWorkflowType.calledOnce.should.be.true();
+        swf.registerActivityType.calledOnce.should.be.true();
         done();
       });
     });
     it('should poll for decision task', function(done) {
       sandbox.stub(swf, 'pollForDecisionTask');
       decider.createServer(function() {
-        swf.pollForDecisionTask.calledOnce.should.be.true;
+        swf.pollForDecisionTask.calledOnce.should.be.true();
         done();
       });
     });
     it('should request statistics', function(done) {
-      var statistics = {
+      let statistics = {
         countOpenWorkflowExecutions: 4,
         countPendingDecisionTasks: 1,
         countPendingActivityTasks: 3,
         countClosedWorkflowExecutions: 7
       };
-      for (var method in statistics) {
+      for (let method in statistics) {
         sandbox.stub(swf, method).yields(null, { count: statistics[method] });
       }
       sandbox.useFakeTimers();
       decider.createServer(function() {
         sandbox.clock.tick(0);
-        decider.stats().should.include({
+        decider.stats().should.containEql({
           open: 4, decisions: 1, activities: 3,
           closed: 7, completed: 7, failed: 0
         });
@@ -189,7 +186,7 @@ describe('decider', function() {
   
   describe('startWorkflow', function() {
     it('should start a build workflow', function(done) {
-      var spec = { spec: true };
+      let spec = { spec: true };
       async.parallel([
         function(next) {
           decider.startWorkflow('no-such-workflow', spec, next);

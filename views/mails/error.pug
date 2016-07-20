@@ -1,0 +1,7 @@
+extends layout
+
+block content
+  div.alert(class=`alert-${locals.level > 40 ? 'danger' : 'warning'}`)
+    h1 Didit #{locals.level > 40 ? 'ERROR' : 'warning'}
+    p= locals.err.msg || 'No message'
+    pre= JSON.stringify(locals.err, null, 2)

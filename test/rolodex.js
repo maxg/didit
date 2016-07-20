@@ -1,13 +1,13 @@
-var async = require('async');
-var events = require('events');
-var ldapjs = require('ldapjs');
-var should = require('should');
-var sinon = require('sinon');
+const async = require('async');
+const events = require('events');
+const ldapjs = require('ldapjs');
+const should = require('should');
+const sinon = require('sinon');
 
 describe('rolodex', function() {
   
-  var config = require('../config');
-  var rolodex = require('../rolodex');
+  let config = require('../src/config');
+  let rolodex = require('../src/rolodex');
   
   before(function() {
     config.ldap = true;
@@ -19,12 +19,12 @@ describe('rolodex', function() {
   
   describe('lookup', function() {
     
-    var search;
+    let search;
     
     beforeEach(function() {
       sinon.stub(ldapjs, 'createClient').returns({
         search: search = sinon.stub(),
-        unbind: function() {}
+        unbind() {}
       });
     });
     
@@ -33,7 +33,7 @@ describe('rolodex', function() {
     });
     
     it('should perform an LDAP search', function(done) {
-      var result = new events.EventEmitter();
+      let result = new events.EventEmitter();
       search.yields(null, result);
       rolodex.lookup('reif', function(err, fullname) {
         fullname.should.equal('Rafael Reif');
@@ -45,7 +45,7 @@ describe('rolodex', function() {
     it('should not repeat LDAP searches', function(done) {
       async.series([
         function(next) {
-          var result = new events.EventEmitter();
+          let result = new events.EventEmitter();
           search.yields(null, result);
           rolodex.lookup('hockfield', next);
           result.emit('searchEntry', { object: { givenName: 'Susan', surname: 'Hockfield' } });
@@ -61,20 +61,20 @@ describe('rolodex', function() {
       });
     });
     it('should return null on unknown user', function(done) {
-      var result = new events.EventEmitter();
+      let result = new events.EventEmitter();
       search.yields(null, result);
       rolodex.lookup('cmvest', function(err, fullname) {
-        search.calledOnce.should.be.true;
+        search.calledOnce.should.be.true();
         should.not.exist(fullname);
         done(err);
       });
       result.emit('end');
     });
     it('should return null on LDAP search error', function(done) {
-      var result = new events.EventEmitter();
+      let result = new events.EventEmitter();
       search.yields(null, result);
       rolodex.lookup('pogo', function(err, fullname) {
-        search.calledOnce.should.be.true;
+        search.calledOnce.should.be.true();
         should.not.exist(fullname);
         done(err);
       });
@@ -84,7 +84,7 @@ describe('rolodex', function() {
     it('should fail on LDAP client error', function(done) {
       search.yields(new Error());
       rolodex.lookup('Jerome Wiesner', function(err, fullname) {
-        search.calledOnce.should.be.true;
+        search.calledOnce.should.be.true();
         should.not.exist(fullname);
         err.should.be.an.instanceof(Error);
         done();

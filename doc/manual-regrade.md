@@ -15,15 +15,15 @@ In order to follow this procedure, you must have Didit running locally in your d
 
 0.  Use `ant`, as described in **[building locally]**, with the `public` target to obtain `TESTS-TestSuites.xml`.
 
-0.  Run `node ant path/to/TESTS-TestSuites.xml path/to/public.json` to generate `public.json`.
+0.  Run `node src/ant path/to/TESTS-TestSuites.xml path/to/public.json` to generate `public.json`.
 
 0.  Run `ant` with the `hidden` target.
 
-0.  And run `node ant` again to generate `hidden.json`.
+0.  And run `node src/ant` again to generate `hidden.json`.
 
-0.  Now use `node grader` to grade the results.
+0.  Now use `node src/grader` to grade the results.
 
-        node grader SPEC GRADING-DIR path/to/public.json path/to/hidden.json /path/to/grade
+        node src/grader SPEC GRADING-DIR path/to/public.json path/to/hidden.json /path/to/grade
 
     In this command:
 
@@ -35,7 +35,7 @@ In order to follow this procedure, you must have Didit running locally in your d
     
     E.g., copy `grade.csv` and the test result `.json` files to `tmp`:
     
-        node grader '{ ... }' tmp tmp/public.json tmp/hidden.json tmp/grade
+        node src/grader '{ ... }' tmp tmp/public.json tmp/hidden.json tmp/grade
 
 0.  Copy `grade.json` to the Didit result directory for the appropriate build and current staff revision, replacing the existing `grade.json`.
     Note that this *only* updates the grading results, it does not update the public or hidden test views.

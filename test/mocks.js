@@ -1,18 +1,17 @@
-var events = require('events');
+const events = require('events');
 
-var config = require('../config');
+const config = require('../src/config');
 
 exports.HTTPS = function() {
   return new MockHTTPS();
 };
 
 function MockHTTPS() {
-  var self = this;
   this.email = undefined;
-  this.listener = function(req, res) {
-    req.connection.authorized = self.email !== undefined;
-    req.connection.getPeerCertificate = function() {
-      return { subject: { emailAddress: self.email } };
+  this.listener = (req, res) => {
+    req.connection.authorized = this.email !== undefined;
+    req.connection.getPeerCertificate = () => {
+      return { subject: { emailAddress: this.email } };
     };
   };
 }
@@ -31,17 +30,20 @@ exports.AWSHTTP = function() {
 
 function MockAWSHttpClient() {
   this.requests = [];
+  this.events = new events.EventEmitter();
 }
 
 MockAWSHttpClient.prototype.handleRequest = function(req, opts, callback, errCallback) {
-  this.requests.push({
+  let request = {
     body: JSON.parse(req.body),
     success: function() {
-      var res = new events.EventEmitter();
+      let res = new events.EventEmitter();
       callback(res);
       res.emit('headers', 200, {});
       res.emit('end');
     }
-  });
+  };
+  this.requests.push(request);
+  this.events.emit('request', request);
   return new events.EventEmitter();
 };

@@ -32,9 +32,9 @@ Fill in `config/development.js` with development settings.
 
 In `/vagrant`...
 
- * `node web`: start the web front-end and build workflow decider
- * `node worker`: start a build worker
- * `node builder <kind> <proj> <users> <rev>`: run a build manually
+ * `node src/web`: start the web front-end and build workflow decider
+ * `node src/worker`: start a build worker
+ * `node src/builder <kind> <proj> <users> <rev>`: run a build manually
 
 In a student repository, simulate a push:
 
@@ -69,7 +69,7 @@ To build virtual machine images, install [Packer]. On OS X, use `brew install ho
 
   [Packer]: http://www.packer.io/
 
-Fill in `manifests/packer.conf.json`.
+Fill in `setup/packer.conf.json`.
 
 Run `bin/pack <rev> [opts]` to build images using Packer:
 
@@ -80,10 +80,7 @@ To manage OpenStack instances, install the [OpenStack CLI]. In the Vagrant VM, u
 
   [OpenStack CLI]: http://docs.openstack.org/user-guide/content/ch_cli.html
 
-The script automates common operations, including:
-
- * `preflight`: gather information for starting instances
- * `launch`: start a new instance
+The script automates common operations, including `launch` to start a new instance.
 
 After starting a new instance, use `bin/productionize` to copy configuration files from `prod`:
 
@@ -93,7 +90,7 @@ After starting a new instance, use `bin/productionize` to copy configuration fil
 
 On an instance, in `/var/didit`...
 
- * `bin/daemon start web` (or `worker`)
+ * `bin/daemon start src/web` (or `src/worker`)
  * `bin/daemon stop`
 
 See `monitor.js` for a simple monitoring app designed for use on [Heroku] to send alerts via SES:
@@ -119,16 +116,16 @@ Resources
  * Amazon Simple Workflow Service
    * [Developer Guide](http://docs.aws.amazon.com/amazonswf/latest/developerguide/)
    * [API Reference](http://docs.aws.amazon.com/amazonswf/latest/apireference/)
-   * [SDK for Node.js](http://aws.amazon.com/sdkfornodejs/), [API documentation](http://docs.amazonwebservices.com/AWSJavaScriptSDK/latest/frames.html)
+   * [SDK for Node.js](https://aws.amazon.com/sdk-for-node-js/), [API documentation](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/)
    * [SWF Management Console](https://console.aws.amazon.com/swf/home)
  * [Apache Ant](http://ant.apache.org/manual/)
- * [Bootstrap front-end framework](http://twitter.github.com/bootstrap/scaffolding.html)
+ * [Bootstrap front-end framework](http://getbootstrap.com/css/)
  * Java security policy [permissions](http://download.java.net/jdk8/docs/technotes/guides/security/permissions.html) and [syntax](http://download.java.net/jdk8/docs/technotes/guides/security/PolicyFiles.html)
  * Node.js
    * [Manual](http://nodejs.org/api/)
    * [Mozilla JavaScript Reference](https://developer.mozilla.org/en-US/docs/JavaScript/Reference)
    * [Async utilities](https://npmjs.org/package/async)
    * [Express web app framework](http://expressjs.com/)
-   * [Jade template engine](https://github.com/visionmedia/jade)
+   * [Pug template engine](https://github.com/pugjs/pug)
  * OpenStack
    * [End User Guide](http://docs.openstack.org/user-guide/content/)

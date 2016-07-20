@@ -1,0 +1,185 @@
+extends layout-sidebar
+
+append head
+  title #{kind}/#{proj} - Didit
+
+block primary
+  div.page-header
+    h1
+      tt #{kind}/#{proj}
+  
+  form#create-repo.modal.form-horizontal(data-kind=kind, data-proj=proj, method='post', tabindex='-1')
+    div.modal-dialog: div.modal-content
+      div.modal-header
+        a.close(data-dismiss='modal') &times;
+        h3.modal-title Create repository
+      div.modal-body
+        h4 Create a new&nbsp;
+          tt #{kind}/#{proj}
+          |  repository for&nbsp;
+          tt.create-repo-users-text
+          | .
+      div.modal-footer
+        a.btn.btn-default(href='#', data-dismiss='modal') Cancel
+        button.btn.btn-info(disabled=true) Create #{kind}/#{proj} for&nbsp;
+          span.create-repo-users-text
+  
+  if authstaff
+    
+    form#create-starting.modal.form-horizontal(action=`/starting/${kind}/${proj}`, method='post', tabindex='-1')
+      div.modal-dialog: div.modal-content
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3.modal-title Create starting repository
+        div.modal-body
+          p Create a starting repository based on the current staff repository.
+          p
+            a(href='#create-tickets' data-toggle='modal' data-dismiss='modal') Students with a ticket
+            |  will be able to create a repository after the&nbsp;
+            a(href='#release' data-toggle='modal' data-dismiss='modal') assignment is released
+            | .
+        div.modal-footer
+          a.btn.btn-default(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Create #{kind}/#{proj} starting repo
+    
+    form#create-tickets.modal(action=`/tickets/${kind}/${proj}`, method='post', tabindex='-1')
+      div.modal-dialog: div.modal-content
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3.modal-title Add tickets
+        div.modal-body
+          p #{tickets.length || 'No'} existing self-service repository creation ticket#{tickets.length == 1 ? '' : 's'} for&nbsp;
+            tt #{kind}/#{proj}
+            | #{tickets.length == 0 ? '.' : ':'}
+            if tickets.length == 0
+              br
+              | (Staff can always create a repository.)
+          ul.list-inline
+            each ticket in tickets
+              li= ticket.users.join('-')
+          div.row: div.col-sm-8
+            label.control-label(for='ticket-usernames') List usernames or dash-separated groups to add:
+            textarea#ticket-usernames.form-control.teletype(rows=10, name='usernames')
+        div.modal-footer
+          a.btn.btn-default(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Add tickets for #{kind}/#{proj}
+    
+    form#release.modal.form-forizontal(action=`/release/${kind}/${proj}`, method='post', tabindex='-1')
+      div.modal-dialog: div.modal-content
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3.modal-title Confirm assignment release
+        div.modal-body
+          p
+            a(href='#create-tickets' data-toggle='modal' data-dismiss='modal') Students with a ticket
+            |  will be able to create an assignment repository.
+          if ! starting
+            p Requires a&nbsp;
+              a(href='#create-starting' data-toggle='modal' data-dismiss='modal') starting repository
+              | .
+        div.modal-footer
+          a.btn.btn-default(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info(disabled= ! starting) Release #{kind}/#{proj}
+    
+    form#confirm-sweep.modal.form-horizontal(action=`/sweep/${kind}/${proj}`, method='post', tabindex='-1')
+      div.modal-dialog: div.modal-content
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3.modal-title Confirm sweep
+        div.modal-body
+          p Record repository revisions and ensure that they have up-to-date builds.
+          div.form-group
+            label.control-label.col-xs-4(for='sweep-date') Record revisions as of:
+            div.col-xs-4
+              input#sweep-date.form-control(type='date', name='date', value=moment().format('YYYY-MM-DD'))
+            div.col-xs-4
+              input#sweep-time.form-control(type='time', name='time', value=moment().format('HH:mm'))
+        div.modal-footer
+          a.btn.btn-default(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Sweep #{kind}/#{proj}
+    
+    form#confirm-catchup.modal.form-horizontal(action=`/catchup/${kind}/${proj}`, method='post', tabindex='-1')
+      div.modal-dialog: div.modal-content
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3.modal-title Confirm catch-up
+        div.modal-body
+          p Schedule builds for all project repositories, but do not record a sweep.
+          div.form-group
+            label.control-label.col-xs-4(for='catchup-hours') Build over the next:
+            div.input-group.col-xs-4
+              input#catchup-hours.form-control(type='number', name='hours', value='24', min='1', max='240')
+              div.input-group-addon hours
+        div.modal-footer
+          a.btn.btn-default(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Catch-up #{kind}/#{proj}
+    
+    form#create-milestone.modal.form-horizontal(action=`/milestone/${kind}/${proj}`, method='post', tabindex='-1')
+      div.modal-dialog: div.modal-content
+        div.modal-header
+          a.close(data-dismiss='modal') &times;
+          h3.modal-title Create milestone
+        div.modal-body
+          p Create a grading milestone.
+          div.form-group
+            label.control-label.col-xs-2(for='milestone-name') Name:
+            div.col-xs-4
+              input#milestone-name.form-control(type='text', name='name', placeholder='e.g. "beta", "final"', pattern='\\w+')
+        div.modal-footer
+          a.btn.btn-default(href='#', data-dismiss='modal') Cancel
+          button.btn.btn-info Create #{kind}/#{proj} milestone
+    
+    div.col-xs-6.pull-right
+      div.well
+        h3 Assignment
+        if starting
+          p: button.btn.btn-sm.btn-success.disabled Starting repo exists
+        else
+          p: a.btn.btn-sm.btn-info(href='#create-starting', data-toggle='modal') Create starting repo
+        p
+          span.badge(class=`badge-${tickets.length ? 'success' : 'default'}`) #{tickets.length} ticket#{tickets.length == 1 ? '' : 's' }
+          | &emsp;
+          a.btn.btn-sm(href='#create-tickets', data-toggle='modal', class=starting && ! tickets.length ? 'btn-info' : 'btn-default') Add tickets
+        if released
+          p: button.btn.btn-sm.btn-success.disabled Released to students
+        else if starting
+          p: a.btn.btn-sm(href='#release', data-toggle='modal', class=starting && tickets.length ? 'btn-info' : 'btn-default') Release to students
+      div.well
+        h3= sweeps.length + schedSweeps.length > 0 ? 'Sweeps' : 'No sweeps'
+        each sweep in sweeps
+          h4
+            a(href=`/sweep/${sweep.kind}/${sweep.proj}/${sweep.when.format(moment.compactFormat)}`).
+              #{sweep.when.format('llll')}
+        each sweep in schedSweeps
+          h4.text-muted #{sweep.when.format('llll')}&nbsp;
+            span.badge #{sweep.when.fromNow()}
+        a.btn.btn-sm.btn-info(href='#confirm-sweep', data-toggle='modal') New sweep
+        a.btn.btn-sm.btn-default.pull-right(href='#confirm-catchup', data-toggle='modal') Catch-up
+      div.well
+        h3= milestones.length > 0 ? 'Milestones' : 'No milestones'
+        each milestone in milestones
+          h4
+            a(href=`/milestone/${kind}/${proj}/${milestone.name}`) #{milestone.name}
+        a.btn.btn-sm.btn-info(href='#create-milestone', data-toggle='modal') New milestone
+  
+  if myrepos.length == 0
+    if released && startable.length > 0
+      h2 Create a repository
+      each repo in startable
+        p: a(href='#create-repo', data-toggle='modal', data-users=repo.users.join('-')).btn.btn-info= repo.users.join('-')
+    else if starting && authstaff
+      h2 Create a repository
+      p: a(href='#create-repo', data-toggle='modal', data-users=authuser).btn.btn-warning= authuser
+    else if released
+      h2.text-muted You cannot create a repository
+  
+  if authstaff
+    h2= repos.length > 0 ? 'Repositories' : 'No repositories'
+  else if repos.length > 0
+    h2 My repositor#{repos.length == 1 ? 'y' : 'ies'}
+  each repo in repos
+    div.inline-header
+      h3
+        a(href=`/${repo.kind}/${repo.proj}/${repo.users.join('-')}`)= repo.users.join('-')
+        | &nbsp;
+      span.text-muted= (repo.fullnames || []).filter(n => n).join(', ')

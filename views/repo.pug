@@ -1,0 +1,76 @@
+extends layout-sidebar
+
+append head
+  title #{kind}/#{proj} - #{users.join('-')} - Didit
+
+block primary
+  div.page-header
+    h1
+      tt #{kind}/#{proj}
+      |  by&nbsp;
+      tt= users.join('-')
+    if remote
+      p.text-muted: tt #{remote(locals, authuser)}
+    if gitweb
+      p: a(href=gitweb(locals)) view repository on gitweb
+
+  if head || current
+    
+    if authstaff
+      div#confirm-build.modal.form-horizontal(tabindex='-1')
+        div.modal-dialog: div.modal-content
+          div.modal-header
+            a.close(data-dismiss='modal') &times;
+            h3.modal-title Confirm build
+          div.modal-body
+            p Request a build for this project.
+            p If a build is already scheduled or was already completed for this revision,
+              br
+              | a new build will not be started.
+          div.modal-footer
+            a.btn.btn-default(href='#', data-dismiss='modal') Cancel
+            button#build-repo.btn.btn-info(data-spec=`${kind}/${proj}/${users.join('-')}/${head}`, data-dismiss='modal')
+              | Build #{users.join('-')}@
+              tt= head
+      
+      div#build-progress.modal.modal-bottom(data-backdrop='', tabindex='-1')
+        div.modal-dialog: div.modal-content
+          div.modal-header
+            a.close(data-dismiss='modal') &times;
+            h3.modal-title Build progress
+          div.modal-body
+            pre#build-output Build requested...
+    
+    div.col-xs-6.pull-right.well
+      h2= head ? 'Latest revision' : 'Latest build'
+      if current
+        h3
+          a(href=`/${current.spec.kind}/${current.spec.proj}/${current.spec.users.join('-')}/${current.spec.rev}`)
+            tt= current.spec.rev
+          | &nbsp;
+          small built #{locals.moment(current.finished).calendar()}
+        div.alert(class=`alert-${current.public ? 'success' : 'warning'}`)
+          h4 Public tests #{current.public ? 'passed' : 'FAILED'}
+        div.alert(class=`alert-${current.compile ? 'success' : 'danger'}`)
+          h4 Compilation #{current.compile ? 'succeeded' : 'FAILED'}
+      else
+        h3
+          tt.text-muted= head
+          | &nbsp;
+          small no build completed
+        if authstaff && staffmode
+          a.btn.btn-default.btn-xs(href='#confirm-build', data-toggle='modal') build
+
+  if milestones
+    - milestones = milestones.filter(function(m) { return m.released || (authstaff && staffmode); });
+    if milestones.length > 0
+      div.col-xs-6.pull-right.well
+        h2 Milestones
+        each milestone in milestones
+          h3
+            a(class=milestone.released ? '' : 'text-warning',
+              href=`/milestone/${kind}/${proj}/${users.join('-')}/${milestone.name}`)= milestone.name
+
+  h2= builds.length > 0 ? 'Builds' : 'No builds'
+  each build in builds
+    h3: a(href=`/${build.kind}/${build.proj}/${build.users.join('-')}/${build.rev}`): tt= build.rev

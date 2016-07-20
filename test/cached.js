@@ -1,19 +1,19 @@
-var crypto = require('crypto');
-var express = require('express');
-var fs = require('fs');
-var http = require('http');
-var request = require('request');
-var should = require('should');
-var sinon = require('sinon');
+const crypto = require('crypto');
+const express = require('express');
+const fs = require('fs');
+const http = require('http');
+const request = require('request');
+const should = require('should');
+const sinon = require('sinon');
 
-var fixtures = require('./fixtures');
+const fixtures = require('./fixtures');
 
 describe('cached', function() {
   
-  var cached = require('../cached');
+  let cached = require('../src/cached');
   
-  var fix = fixtures();
-  var sandbox = sinon.sandbox.create();
+  let fix = fixtures();
+  let sandbox = sinon.sandbox.create();
   
   beforeEach(function(done) {
     fix.files(this.currentTest, done);
@@ -26,8 +26,8 @@ describe('cached', function() {
   
   describe('middleware', function() {
     
-    var app;
-    var server;
+    let app;
+    let server;
     
     beforeEach(function(done) {
       app = express();
@@ -36,9 +36,7 @@ describe('cached', function() {
       server.listen(0, done);
     });
     
-    afterEach(function(done) {
-      server.close(done);
-    });
+    afterEach(done => server.close(done));
     
     function url() { return 'http://localhost:' + server.address().port; }
     
@@ -58,20 +56,12 @@ describe('cached', function() {
         done();
       });
     });
-    it('should not allow caching on error', function(done) {
-      request(url() + '/0000000000000000/../evil.txt', function(req, res, body) {
-        res.statusCode.should.equal(403);
-        should.not.exist(res.headers['cache-control']);
-        body.should.match(/Forbidden/);
-        done();
-      });
-    });
     it('should not allow caching for redirects', function(done) {
       request({
         url: url() + '/0000000000000000/dir',
         followRedirect: false
       }, function(req, res, body) {
-        res.statusCode.should.equal(303);
+        res.statusCode.should.equal(301);
         should.not.exist(res.headers['cache-control']);
         done();
       });
@@ -84,7 +74,7 @@ describe('cached', function() {
         done();
       });
     });
-    it('should not allow caching for unhandled URLs', function(done) {
+    it('should not allow caching for unhandled success', function(done) {
       app.get('/goodbye.txt', function(req, res) {
         res.end('Goodbye, world!');
       });
@@ -95,27 +85,50 @@ describe('cached', function() {
         done();
       });
     });
+    it('should not allow caching for unhandled failure', function(done) {
+      request(url() + '/0000000000000000/../evil.txt', function(req, res, body) {
+        res.statusCode.should.equal(404);
+        should.not.exist(res.headers['cache-control']);
+        done();
+      });
+    });
+    
+    describe('final', function() {
+      
+      beforeEach(function() {
+        app.use('/final', cached.static(fix.fixdir, { fallthrough: false }));
+      });
+      
+      it('should not allow caching on error', function(done) {
+        request(url() + '/final/0000000000000000/../evil.txt', function(req, res, body) {
+          res.statusCode.should.equal(403);
+          should.not.exist(res.headers['cache-control']);
+          body.should.match(/Forbidden/);
+          done();
+        });
+      });
+    });
   });
   
   describe('url', function() {
     it('should return URL with slug', function() {
-      var md5 = crypto.createHash('md5');
+      let md5 = crypto.createHash('md5');
       md5.update('Hello, world!\n');
-      var slug = md5.digest('hex').slice(-16);
+      let slug = md5.digest('hex').slice(-16);
       cached.static(fix.fixdir).url('/hello.txt').should.equal('/' + slug + '/hello.txt');
     });
     it('should cache slugs', function() {
       sandbox.spy(fs, 'readFileSync');
       sandbox.spy(crypto, 'createHash');
-      var static = cached.static(fix.fixdir);
+      let static = cached.static(fix.fixdir);
       
-      var url = static.url('/goodbye.txt');
-      fs.readFileSync.calledOnce.should.be.true;
-      crypto.createHash.calledOnce.should.be.true;
+      let url = static.url('/goodbye.txt');
+      fs.readFileSync.calledOnce.should.be.true();
+      crypto.createHash.calledOnce.should.be.true();
       
       static.url('/goodbye.txt').should.equal(url);
-      fs.readFileSync.calledOnce.should.be.true;
-      crypto.createHash.calledOnce.should.be.true;
+      fs.readFileSync.calledOnce.should.be.true();
+      crypto.createHash.calledOnce.should.be.true();
     });
   });
 });

@@ -1,16 +1,16 @@
-var async = require('async');
-var path = require('path');
-var should = require('should');
-var temp = require('temp');
+const async = require('async');
+const path = require('path');
+const should = require('should');
+const temp = require('temp');
 
-var fixtures = require('./fixtures');
+const fixtures = require('./fixtures');
 
 describe('ant', function() {
   
-  var ant = require('../ant');
+  let ant = require('../src/ant');
   
-  var fix = fixtures();
-  var nospec = { ignored: true };
+  let fix = fixtures();
+  let nospec = { ignored: true };
   
   beforeEach(function(done) {
     fix.files(this.currentTest, done);
@@ -24,7 +24,7 @@ describe('ant', function() {
     it('should run the compile target', function(done) {
       ant.compile(nospec, fix.fixdir, 'compile', path.join(fix.fixdir, 'out'), function(err, result) {
         fix.readFile('out.txt', function(fserr, data) {
-          result.success.should.be.true;
+          result.success.should.be.true();
           data.should.match(/\[echo\] compiling/).and.match(/BUILD SUCCESSFUL/);
           done(err || fserr);
         });
@@ -33,7 +33,7 @@ describe('ant', function() {
     it('should provide Java', function(done) {
       ant.compile(nospec, fix.fixdir, 'compile', path.join(fix.fixdir, 'out'), function(err, result) {
         fix.readFile('out.txt', function(fserr, data) {
-          result.success.should.be.true;
+          result.success.should.be.true();
           data.should.match(/junit\.jar/);
           done(err || fserr);
         });
@@ -41,14 +41,14 @@ describe('ant', function() {
     });
     it('should return false with invalid build file', function(done) {
       ant.compile(nospec, fix.fixdir, 'compile', path.join(fix.fixdir, 'out'), function(err, result) {
-        result.success.should.be.false;
+        result.success.should.be.false();
         done(err);
       });
     });
     it('should return false when build fails', function(done) {
       ant.compile(nospec, fix.fixdir, 'compile', path.join(fix.fixdir, 'out'), function(err, result) {
         fix.readFile('out.txt', function(fserr, data) {
-          result.success.should.be.false;
+          result.success.should.be.false();
           data.should.match(/BUILD FAILED/);
           done(err || fserr);
         });
@@ -67,7 +67,7 @@ describe('ant', function() {
     });
     it('should return results', function(done) {
       ant.test(nospec, fix.fixdir, 'test', path.join(fix.fixdir, 'out'), function(err, result) {
-        result.success.should.be.false;
+        result.success.should.be.false();
         result.result.tests.should.equal(0);
         result.result.failures.should.equal(0);
         result.result.errors.should.equal(0);
@@ -78,13 +78,13 @@ describe('ant', function() {
     it('should record results', function(done) {
       ant.test(nospec, fix.fixdir, 'test', path.join(fix.fixdir, 'out'), function(err, result) {
         fix.readFile('out.json', function(fserr, data) {
-          result.success.should.be.true;
-          var json = JSON.parse(data);
+          result.success.should.be.true();
+          let json = JSON.parse(data);
           json.tests.should.equal(1);
           json.failures.should.equal(0);
           json.errors.should.equal(0);
           json.testsuites.should.have.length(1);
-          var suite = json.testsuites[0];
+          let suite = json.testsuites[0];
           suite.name.should.equal('OnePass');
           json.tests.should.equal(1);
           json.failures.should.equal(0);
@@ -92,7 +92,7 @@ describe('ant', function() {
           suite.testcases.should.have.length(1);
           suite.sysout.should.eql([ 'text on stdout\n' ]);
           suite.syserr.should.eql([ 'text on stderr\n' ]);
-          var test = suite.testcases[0];
+          let test = suite.testcases[0];
           test.classname.should.equal('OnePass');
           test.name.should.equal('pass');
           done(err || fserr);
@@ -102,7 +102,7 @@ describe('ant', function() {
     it('should fail with invalid test output', function(done) {
       ant.test(nospec, fix.fixdir, 'test', path.join(fix.fixdir, 'out'), function(err, result) {
         fix.readFile('out.txt', function(fserr, data) {
-          result.success.should.be.false;
+          result.success.should.be.false();
           data.should.match(/BUILD SUCCESSFUL/);
           done(err || fserr);
         });
@@ -126,8 +126,8 @@ describe('ant', function() {
           },
           function(next) {
             fix.readFile('out.json', function(fserr, data) {
-              result.success.should.be.false;
-              var json = JSON.parse(data);
+              result.success.should.be.false();
+              let json = JSON.parse(data);
               json.tests.should.equal(0);
               json.failures.should.equal(0);
               json.errors.should.equal(0);
@@ -140,8 +140,8 @@ describe('ant', function() {
     it('should return false when tests fail', function(done) {
       ant.test(nospec, fix.fixdir, 'test', path.join(fix.fixdir, 'out'), function(err, result) {
         fix.readFile('out.json', function(fserr, data) {
-          result.success.should.be.false;
-          var json = JSON.parse(data);
+          result.success.should.be.false();
+          let json = JSON.parse(data);
           json.tests.should.equal(1);
           json.failures.should.equal(1);
           json.errors.should.equal(0);
@@ -152,8 +152,8 @@ describe('ant', function() {
     it('should return false when no tests run', function(done) {
       ant.test(nospec, fix.fixdir, 'test', path.join(fix.fixdir, 'out'), function(err, result) {
         fix.readFile('out.json', function(fserr, data) {
-          result.success.should.be.false;
-          var json = JSON.parse(data);
+          result.success.should.be.false();
+          let json = JSON.parse(data);
           json.tests.should.equal(0);
           json.failures.should.equal(0);
           json.errors.should.equal(0);
@@ -189,7 +189,7 @@ describe('ant', function() {
         result.failures.should.equal(0);
         result.errors.should.equal(0);
         result.testsuites.should.have.length(1);
-        var suite = result.testsuites[0];
+        let suite = result.testsuites[0];
         suite.name.should.equal('Only');
         suite.testcases.should.have.length(0);
         done(err);
@@ -210,20 +210,20 @@ describe('ant', function() {
       });
     });
     it('should handle skipped tests', function(done) {
-      var expected = {
+      let expected = {
         One: [],
         Two: [ 'pass' ]
       };
       ant.parseJUnitResults(0, path.join(fix.fixdir, 'TESTS-TestSuites.xml'), function(err, result) {
         result.testsuites.should.have.length(2);
         result.testsuites.forEach(function(suite) {
-          suite.testcases.map(function(test) { return test.name; }).should.eql(expected[suite.name]);
+          suite.testcases.map(test => test.name).should.eql(expected[suite.name]);
         });
         done(err);
       });
     });
     it('should report errors and failures', function(done) {
-      var expected = {
+      let expected = {
         Failure: /junit.framework.AssertionFailedError/,
         Error: /java.lang.Error/
       };
@@ -237,7 +237,7 @@ describe('ant', function() {
       });
     });
     it('should report malformed errors and failures', function(done) {
-      var expected = {
+      let expected = {
         Failure: /Total failure/,
         Error: /Catastrophic error/
       };

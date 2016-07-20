@@ -1,10 +1,10 @@
-var os = require('os');
-var should = require('should');
-var temp = require('temp');
+const os = require('os');
+const should = require('should');
+const temp = require('temp').track();
 
-var config = require('../config');
+const config = require('../src/config');
 
-var override = {
+const override = {
   student: {
     semester: 'su00',
     repos: temp.mkdirSync('test-student-repos-'),
