@@ -42,7 +42,7 @@ case "$cmd" in
     name=${hostname%%.*}
     
     imagename="${3:?image name required}"
-    imageid=`nova image-show $imagename | tablepick id 2`
+    imageid=`$0 image-named "$imagename"`
     [ -z "$imageid" ] && exit
     
     ipaddr=`dig +short $hostname | tail -1`
@@ -51,7 +51,7 @@ case "$cmd" in
     
     echo "Booting $name (${ipaddr:-dynamic IP}) from $imagename ($imageid)"
     
-    volsize=16
+    volsize=8
     
     volcmd="cinder create --image-id $imageid
               --display-name $name-`date +%s` --display-description $imagename
@@ -97,6 +97,10 @@ case "$cmd" in
     
   images)
     glance image-list | tablegrep $app
+    ;;
+    
+  image-named)
+    glance image-list --property-filter name="$2" | tablepick "$2" 1
     ;;
     
   secgroups)
