@@ -6,8 +6,8 @@
     "test": "bin/test"
   },
   "dependencies": {
-    "async": "^2.0.0",
-    "aws-sdk": "^2.4.8",
+    "async": "^2.0.1",
+    "aws-sdk": "^2.5.1",
     "body-parser": "^1.15.2",
     "bunyan": "^1.8.1",
     "byline": "^5.0.0",
@@ -23,7 +23,7 @@
     "nodemailer": "^2.5.0",
     "nodemailer-html-to-text": "^2.1.0",
     "nodemailer-ses-transport": "^1.4.0",
-    "pug": "^2.0.0-beta4",
+    "pug": "^2.0.0-beta5",
     "response-time": "^2.3.1",
     "serve-favicon": "^2.3.0",
     "temp": "^0.8.3",
@@ -31,13 +31,13 @@
   },
   "devDependencies": {
     "istanbul": "^0.4.4",
-    "mocha": "^2.5.3",
+    "mocha": "^3.0.2",
     "nodemailer-pickup-transport": "^0.1.1",
-    "request": "^2.73.0",
-    "should": "^10.0.0",
-    "sinon": "^1.17.4"
+    "request": "^2.74.0",
+    "should": "^11.1.0",
+    "sinon": "^1.17.5"
   },
   "engines": {
-    "node": "^6.3.0"
+    "node": "^6.4.0"
   }
 }
