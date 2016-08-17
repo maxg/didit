@@ -29,7 +29,9 @@ exports.start = function() {
   let ssl = {
     key: fs.readFileSync('./config/ssl-private-key.pem'),
     cert: fs.readFileSync('./config/ssl-certificate.pem'),
-    ca: [ fs.readFileSync('./config/ssl-ca.pem') ]
+    ca: fs.readdirSync('./config')
+          .filter(f => /ssl-ca|ssl-intermediate/.test(f))
+          .map(f => fs.readFileSync('./config/' + f)),
   };
   exports.server = https.createServer(ssl, app).listen(config.web.port, function() {
     log.info('whoops started on HTTPS port ' + config.web.port);
