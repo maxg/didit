@@ -85,6 +85,16 @@ case "$cmd" in
     echo
     
     echo "IP addr: $inetaddr"
+    
+    until [[ "$fingerprints" ]]; do
+      sleep 2
+      fingerprints=`$0 fingerprints $instid`
+      echo -n .
+    done
+    echo
+    
+    echo "SSH:"
+    echo "$fingerprints"
     ;;
     
   flavors)
@@ -113,6 +123,10 @@ case "$cmd" in
     
   instances)
     nova list --name $app
+    ;;
+    
+  fingerprints)
+    nova console-log "$2" | sed '/BEGIN SSH HOST KEY/,/END SSH HOST KEY/!d;//d'
     ;;
     
   *)

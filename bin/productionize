@@ -12,3 +12,8 @@ eval `sed -n 's/ *"\(.*\)": *"\(.*\)",*/\1 \2/p' < setup/packer.conf.json | \
 hostname="${1:?Missing host}"
 
 scp -r prod/* ubuntu@$hostname:/var/$app/config/
+
+files=(prod/*)
+files="${files[@]#prod/}"
+
+ssh ubuntu@$hostname "cd /var/$app/config && sudo chown $app $files && sudo chmod 440 $files"
