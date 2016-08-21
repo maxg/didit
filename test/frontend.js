@@ -856,7 +856,7 @@ describe('frontend', function() {
       mock.user('eve');
       request.post(root + 'milestone/labs/lab3/alpha/release', function(err, res, body) {
         res.statusCode.should.equal(302);
-        grader.isMilestoneReleasedSync(spec, milestone).should.true;
+        grader.isMilestoneReleasedSync(spec, milestone).should.be.true();
         done(err);
       });
     });
@@ -865,7 +865,7 @@ describe('frontend', function() {
       sandbox.stub(grader, 'releaseMilestone').throws();
       request.post(root + 'milestone/labs/lab3/alpha/release', function(err, res, body) {
         body.should.match(/alice/).and.match(/You are not staff/);
-        grader.isMilestoneReleasedSync(spec, milestone).should.false;
+        grader.isMilestoneReleasedSync(spec, milestone).should.be.false();
         done(err);
       });
     });

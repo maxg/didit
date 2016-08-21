@@ -386,7 +386,7 @@ describe('git', function() {
     });
     
     it('should create a student repo', function(done) {
-      fs.existsSync(resultdirs.startable).should.be.false;
+      fs.existsSync(resultdirs.startable).should.be.false();
       git.createStudentRepo(specs.startable, 'nobody', function(err) {
         let head = fs.readFileSync(path.join(resultdirs.startable, 'HEAD'), { encoding: 'utf8' });
         head.should.eql('not: a/valid/head\n');
@@ -420,7 +420,7 @@ describe('git', function() {
     it('should fail with missing starting repo', function(done) {
       git.createStudentRepo(specs.missing, 'nobody', function(err) {
         should.exist(err);
-        fs.existsSync(resultdirs.missing).should.be.false;
+        fs.existsSync(resultdirs.missing).should.be.false();
         done();
       });
     });
