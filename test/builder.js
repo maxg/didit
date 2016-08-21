@@ -96,9 +96,10 @@ describe('builder', function() {
       ], done);
     });
     it('should fail with filesystem error', function(done) {
-      sandbox.stub(fs, 'readdir').yields(new Error());
+      let stub = sandbox.stub(fs, 'readdir').yields(new Error());
       sandbox.stub(console, 'error');
       builder.findRepos({ kind: 'labs' }, function(err, repos) {
+        stub.called.should.be.true();
         should.exist(err);
         done();
       });
@@ -107,9 +108,10 @@ describe('builder', function() {
   
   describe('findBuilds', function() {
     it('should fail with filesystem error', function(done) {
-      sandbox.stub(fs, 'readdir').yields(new Error());
+      let stub = sandbox.stub(fs, 'readdir').yields(new Error());
       sandbox.stub(console, 'error');
       builder.findBuilds(fixed.repo.lab[0], function(err, builds) {
+        stub.called.should.be.true();
         should.exist(err);
         done();
       });
@@ -154,9 +156,10 @@ describe('builder', function() {
       })
     });
     it('should fail with filesystem error', function(done) {
-      sandbox.stub(fs, 'readdir').yields(new Error());
+      let stub = sandbox.stub(fs, 'readdir').yields(new Error());
       sandbox.stub(console, 'error');
       builder.findBuild(fixed.rev.lab[0], function(err, repos) {
+        stub.called.should.be.true();
         should.exist(err);
         done();
       });

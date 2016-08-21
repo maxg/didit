@@ -51,9 +51,10 @@ describe('gatekeeper', function() {
       });
     });
     it('should fail with filesystem error', function(done) {
-      sandbox.stub(fs, 'readdir').yields(new Error());
+      let stub = sandbox.stub(fs, 'readdir').yields(new Error());
       sandbox.stub(console, 'error');
       gatekeeper.findTickets({ kind: 'inclass' }, function(err, specs) {
+        stub.called.should.be.true();
         should.exist(err);
         done();
       });
