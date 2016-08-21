@@ -399,7 +399,13 @@ exports.createStudentRepo = function(spec, committer, callback) {
         return async.apply(acl.set, dest, user, acl.level.write);
       }))
     ])
-  ], callback);
+  ], function(err, results) {
+    if (err) {
+      // try not to leave an empty directory behind
+      return fs.rmdir(dest, () => callback(err));
+    }
+    callback();
+  });
 };
 
 // command-line git

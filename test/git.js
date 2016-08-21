@@ -410,18 +410,30 @@ describe('git', function() {
       });
     });
     it('should fail with existing student repo', function(done) {
-      fsextra.mkdirs(resultdirs.startable, function(fserr) {
+      fsextra.mkdirs(path.join(resultdirs.startable, 'objects'), function(fserr) {
         git.createStudentRepo(specs.startable, 'nobody', function(err) {
           should.exist(err);
-          fs.readdirSync(resultdirs.startable).should.eql([]);
+          fs.readdirSync(resultdirs.startable).should.eql([ 'objects' ]);
           done(fserr);
         });
-      })
+      });
     });
     it('should fail with missing starting repo', function(done) {
       git.createStudentRepo(specs.missing, 'nobody', function(err) {
         should.exist(err);
         fs.existsSync(resultdirs.missing).should.be.false();
+        done();
+      });
+    });
+    it('should fail with filesystem error', function(done) {
+      let gracefulfs = require('graceful-fs'); // createStudentRepo -> fs-extra -> graceful-fs
+      let spy = sandbox.spy(gracefulfs, 'mkdir').withArgs(resultdirs.startable);
+      let stub = sandbox.stub(gracefulfs, 'readdir').yields(new Error());
+      git.createStudentRepo(specs.startable, 'nobody', function(err) {
+        stub.called.should.be.true();
+        should.exist(err);
+        spy.calledOnce.should.be.true();
+        fs.existsSync(resultdirs.startable).should.be.false();
         done();
       });
     });
