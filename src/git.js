@@ -315,7 +315,13 @@ exports.createStartingRepo = function(spec, committer, callback) {
     init: [ 'dir', function(results, next) {
       async.eachSeries([
         [ 'init', '--quiet', '--bare' ],
-        [ 'config', 'receive.denynonfastforwards', 'true' ]
+        [ 'config', 'receive.denynonfastforwards', 'true' ],
+        [ 'config', 'receive.unpacklimit', '1' ],
+        [ 'config', 'gc.auto', '1' ],
+        [ 'config', 'gc.autopacklimit', '5' ],
+        [ 'config', 'gc.pruneexpire', 'never' ],
+        [ 'config', 'gc.reflogexpire', 'never' ],
+        [ 'config', 'gc.reflogexpireunreachable', 'never' ]
       ], function(args, next) {
         util.onExit(util.spawnAndLog('git', args, {
           cwd: dest,
