@@ -214,7 +214,7 @@ function fetchStaffDir(dir, dest, callback) {
       
       // get staff repository revision
       let staffrev = '';
-      results.id.stdin.on('error', function(err) { log.warn({ err }, 'ignoring id.stdin error'); });
+      results.id.stdin.on('error', function(err) { log.info({ err }, 'ignoring id.stdin error'); });
       results.id.stdout.on('data', function(data) {
         staffrev += data;
         if (staffrev.length >= 7) { results.id.stdin.end(); }
