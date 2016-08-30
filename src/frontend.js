@@ -285,7 +285,7 @@ app.get('/:kind/:proj', authorize, function(req, res, next) {
 });
 
 app.get('/:kind/:proj/:users.git', authorize, function(req, res, next) {
-  res.redirect(301, req.path.replace(/\.git$/, ''));
+  res.redirect(301, req.path.replace(/\.git\/?$/, ''));
 });
 
 app.get('/:kind/:proj/:users', authorize, function(req, res, next) {
