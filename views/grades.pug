@@ -1,4 +1,4 @@
-mixin grades(reporevs)
+mixin grades(reporevs, milestone)
   - let users = Math.max.apply(null, reporevs.map(r => r.users.length))
   - let spacer = new Array(Math.max(users, 0))
   div.grades
@@ -13,14 +13,17 @@ mixin grades(reporevs)
           th(colspan=2) Grade
       tbody
         each reporev in reporevs
+          - let repolink = `/${reporev.kind}/${reporev.proj}/${reporev.users.join('-')}`
+          - let revlink = `${repolink}/${reporev.rev}`
+          - let gradelink = milestone ? `/milestone${repolink}/${milestone}` : `${revlink}/grade`
           tr(class=`${reporev.grade ? '' : 'info'}`)
             td= reporev.kind
             td= reporev.proj
             each _, idx in spacer
-              td= reporev.users[idx]
-            td: tt: a(href=`/${reporev.kind}/${reporev.proj}/${reporev.users.join('-')}/${reporev.rev}`)= reporev.rev
+              td: a(href=repolink)= reporev.users[idx]
+            td: tt: a(href=revlink)= reporev.rev
             if reporev.grade
-              td: .text-right= reporev.grade.score
+              td: .text-right: a(href=gradelink)= reporev.grade.score
               td.text-muted /&nbsp;#{reporev.grade.outof}
               each suite in reporev.grade.ungraded || []
                 td.splitter
