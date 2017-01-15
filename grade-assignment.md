@@ -53,7 +53,7 @@ On the milestone page, use ***assign grades by revision*** to find one or more u
 Use your browser's search feature to locate the user(s) you want.
 
 If a grade is assigned in error, and you cannot re-assign a correct grade yet, you can un-assign the grade by going to the *build results* directory and removing the milestone's copy of the grade.
-Under build results: `milestones/SEMESTER/KIND/PROJ/MILESTONE/USERNAME.json`
+Under build results: `milestones/KIND/PROJ/MILESTONE/USERNAME.json`
 
 ## Releasing grades
 
@@ -64,4 +64,4 @@ Under build results: `milestones/SEMESTER/KIND/PROJ/MILESTONE/USERNAME.json`
 Grade reports for a milestone are not accessible to students until they are released.
 
 If milestone grades are released in error, you can un-release them by going to the *build results* directory and removing the `released` file for that milestone.
-Under build results: `milestones/SEMESTER/KIND/PROJ/MILESTONE/released`
+Under build results: `milestones/KIND/PROJ/MILESTONE/released`
