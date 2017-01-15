@@ -16,7 +16,7 @@ const ant = require('./ant');
 const git = require('./git');
 
 function buildId(spec) {
-  return [ 'build', config.student.semester, spec.kind, spec.proj, spec.users.join('-'), spec.rev.substring(0, 7) ].join('-');
+  return [ 'build', config.semester, spec.kind, spec.proj, spec.users.join('-'), spec.rev.substring(0, 7) ].join('-');
 }
 
 function buildJSONable(spec) {
@@ -25,8 +25,7 @@ function buildJSONable(spec) {
 
 function buildResultDir(spec, staffrev) {
   return path.join(
-    config.build.results, config.student.semester,
-    spec.kind, spec.proj, spec.users.join('-'), spec.rev, staffrev || ''
+    config.build.results, 'builds', spec.kind, spec.proj, spec.users.join('-'), spec.rev, staffrev || ''
   );
 }
 
@@ -40,7 +39,7 @@ function buildOutputBase(spec, staffrev, target) {
 
 // find all projects
 exports.findProjects = function(callback) {
-  glob(path.join(config.student.semester, config.glob.kind, '*'), {
+  glob(path.join('builds', config.glob.kind, '*'), {
     cwd: config.build.results
   }, function(err, dirs) {
     if (err) {
@@ -61,7 +60,7 @@ exports.findRepos = function(spec, callback) {
   let proj = spec.proj || '*';
   let users = spec.users ? '?(*-)' + spec.users.join('-') + '?(-*)' : '*';
   log.info('findRepos', kind, proj, users);
-  glob(path.join(config.student.semester, kind, proj, users), {
+  glob(path.join('builds', kind, proj, users), {
     cwd: config.build.results
   }, function(err, files) {
     if (err) {
@@ -79,7 +78,7 @@ exports.findRepos = function(spec, callback) {
 // find all builds of a repo by kind, project, and users
 exports.findBuilds = function(spec, callback) {
   log.info({ spec }, 'findBuilds');
-  let dir = path.join(config.build.results, config.student.semester, spec.kind, spec.proj, spec.users.join('-'));
+  let dir = path.join(config.build.results, 'builds', spec.kind, spec.proj, spec.users.join('-'));
   glob('*/result.json', {
     cwd: dir
   }, function(err, files) {
@@ -151,7 +150,7 @@ exports.findBuild = function(spec, callback) {
 // callback returns a build id
 exports.startBuild = function(spec, callback) {
   let path = [
-    config.student.repos, config.student.semester, spec.kind, spec.proj, spec.users.join('-')
+    config.student.repos, spec.kind, spec.proj, spec.users.join('-')
   ].join('/') + '.git';
   if ( ! fs.existsSync(path)) {
     log.error({ spec }, 'startBuild no such repository');

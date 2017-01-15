@@ -273,8 +273,7 @@ describe('git', function() {
     let resultdirs = {};
     Object.keys(specs).forEach(function(key) {
       resultdirs[key] = path.join(
-        config.student.repos, config.student.semester,
-        specs[key].kind, specs[key].proj, 'didit', 'starting.git'
+        config.student.repos, specs[key].kind, specs[key].proj, 'didit', 'starting.git'
       );
     });
     
@@ -371,8 +370,7 @@ describe('git', function() {
     let resultdirs = {};
     Object.keys(specs).forEach(function(key) {
       resultdirs[key] = path.join(
-        config.student.repos, config.student.semester,
-        specs[key].kind, specs[key].proj, specs[key].users.join('-')+'.git'
+        config.student.repos, specs[key].kind, specs[key].proj, specs[key].users.join('-')+'.git'
       );
     });
     

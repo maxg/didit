@@ -34,12 +34,12 @@ Fixture.prototype.filesTo = function(test, source, destination, callback) {
 };
 
 Fixture.prototype.special = {
-  'student-repos': path.join(config.student.repos, config.student.semester),
+  'student-repos': config.student.repos,
   'staff-repo.git': config.staff.repo,
-  'build-results': path.join(config.build.results, config.student.semester),
-  'sweeps': path.join(config.build.results, 'sweeps', config.student.semester),
-  'milestones': path.join(config.build.results, 'milestones', config.student.semester),
-  'tickets': path.join(config.build.results, 'tickets', config.student.semester),
+  'build-results': path.join(config.build.results, 'builds'),
+  'sweeps': path.join(config.build.results, 'sweeps'),
+  'milestones': path.join(config.build.results, 'milestones'),
+  'tickets': path.join(config.build.results, 'tickets'),
 };
 
 function recursiveCopier(destination) {

@@ -10,7 +10,7 @@ module.exports.glob = {
 };
 
 [ 'footer', 'swf' ].forEach(function(config) {
-  module.exports[config] = JSON.parse(fs.readFileSync('./config/' + config + '.json'), { encoding: 'utf8' });
+  module.exports[config] = JSON.parse(fs.readFileSync(`./config/${config}.json`), { encoding: 'utf8' });
 });
 
 aws.config.loadFromPath('./config/aws.json');

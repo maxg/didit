@@ -11,9 +11,9 @@ A continuous build server designed for the classroom. Uses the [Amazon Simple Wo
 Git Repositories
 ----------------
 
-Student repositories must be organized in the `config.student.repos` directory under `<semester>/<kind>/<proj>/<users>.git`. In each repository, `hooks/post-receive` should copy or symlink Didit's `hooks/post-receive` script.
+Student repositories must be organized in the `config.student.repos` directory under `<kind>/<proj>/<users>.git`. In each repository, `hooks/post-receive` should copy or symlink Didit's `hooks/post-receive` script.
 
-The staff repository must store build materials under `<semester>/<kind>/<proj>/grading`.
+The staff repository at `config.staff.repo` must store build materials in the `config.staff.base` directory, under `<kind>/<proj>/grading`.
 
 
 Development

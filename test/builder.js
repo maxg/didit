@@ -178,7 +178,7 @@ describe('builder', function() {
       decider.startWorkflow.callsArg(2);
       let spec = fixed.rev.lab[0];
       builder.startBuild(spec, function(err, id) {
-        id.should.equal([ 'build', config.student.semester, spec.kind, spec.proj, spec.users[0], spec.rev ].join('-'));
+        id.should.equal([ 'build', config.semester, spec.kind, spec.proj, spec.users[0], spec.rev ].join('-'));
         decider.startWorkflow.calledWith(id, spec).should.be.true();
         done(err);
       });
@@ -199,8 +199,7 @@ describe('builder', function() {
     
     let spec = fixed.rev.lab[0];
     let resultdir = path.join(
-      config.build.results, config.student.semester,
-      spec.kind, spec.proj, spec.users[0], spec.rev
+      config.build.results, 'builds', spec.kind, spec.proj, spec.users[0], spec.rev
     );
     
     beforeEach(function() {

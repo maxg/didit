@@ -8,11 +8,11 @@ const config = require('./config');
 const log = require('./logger').cat('gatekeeper');
 
 function ticketPath(spec) {
-  return path.join(config.build.results, 'tickets', config.student.semester, spec.kind, spec.proj);
+  return path.join(config.build.results, 'tickets', spec.kind, spec.proj);
 }
 
 function releasePath(spec) {
-  return path.join(config.student.repos, config.student.semester, spec.kind, spec.proj, 'didit', 'released');
+  return path.join(config.student.repos, spec.kind, spec.proj, 'didit', 'released');
 }
 
 // find all tickets matching a kind, proj, and/or users
@@ -22,7 +22,7 @@ exports.findTickets = function(spec, callback) {
   let kind = spec.kind || config.glob.kind;
   let proj = spec.proj || '*';
   let users = spec.users ? '?(*-)' + spec.users.join('-') + '?(-*)' : '*';
-  glob(path.join('tickets', config.student.semester, kind, proj, users), {
+  glob(path.join('tickets', kind, proj, users), {
     cwd: config.build.results
   }, function(err, files) {
     if (err) {
@@ -32,7 +32,7 @@ exports.findTickets = function(spec, callback) {
     }
     callback(err, files.map(function(file) {
       let parts = file.split(path.sep);
-      return { kind: parts[2], proj: parts[3], users: parts[4].split('-') };
+      return { kind: parts[1], proj: parts[2], users: parts[3].split('-') };
     }));
   });
 };
@@ -60,7 +60,7 @@ exports.findReleasedProjects = function(spec, callback) {
   log.info({ spec }, 'findReleasedProjects');
   let kind = spec.kind || config.glob.kind;
   let proj = spec.proj || '*';
-  glob(path.join(config.student.semester, kind, proj, 'didit', 'released'), {
+  glob(path.join(kind, proj, 'didit', 'released'), {
     cwd: config.student.repos
   }, function(err, dirs) {
     if (err) {
@@ -69,7 +69,7 @@ exports.findReleasedProjects = function(spec, callback) {
     }
     callback(err, dirs.map(function(dir) {
       let parts = dir.split(path.sep);
-      return { kind: parts[1], proj: parts[2] };
+      return { kind: parts[0], proj: parts[1] };
     }));
   });
 };

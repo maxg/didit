@@ -23,8 +23,7 @@ function shuffle(ordered) {
 
 function sweepResultDir(spec, when) {
   return path.join(
-    config.build.results, 'sweeps', config.student.semester,
-    spec.kind, spec.proj, when.format(moment.compactFormat)
+    config.build.results, 'sweeps', spec.kind, spec.proj, when.format(moment.compactFormat)
   );
 }
 
@@ -37,7 +36,7 @@ exports.findSweeps = function(spec, callback) {
   log.info({ spec }, 'findSweeps');
   let kind = spec.kind || config.glob.kind;
   let proj = spec.proj || '*';
-  glob(path.join('sweeps', config.student.semester, kind, proj, '*', 'sweep.json'), {
+  glob(path.join('sweeps', kind, proj, '*', 'sweep.json'), {
     cwd: config.build.results
   }, function(err, files) {
     if (err) {
@@ -47,7 +46,7 @@ exports.findSweeps = function(spec, callback) {
     }
     callback(err, files.map(function(file) {
       let parts = file.split(path.sep);
-      return { kind: parts[2], proj: parts[3], when: moment(parts[4], moment.compactFormat) };
+      return { kind: parts[1], proj: parts[2], when: moment(parts[3], moment.compactFormat) };
     }));
   });
 };

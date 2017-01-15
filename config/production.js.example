@@ -1,14 +1,16 @@
+const semester = 'sp13';
+
 module.exports = {
+  semester,
   student: {
-    semester: 'sp13',
-    repos: '/afs/athena.mit.edu/course/.../git',
+    repos: `/afs/athena.mit.edu/course/.../git/${semester}`,
     kinds: [ 'psets', 'projects' ],
     acl: 'afs',
-    remote: 'ssh://[user]@athena.dialup.mit.edu/mit/.../git'
+    remote: `ssh://[user]@athena.dialup.mit.edu/mit/.../git/${semester}`
   },
   staff: {
-    semester: 'spring13',
-    repo: '/afs/athena.mit.edu/course/.../git/staff.git',
+    repo: `/afs/athena.mit.edu/course/.../git/${semester}/staff.git`,
+    base: '',
     users: [ 'maxg' ]
   },
   web: {
@@ -31,7 +33,7 @@ module.exports = {
   },
   build: {
     eclipse: '/usr/local/eclipse',
-    results: '/afs/athena.mit.edu/course/.../didit',
+    results: `/afs/athena.mit.edu/course/.../didit/${semester}`,
     concurrency: 4
   },
   workflow: {

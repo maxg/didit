@@ -14,19 +14,19 @@ const util = require('./util');
 const log = require('./logger').cat('git');
 
 function studentSourcePath(spec) {
-  return [ config.student.repos, config.student.semester, spec.kind, spec.proj, spec.users.join('-') ].join('/') + '.git';
+  return [ config.student.repos, spec.kind, spec.proj, spec.users.join('-') ].join('/') + '.git';
 }
 
 function startingSourcePath(spec) {
-  return [ config.student.repos, config.student.semester, spec.kind, spec.proj, 'didit', 'starting' ].join('/') + '.git';
+  return [ config.student.repos, spec.kind, spec.proj, 'didit', 'starting' ].join('/') + '.git';
 }
 
 function builderDir(spec) {
-  return [ config.staff.semester, spec.kind, spec.proj, 'grading' ].join('/');
+  return [ config.staff.base, spec.kind, spec.proj, 'grading' ].filter(p => p).join('/');
 }
 
 function startingDir(spec) {
-  return [ config.staff.semester, spec.kind, spec.proj, 'starting' ].join('/');
+  return [ config.staff.base, spec.kind, spec.proj, 'starting' ].filter(p => p).join('/');
 }
 
 function findRev(dir, gitargs, callback) {
@@ -55,7 +55,7 @@ exports.findStudentRepos = function(spec, callback) {
   let proj = spec.proj || '*';
   let users = spec.users ? '?(*-)' + spec.users.join('-') + '?(-*)' : '*';
   log.info('findStudentRepos', kind, proj, users);
-  glob(path.join(config.student.semester, kind, proj, users + '.git'), {
+  glob(path.join(kind, proj, users + '.git'), {
     cwd: config.student.repos
   }, function(err, dirs) {
     if (err) {
@@ -65,7 +65,7 @@ exports.findStudentRepos = function(spec, callback) {
     }
     callback(err, dirs.map(function(dir) {
       let parts = dir.split(path.sep);
-      return { kind: parts[1], proj: parts[2], users: parts[3].split('.')[0].split('-') };
+      return { kind: parts[0], proj: parts[1], users: parts[2].split('.')[0].split('-') };
     }));
   });
 };
@@ -257,20 +257,20 @@ exports.findReleasableProjects = function(callback) {
   let projects = {};
   
   let find = byline(util.spawnAndLog('git', [ 'ls-tree',
-    '-r', '-d', '--name-only', 'master', config.staff.semester
+    '-r', '-d', '--name-only', 'master', config.staff.base
   ], {
     cwd: config.staff.repo,
     stdio: 'pipe'
   }).stdout, { encoding: 'utf8' });
   
   find.on('data', function(dir) {
-    let parts = dir.split(path.sep);
-    if (parts.length == 3) {
-      // found potential /semester/kind/proj
-      projects[dir] = 0;
-    } else if (parts.length == 4 && required.indexOf(parts[3]) >= 0) {
-      // found /semester/kind/proj/required
-      projects[parts.slice(0, 3).join(path.sep)]++;
+    let parts = path.relative(config.staff.base, dir).split(path.sep);
+    if (parts.length == 2) {
+      // found potential /base/kind/proj
+      projects[parts.join(path.sep)] = 0;
+    } else if (parts.length == 3 && required.indexOf(parts[2]) >= 0) {
+      // found /base/kind/proj/required
+      projects[parts.slice(0, 2).join(path.sep)]++;
     }
   });
   find.on('end', function() {
@@ -279,7 +279,7 @@ exports.findReleasableProjects = function(callback) {
       return projects[key] == required.length;
     }).map(function(key) {
       let parts = key.split(path.sep);
-      return { kind: parts[1], proj: parts[2] };
+      return { kind: parts[0], proj: parts[1] };
     }));
   });
 };

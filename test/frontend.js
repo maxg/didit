@@ -636,8 +636,8 @@ describe('frontend', function() {
     
     afterEach(function(done) {
       async.parallel([
-        async.apply(fsextra.remove, path.join(config.student.repos, config.student.semester, 'labs', 'lab4')),
-        async.apply(fsextra.remove, path.join(config.build.results, 'tickets', config.student.semester, 'labs', 'lab4'))
+        async.apply(fsextra.remove, path.join(config.student.repos, 'labs', 'lab4')),
+        async.apply(fsextra.remove, path.join(config.build.results, 'tickets', 'labs', 'lab4'))
       ], done);
     });
     
@@ -712,7 +712,7 @@ describe('frontend', function() {
     let spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
     let rev = 'abcd789';
     let resultdir = path.join(
-      config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', 'alpha'
+      config.build.results, 'milestones', 'labs', 'lab3', 'alpha'
     );
     
     beforeEach(function(done){
@@ -758,7 +758,7 @@ describe('frontend', function() {
     let spec = { kind: 'labs', proj: 'lab3', users: [ 'alice' ] };
     let when = '20130101T221500';
     let resultdir = path.join(
-      config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', 'alpha'
+      config.build.results, 'milestones', 'labs', 'lab3', 'alpha'
     );
     
     beforeEach(function(done){
@@ -803,7 +803,7 @@ describe('frontend', function() {
     
     let milestone = 'alpha' + +new Date();
     let resultdir = path.join(
-      config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', milestone
+      config.build.results, 'milestones', 'labs', 'lab3', milestone
     );
     
     afterEach(function(done) {
@@ -841,7 +841,7 @@ describe('frontend', function() {
     let spec = { kind: 'labs', proj: 'lab3' };
     let milestone = 'alpha';
     let resultdir = path.join(
-      config.build.results, 'milestones', config.student.semester, 'labs', 'lab3', milestone
+      config.build.results, 'milestones', 'labs', 'lab3', milestone
     );
     
     beforeEach(function(done){

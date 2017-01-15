@@ -191,8 +191,7 @@ describe('sweeper', function() {
     };
     let revs = { alice: 'abcd123' };
     let resultdir = path.join(
-      config.build.results, 'sweeps', config.student.semester,
-      specs.sweep.kind, specs.sweep.proj
+      config.build.results, 'sweeps', specs.sweep.kind, specs.sweep.proj
     );
     
     beforeEach(function(done) {

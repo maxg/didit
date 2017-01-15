@@ -132,7 +132,7 @@ exports.findTest = function(build, category, suitename, testname, callback) {
 };
 
 function milestoneDir(spec, name) {
-  return path.join(config.build.results, 'milestones', config.student.semester, spec.kind, spec.proj, name);
+  return path.join(config.build.results, 'milestones', spec.kind, spec.proj, name);
 }
 
 exports.isMilestoneReleasedSync = function(spec, name) {
@@ -143,7 +143,7 @@ exports.findMilestones = function(spec, callback) {
   log.info({ spec }, 'findMilestones');
   let kind = spec.kind || config.glob.kind;
   let proj = spec.proj || '*';
-  glob(path.join('milestones', config.student.semester, kind, proj, '*'), {
+  glob(path.join('milestones', kind, proj, '*'), {
     cwd: config.build.results
   }, function(err, files) {
     if (err) {
@@ -153,7 +153,7 @@ exports.findMilestones = function(spec, callback) {
     }
     async.map(files, function(file, set) {
       let parts = file.split(path.sep);
-      let spec = { kind: parts[2], proj: parts[3], name: parts[4] };
+      let spec = { kind: parts[1], proj: parts[2], name: parts[3] };
       spec.released = exports.isMilestoneReleasedSync(spec, spec.name);
       set(null, spec);
     }, callback);

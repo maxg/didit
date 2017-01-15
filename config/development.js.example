@@ -1,12 +1,14 @@
+const semester = 'sp13';
+
 module.exports = {
+  semester,
   student: {
-    semester: 'sp13',
-    repos: '/vagrant/devel/repos',
+    repos: `/vagrant/devel/repos/${semester}`,
     acl: 'none'
   },
   staff: {
-    semester: 'spring13',
-    repo: '/vagrant/devel/repos/staff',
+    repo: '/vagrant/devel/staff-repo',
+    base: '',
     users: [ 'maxg' ]
   },
   web: {
@@ -22,7 +24,7 @@ module.exports = {
   },
   build: {
     eclipse: '/usr/local/eclipse',
-    results: '/vagrant/devel/builds',
+    results: `/vagrant/devel/didit/${semester}`,
     concurrency: 4
   },
   workflow: {

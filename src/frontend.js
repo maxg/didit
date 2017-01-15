@@ -47,7 +47,7 @@ Object.assign(app.locals, {
   
   // generate Git remote URLs
   remote: config.student.remote && function(spec, user) {
-    return config.student.remote.replace('[user]', user) + '/' + config.student.semester
+    return config.student.remote.replace('[user]', user)
            + '/' + spec.kind + '/' + spec.proj + '/' + spec.users.join('-') + '.git';
   },
   

@@ -5,15 +5,15 @@ const temp = require('temp').track();
 const config = require('../src/config');
 
 const override = {
+  semester: 'su00',
   student: {
-    semester: 'su00',
     repos: temp.mkdirSync('test-student-repos-'),
     kinds: undefined,
     acl: 'test'
   },
   staff: {
-    semester: 'summer00',
     repo: temp.mkdirSync('test-staff-repo-'),
+    base: 'summer00',
     users: [ 'eve', 'frank' ]
   },
   web: {
