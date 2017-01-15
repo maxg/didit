@@ -21,7 +21,7 @@ apt-get install -y nodejs build-essential
 
 # Eclipse
 eclipse_major=neon
-eclipse_minor=R
+eclipse_minor=2
 eclipse_dir="eclipse-$eclipse_major-$eclipse_minor"
 eclipse_url="http://www.eclipse.org/downloads/download.php?r=1&file=/technology/epp/downloads/release/$eclipse_major/$eclipse_minor/eclipse-java-$eclipse_major-$eclipse_minor-linux-gtk-x86_64.tar.gz"
 (
