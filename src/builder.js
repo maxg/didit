@@ -88,7 +88,8 @@ exports.findBuilds = function(spec, callback) {
       return;
     }
     let revs = files.map(function(file) {
-      return { rev: file.split(path.sep)[0], ctime: fs.statSync(path.join(dir, file)).ctime.getTime() };
+      let rev = file.split(path.sep)[0];
+      return { rev, ctime: fs.statSync(path.join(dir, rev)).ctime.getTime() };
     }).sort(function(a, b) {
       return b.ctime - a.ctime;
     }).map(function(data) {
