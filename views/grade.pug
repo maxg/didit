@@ -27,8 +27,8 @@ block primary
   div.pull-right.well.graderesult
     p.text-muted Auto-grading result:
     if grade
-      h3.pull-right #{grade.score}&nbsp;
-        small / #{grade.outof}
+      h3 #{Math.floor(100 / grade.outof * grade.score)}
+        small &thinsp;%&emsp;#{grade.score} / #{grade.outof}
     else
       h4.pull-right: span.label.label-danger NO GRADE
   
