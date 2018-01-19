@@ -257,7 +257,7 @@ exports.findReleasableProjects = function(callback) {
   let projects = {};
   
   let find = byline(util.spawnAndLog('git', [ 'ls-tree',
-    '-r', '-d', '--name-only', 'master', config.staff.base
+    '-r', '-d', '--name-only', 'master', (config.staff.base || '.')
   ], {
     cwd: config.staff.repo,
     stdio: 'pipe'
