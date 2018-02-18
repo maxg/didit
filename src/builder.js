@@ -226,6 +226,10 @@ exports.build = function(spec, progressCallback, resultCallback) {
     grade: [ 'hidden', function(results, next) {
       let result = { json: { public: results.public.result, hidden: results.hidden.result } };
       grader.grade(spec, results.builddir, result, buildOutputBase(spec, results.builder, 'grade'), next);
+    } ],
+    passfail: [ 'hidden', function(results, next) {
+      let result = { json: { public: results.public.result, hidden: results.hidden.result } };
+      exports.passfail(spec, results.builddir, result, buildOutputBase(spec, results.builder, 'passfail'), next);
     } ]
   }, function(err, results) {
     log.info('build complete');
@@ -246,6 +250,8 @@ exports.build = function(spec, progressCallback, resultCallback) {
     if (results.grade) {
       results.grade = [ results.grade.score, results.grade.outof ];
     }
+    // and don't store pass/fail
+    delete results.passfail;
     
     fs.writeFile(buildResultFile(spec), JSON.stringify(results), function(fserr) {
       if (fserr) { log.error({ err: fserr, results }, 'error writing results'); }
@@ -260,7 +266,32 @@ exports.build = function(spec, progressCallback, resultCallback) {
       }
     });
   });
-}
+};
+
+exports.passfail = function(spec, builddir, build, output, callback) {
+  let passfail = { spec, public: {}, hidden: {} };
+  for (let [ report, testsuites ] of [
+    [ passfail.public, build.json.public && build.json.public.testsuites || [] ],
+    [ passfail.hidden, build.json.hidden && build.json.hidden.testsuites || [] ],
+  ]) {
+    for (let suite of testsuites) {
+      let pkg = report[suite.package] || (report[suite.package] = {});
+      let cls = pkg[suite.name] = Object.assign({}, suite);
+      [ 'hostname' ].forEach(reject => delete cls[reject]);
+      cls.testcases = {};
+      for (let testcase of suite.testcases) {
+        let test = cls.testcases[testcase.name] = Object.assign({}, testcase);
+        [ 'classname', 'name', 'time' ].forEach(reject => delete test[reject]);
+      }
+    }
+  }
+  fs.writeFile(output + '.json', JSON.stringify(passfail), function(err) {
+    if (err) {
+      err.dmesg = 'error writing pass/fail report';
+    }
+    callback(err, passfail);
+  });
+};
 
 // command-line build
 if (require.main === module) {

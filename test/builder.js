@@ -236,6 +236,7 @@ describe('builder', function() {
         results.public.should.be.type('boolean');
         results.hidden.should.be.type('boolean');
         results.grade.should.be.an.instanceof(Array);
+        should.not.exist(results.passfail);
         results.started.should.be.within(start, finish);
         results.finished.should.be.within(start, finish);
         done(err);
@@ -283,6 +284,18 @@ describe('builder', function() {
           json.testsuites[1].testcases.map(function(test) {
             return test.name;
           }).should.eql([ 'hiddenPass', 'hiddenError', 'hiddenSkip' ]);
+          done(err || fserr);
+        });
+      });
+    });
+    it('should record test results', function(done) {
+      builder.build(spec, function() { }, function(err, results) {
+        fs.readFile(path.join(resultdir, results.builder, 'passfail.json'), { encoding: 'utf8' }, function(fserr, data) {
+          let json = JSON.parse(data);
+          json.public['']['FakePublic'].testcases['publicPass'].should.eql({});
+          json.public['']['FakePublic'].testcases['publicFail'].should.eql({ failure: 'Fake failure!' });
+          json.hidden['']['FakeHidden'].testcases['hiddenPass'].should.eql({});
+          json.hidden['']['FakeHidden'].testcases['hiddenError'].should.eql({ error: 'Fake error!' });
           done(err || fserr);
         });
       });
