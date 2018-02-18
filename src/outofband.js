@@ -110,7 +110,7 @@ function notifyProject(suffix, template, params, user, callback) {
 
 function notify(subject, template, locals, callback) {
   if ( ! config.log.mail) { return; }
-  mailer.sendMail({ to: config.log.mail }, subject, template, locals, function(err, result) {
+  mailer.sendMail({ to: config.log.mail, cc: [].concat(locals.user || []) }, subject, template, locals, function(err, result) {
     if (err) {
       log.error(err, 'error sending mail');
     }
