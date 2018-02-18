@@ -227,7 +227,7 @@ exports.createServer = function(callback) {
       module.statistics = results;
     });
   }
-  setInterval(updateStats, 1000 * 120);
+  setInterval(updateStats, 1000 * 15);
   updateStats();
   
   callback();
